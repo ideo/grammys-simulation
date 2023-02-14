@@ -1,18 +1,23 @@
 [tool.poetry]
-name = "avocado-allegory"
+name = "grammys-simulation"
 version = "0.1.0"
 description = ""
-authors = ["Joe Gambino <joe@gam.bingo>"]
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "grammys_simulation"}]
 
 [tool.poetry.dependencies]
-python = ">=3.7.1,<4.0"
-pandas = "1.2.5"
-streamlit = "^1.6.0"
-inflect = "^5.4.0"
+python = "^3.10"
+streamlit = "^1.18.1"
+pandas = "^1.5.3"
+inflect = "^6.0.2"
 
-[tool.poetry.dev-dependencies]
-watchdog = "^2.1.6"
+
+[tool.poetry.group.dev.dependencies]
+watchdog = "^2.2.1"
+jupyterlab = "^3.6.1"
+ipykernel = "^6.21.2"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

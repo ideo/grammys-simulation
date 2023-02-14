@@ -65,29 +65,45 @@ def sidebar():
     Let's put all the sidebar controls here!
     """
     st.sidebar.subheader("Simulation Parameters")
-    keep_out = """
-        HEY! What are you doing it here? This area is off limits! Only Fra and 
-        Joe are allowed in here! Get outta here ya meddling kids!
+
+    label = "How many members vote in the contest?"
+    num_voters = st.sidebar.slider(label, 
+        value=12000, 
+        min_value=1000, 
+        max_value=20000,
+        step=500)
+
+    label = "How many songs have been nominated?"
+    num_songs = st.sidebar.slider(label,
+        value=8000, 
+        min_value=50, 
+        max_value=15000,
+        step=50)
+
+    st_dev = 2.0
+    fullness_factor = 1.0
+    label = ""
+    # st_dev = st.sidebar.number_input("What is the st. dev. of their randomly generated scores?",
+    #     value=2.0,
+    #     min_value=0.1,
+    #     max_value=5.0,
+    #     step=0.1
+    #     )
+    # fullness_factor = st.sidebar.number_input("What is the mean offset of the fullness factor?",
+    #     value=1.0,
+    #     min_value=0.1,
+    #     max_value=3.0,
+    #     step=0.1
+    #     )
+    return num_voters, num_songs, st_dev, fullness_factor
+
+
+def generate_objective_scores(num_songs):
     """
-    st.sidebar.write(keep_out)
-    num_townspeople = st.sidebar.slider("How many townspeople are there?", 
-        value=200, 
-        min_value=10, 
-        max_value=500,
-        step=10)
-    st_dev = st.sidebar.number_input("What is the st. dev. of their randomly generated scores?",
-        value=2.0,
-        min_value=0.1,
-        max_value=5.0,
-        step=0.1
-        )
-    fullness_factor = st.sidebar.number_input("What is the mean offset of the fullness factor?",
-        value=1.0,
-        min_value=0.1,
-        max_value=3.0,
-        step=0.1
-        )
-    return num_townspeople, st_dev, fullness_factor
+    An array of randomly generated scores, ranging from 0 to 100, following a 
+    
+    """
+    pass
 
 
 def choose_scenario(key="intro"):
