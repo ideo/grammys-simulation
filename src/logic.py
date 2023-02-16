@@ -3,14 +3,17 @@ import pandas as pd
 import time
 import inflect
 
-from .story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
-from .config import COLORS, ENTRANTS, DEMO_CONTEST
-from .simulation import Simulation
+# from .story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
+# from .config import COLORS, ENTRANTS, DEMO_CONTEST
+# from .simulation import Simulation
+from src.story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
+from src.config import COLORS, ENTRANTS, DEMO_CONTEST
+from src.simulation import Simulation
 
 
 import warnings
-warnings.simplefilter(action='ignore', category=UserWarning)
-
+# warnings.simplefilter(action='ignore', category=UserWarning)
+warnings.filterwarnings('ignore')
 
 p = inflect.engine()
 
@@ -24,6 +27,10 @@ def initialize_session_state():
         "sandbox_keep_chart_visible":       False,
         "entrant_num":                      0,
         "N":                                5,
+        "num_voters":                       200,
+        "num_songs":                        100,
+        "st_dev":                           2.0,    #This will need to change
+        "fullness_factor":                  1.0,    #again, bigger
     }
 
     for key, value in initial_values.items():
@@ -67,21 +74,23 @@ def sidebar():
     st.sidebar.subheader("Simulation Parameters")
 
     label = "How many members vote in the contest?"
-    num_voters = st.sidebar.slider(label, 
-        value=12000, 
+    _ = st.sidebar.slider(label, 
         min_value=1000, 
         max_value=20000,
-        step=500)
+        step=500,
+        key="num_voters")
 
     label = "How many songs have been nominated?"
-    num_songs = st.sidebar.slider(label,
-        value=8000, 
+    _ = st.sidebar.slider(label,
         min_value=50, 
         max_value=15000,
-        step=50)
+        step=50,
+        key="num_songs")
 
-    st_dev = 2.0
-    fullness_factor = 1.0
+    # st_dev = 2.0
+    # fullness_factor = 1.0
+    # st.session_state["st_dev"] = st_dev
+
     label = ""
     # st_dev = st.sidebar.number_input("What is the st. dev. of their randomly generated scores?",
     #     value=2.0,
@@ -95,7 +104,7 @@ def sidebar():
     #     max_value=3.0,
     #     step=0.1
     #     )
-    return num_voters, num_songs, st_dev, fullness_factor
+    # return num_voters, num_songs, st_dev, fullness_factor
 
 
 def generate_objective_scores(num_songs):
@@ -106,78 +115,89 @@ def generate_objective_scores(num_songs):
     pass
 
 
-def choose_scenario(key="intro"):
-    """
-    The user selects a scenario, which determines the 'objective ratings' to be
-    used in the simulation.
-    """
+def run_a_simulation(song_df, num_voters, song_limit, key):
+    st_dev = st.session_state["st_dev"]
 
-    #define the structure of the entry as 2 columns
-    col1, col2 = st.columns([2,5])
-
-    #one column has a widget with 2 options
-    options = list(ENTRANTS[0].keys())
-    options.remove("ID")
-    options.remove("Entrant")
-
-    scenario = col1.radio(
-        "Choose a scenario", 
-        options=options,
-        index=0,
-        on_change=reset_visuals,
-        key=key)
-    df = get_scenario_dataframe(scenario)
-
-    if key == "sandbox":
-        num_guacs = col1.slider("How many contestants?",
-            min_value=5,
-            max_value=20,
-            value=20,
-            key="num_guacs")
-
-        if num_guacs < 20:
-            df = df.sample(n=num_guacs, random_state=42)
-            df.sort_index(inplace=True)
-            df = format_scenario_colors(df)
-            df.index = list(range(df.shape[0]))
-
-    winner = df["Objective Ratings"].idxmax()
-    #draw the chart
-    spec = {
-        "height":   275,
-        "mark": {"type": "bar"},
-        "encoding": {
-            "x":    {
-                "field": "Entrant", "type": "nominal", "sort": "ID", 
-                "axis": {"labelAngle": 45}
-                },
-            "y":    {"field": "Objective Ratings", "type": "quantitative"},
-            "color":    {"field": "Color", "type": "nominal", "scale": None}
-        },
-        "title":    {
-            "text": scenario, 
-            "subtitle": f"The Best Guac is Guac No. {winner}"},   
-    }
-
-    col2.vega_lite_chart(df, spec)
-    return df, scenario
+    start_btn = st.button("Simulate", key=key)
+    sim = Simulation(song_df, num_voters, st_dev, assigned_guacs=song_limit)
+    if start_btn:
+        sim.simulate()
+    return sim
 
 
-def get_scenario_dataframe(scenario):
-    df = pd.DataFrame(data=ENTRANTS)
-    df["Objective Ratings"] = df[scenario].copy()
-    # winning_score = df["Objective Ratings"].max()
-    # df["Color"] = df["Objective Ratings"].apply(
-    #     lambda x: COLORS["green"] if x==winning_score else COLORS["blue"])
-    df = format_scenario_colors(df)
-    return df
+
+# def choose_scenario(key="intro"):
+#     """
+#     The user selects a scenario, which determines the 'objective ratings' to be
+#     used in the simulation.
+#     """
+
+#     #define the structure of the entry as 2 columns
+#     col1, col2 = st.columns([2,5])
+
+#     #one column has a widget with 2 options
+#     options = list(ENTRANTS[0].keys())
+#     options.remove("ID")
+#     options.remove("Entrant")
+
+#     scenario = col1.radio(
+#         "Choose a scenario", 
+#         options=options,
+#         index=0,
+#         on_change=reset_visuals,
+#         key=key)
+#     df = get_scenario_dataframe(scenario)
+
+#     if key == "sandbox":
+#         num_guacs = col1.slider("How many contestants?",
+#             min_value=5,
+#             max_value=20,
+#             value=20,
+#             key="num_guacs")
+
+#         if num_guacs < 20:
+#             df = df.sample(n=num_guacs, random_state=42)
+#             df.sort_index(inplace=True)
+#             df = format_scenario_colors(df)
+#             df.index = list(range(df.shape[0]))
+
+#     winner = df["Objective Ratings"].idxmax()
+#     #draw the chart
+#     spec = {
+#         "height":   275,
+#         "mark": {"type": "bar"},
+#         "encoding": {
+#             "x":    {
+#                 "field": "Entrant", "type": "nominal", "sort": "ID", 
+#                 "axis": {"labelAngle": 45}
+#                 },
+#             "y":    {"field": "Objective Ratings", "type": "quantitative"},
+#             "color":    {"field": "Color", "type": "nominal", "scale": None}
+#         },
+#         "title":    {
+#             "text": scenario, 
+#             "subtitle": f"The Best Guac is Guac No. {winner}"},   
+#     }
+
+#     col2.vega_lite_chart(df, spec)
+#     return df, scenario
 
 
-def format_scenario_colors(df):
-    winning_score = df["Objective Ratings"].max()
-    df["Color"] = df["Objective Ratings"].apply(
-        lambda x: COLORS["green"] if x==winning_score else COLORS["blue"])
-    return df
+# def get_scenario_dataframe(scenario):
+#     df = pd.DataFrame(data=ENTRANTS)
+#     df["Objective Ratings"] = df[scenario].copy()
+#     # winning_score = df["Objective Ratings"].max()
+#     # df["Color"] = df["Objective Ratings"].apply(
+#     #     lambda x: COLORS["green"] if x==winning_score else COLORS["blue"])
+#     df = format_scenario_colors(df)
+#     return df
+
+
+# def format_scenario_colors(df):
+#     winning_score = df["Objective Ratings"].max()
+#     df["Color"] = df["Objective Ratings"].apply(
+#         lambda x: COLORS["green"] if x==winning_score else COLORS["blue"])
+#     return df
 
 
 def animate_results(sim, key):
@@ -192,41 +212,68 @@ def animate_results(sim, key):
         show_fptp_rankings(sim.rankings, sim.num_townspeople)     
 
 
+def format_condorcet_results_chart_df(sim, col_limit=None):
+    """
+    Take the pariwise sums from the condorcet results and return a dataframe
+    that matches the input that we had previously fed the tally by sums chart
+    animation
+    """
+    _sums = sim.condorcet.pairwise_sums
+    ii = sim.condorcet.top_nominee_ids
+    chart_df = pd.DataFrame(_sums).iloc[ii, ii]
+
+    # For the animation
+    if col_limit:
+        chart_df = chart_df.iloc[:, :col_limit].copy()
+
+    # Assign names to top nominees
+    chart_df["sum"] = chart_df.sum(axis=1)
+    chart_df["Entrant"] = chart_df.index
+    return chart_df
+
+
 def animate_summation_results(sim, key):
     """
     Creates the `Simulate` button, animated chart, and success/fail message
     """
     col1, col2 = st.columns([2,5])
-    start_btn = col1.button("Simulate", key=key)
-
-    results_df = sim.results_df.copy()
-    results_df.drop(columns=["sum"], inplace=True)
-    subtitle = "And the winner is... "
-    y_max = int(sim.results_df["sum"].max())
-
-    animation_duration = 1 #second
-    time_per_frame = animation_duration / results_df.shape[0] / 20
+    # start_btn = col1.button("Simulate", key=key)
 
     bar_chart = None
-    if start_btn:
+    # if start_btn:
+    if sim.townspeople:
+
+        # results_df = sim.results_df.copy()
+        # results_df.drop(columns=["sum"], inplace=True)
+        chart_df = format_condorcet_results_chart_df(sim)
+        subtitle = "And the winner is... "
+        y_max = int(chart_df["sum"].max())
+        # y_max = sim.condorcet.top_vote_counts.max()
+
+
+        animation_duration = 10 #second
+        time_per_frame = animation_duration / chart_df.shape[0] / 20
+
+    # bar_chart = None
+    # if start_btn:
         st.session_state[f"{key}_keep_chart_visible"] = True
-        for NN in range(results_df.shape[1]):
+        for NN in range(chart_df.shape[1]):
             chart_df, spec = format_spec(sim, subtitle, y_max, col_limit=NN)
             if bar_chart is not None:
-                bar_chart.vega_lite_chart(chart_df, spec)
+                bar_chart.vega_lite_chart(chart_df, spec, use_container_width=True)
             else:
-                bar_chart = col2.vega_lite_chart(chart_df, spec)
+                bar_chart = col2.vega_lite_chart(chart_df, spec, use_container_width=True)
 
             # time.sleep(.01/2)
             time.sleep(time_per_frame)
 
-    if st.session_state[f"{key}_keep_chart_visible"]:
+    if sim.townspeople and st.session_state[f"{key}_keep_chart_visible"]:
         # Ensure the final chart stays visible
         chart_df, spec = format_spec(sim, subtitle, y_max)
         if bar_chart is not None:
-            bar_chart.vega_lite_chart(chart_df, spec)
+            bar_chart.vega_lite_chart(chart_df, spec, use_container_width=True)
         else:
-            bar_chart = col2.vega_lite_chart(chart_df, spec)
+            bar_chart = col2.vega_lite_chart(chart_df, spec, use_container_width=True)
 
         # message_var = None
         # if sim.assigned_guacs < results_df.shape[0]:
@@ -247,18 +294,19 @@ def get_winner_image(sim, key):
 def format_spec(sim, subtitle, y_max, col_limit=None):
     """Format the chart to be shown in each frame of the animation"""
 
-    if col_limit:
-        chart_df = sim.results_df.iloc[:, :col_limit].copy()
-        chart_df["sum"] = chart_df.sum(axis=1)
-    else:
-        chart_df = sim.results_df.copy()
+    # if col_limit:
+    #     chart_df = sim.results_df.iloc[:, :col_limit].copy()
+    #     chart_df["sum"] = chart_df.sum(axis=1)
+    # else:
+    #     chart_df = sim.results_df.copy()
+    chart_df = format_condorcet_results_chart_df(sim, col_limit=col_limit)
 
     color_spec = None
-    chart_df["Entrant"] = sim.guac_df["Entrant"]
+    # chart_df["Entrant"] = sim.guac_df["Entrant"]
     if col_limit is None:
-        subtitle += f"Guacamole No. {sim.sum_winner}!"
-        chart_df = format_bar_colors(chart_df, sim.objective_winner, sim.sum_winner)
-        color_spec = {"field": "Color", "type": "nomical", "scale": None}
+        subtitle += f"Guacamole No. {sim.winner}!"
+        # chart_df = format_bar_colors(chart_df, sim.objective_winner, sim.winner)
+        # color_spec = {"field": "Color", "type": "nomical", "scale": None}
 
     spec = {
             "height":   275,
@@ -271,7 +319,7 @@ def format_spec(sim, subtitle, y_max, col_limit=None):
                     "field": "sum", "type": "quantitative", 
                     "scale": {"domain": [0, y_max]},
                     "title": "Vote Tallies"},
-                "color":    color_spec,
+                # "color":    color_spec,
             },
             "title":    {
                 "text": f"Simulation Results",
@@ -281,11 +329,11 @@ def format_spec(sim, subtitle, y_max, col_limit=None):
     return chart_df, spec
 
 
-def format_bar_colors(chart_df, should_win, actually_won):
-    chart_df["Color"] = pd.Series([COLORS["blue"]]*chart_df.shape[0], index=chart_df.index)
-    chart_df.at[actually_won, "Color"] = COLORS["red"]
-    chart_df.at[should_win, "Color"] = COLORS["green"]
-    return chart_df
+# def format_bar_colors(chart_df, should_win, actually_won):
+#     chart_df["Color"] = pd.Series([COLORS["blue"]]*chart_df.shape[0], index=chart_df.index)
+#     chart_df.at[actually_won, "Color"] = COLORS["red"]
+#     chart_df.at[should_win, "Color"] = COLORS["green"]
+#     return chart_df
 
 
 def animate_results_of_100_runs(sim, scenario, key):
@@ -435,6 +483,7 @@ def animate_condorcet_simulation(sim, key=None):
     start_btn = col1.button("Simulate", key=key)
 
     if start_btn:
+        sim.simulate()
         st.session_state[f"{key}_keep_chart_visible"] = True
         
     if st.session_state[f"{key}_keep_chart_visible"]:

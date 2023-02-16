@@ -3,49 +3,56 @@ import streamlit as st
 # from src import STORY
 from src import logic as lg
 from src import Simulation
+from src.simulation import generate_objective_scores
 
 
 st.set_page_config(
-    page_title="Guacamole Contest",
-    page_icon="img/avocado-emoji.png",
+    page_title="Grammys Simulation",
+    page_icon="img/grammys_logo.png",
     initial_sidebar_state="expanded")
 
 lg.initialize_session_state()
-num_voters, num_songs, st_dev, fullness_factor = lg.sidebar()
-
+lg.sidebar()
 
 st.title("Grammys Simulation")
 
-
-guac_df, scenario = lg.choose_scenario()
-st.write(guac_df)
+num_songs = st.session_state["num_songs"]
+song_df = generate_objective_scores(num_songs)
 
 
 section_title = "simulation_1"
 st.subheader(section_title.replace("_", " ").title())
-sim1 = Simulation(guac_df, num_voters, st_dev, fullness_factor=fullness_factor)
-sim1.simulate()
-lg.animate_results(sim1, key=section_title)
-if st.session_state[f"{section_title}_keep_chart_visible"]:
-    lg.success_message(section_title, sim1.success)
+
+num_voters = st.session_state["num_voters"]
+st_dev = st.session_state["st_dev"]
+
+# sim1 = Simulation(song_df, num_voters, st_dev, assigned_guacs=num_songs)
+st.write("Each voter votes on every nominee.")
+sim1 = lg.run_a_simulation(song_df, num_voters, num_songs, section_title)
+# sim1.simulate()
+# lg.animate_results(sim1, key=section_title)
+lg.animate_summation_results(sim1, section_title)
+# if st.session_state[f"{section_title}_keep_chart_visible"]:
+#     lg.success_message(section_title, sim1.success)
 
 
-# st.markdown("---")
-# section_title = "simulation_2"
-# st.subheader(section_title.replace("_", " ").title())
+st.markdown("---")
+section_title = "simulation_2"
+st.subheader(section_title.replace("_", " ").title())
 
-# col1, col2 = st.columns(2)
+col1, col2 = st.columns(2)
 # lg.write_instructions(section_title, col1)
-# guac_limit2 = col2.slider(
-#     "How many guacs will tasters try? Start by just removing a couple and then push it from there.",
-#     value=18, 
-#     min_value=1, 
-#     max_value=20)
+guac_limit2 = col2.slider(
+    "How many songs does each voter get to listen to?",
+    value=50, 
+    min_value=10, 
+    max_value=num_songs)
 
-# sim2 = Simulation(guac_df, num_voters, st_dev, assigned_guacs=guac_limit2)
+# sim2 = Simulation(song_df, num_voters, st_dev, assigned_guacs=guac_limit2)
 # sim2.simulate()
 
-# lg.animate_results(sim2, key=section_title)
+sim2 = lg.run_a_simulation(song_df, num_voters, guac_limit2, section_title)
+lg.animate_summation_results(sim2, key=section_title)
 # if st.session_state[f"{section_title}_keep_chart_visible"]:
 #     lg.success_message(section_title, sim2.success, guac_limit2)
 
@@ -72,7 +79,7 @@ if st.session_state[f"{section_title}_keep_chart_visible"]:
 #     max_value=20,
 #     key=section_title)
 
-# sim3 = Simulation(guac_df, num_voters, st_dev, 
+# sim3 = Simulation(song_df, num_voters, st_dev, 
 #     assigned_guacs=guac_limit3,
 #     perc_fra=fra,
 #     perc_pepe=pepe,
@@ -112,7 +119,7 @@ if st.session_state[f"{section_title}_keep_chart_visible"]:
 #     step=10,
 #     key=section_title)
 
-# sim4 = Simulation(guac_df, num_voters4, st_dev, 
+# sim4 = Simulation(song_df, num_voters4, st_dev, 
 #     assigned_guacs=guac_limit4,
 #     perc_fra=fra,
 #     perc_pepe=pepe,

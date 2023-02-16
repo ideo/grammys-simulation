@@ -7,6 +7,74 @@ from unittest import runner
 import numpy as np
 import pandas as pd
 import sys
+from tqdm import tqdm
+
+
+class Condorcet:
+    def __init__(self, results_df):
+        self.results_df = self.clean_results_df(results_df)
+        self.n_nominees = self.results_df.shape[0]
+        self.pairwise_sums = self.compute_sum_of_ballot_pairwise_comparisons()
+        self.top_nominee_ids, self.top_vote_counts = self.top_nominees()
+
+
+    def clean_results_df(self, results_df):
+        """
+        The current simluation code adds some extraneous columns
+        """
+        columns = ["ID", "Mean"]
+        columns_to_drop = [col for col in columns if col in results_df.columns]
+        if columns_to_drop:
+            results_df.drop(columns=columns_to_drop, inplace=True)
+        return results_df
+
+
+    def compute_sum_of_ballot_pairwise_comparisons(self):
+        """
+        TKTK
+        """
+        pairwise_sums = np.zeros((self.n_nominees, self.n_nominees))
+        print("Tallying")
+        for col in tqdm(self.results_df.columns):
+            ballot = self.results_df[col]
+            pairwise_sums += self.pairwise_comparison(ballot)
+        return pairwise_sums
+
+
+    def pairwise_comparison(self, ballot):
+        """
+        ballot (pd.Series): 
+            One column of the results_df. A single voters's ballot.
+
+        Computes pairwise comparisons. Row-Col, was nominee at row ranked 
+        higher than nominee at col?
+        """
+        # Need to sort by the index because the ballot is returned in the
+        # order of the random sample
+        ballot = ballot.sort_index()
+
+        # This is numpy magic for doing a pairwise comparison
+        pairwise_comparison = (ballot.values[:, None] > ballot.values)
+
+        # Transforms from bool to int
+        pairwise_comparison = pairwise_comparison * 1 
+        return pairwise_comparison
+
+
+    def top_nominees(self, top_N=10):
+        if top_N > self.pairwise_sums.shape[0]:
+            top_N = self.pairwise_sums.shape[0]
+
+        row_sums = self.pairwise_sums.sum(axis=1)
+        ii = np.argpartition(row_sums, -top_N)[-top_N:]
+        ii = ii[np.argsort(row_sums[ii])]
+        ii = np.flip(ii)
+        return ii, row_sums[ii]
+
+
+
+
+
 class CondorcetCounting():
     def __init__(
             self, 
@@ -25,60 +93,74 @@ class CondorcetCounting():
         self.num_guacs = len(guac_df)
         self.sample_guac_df = sample_guac_df
         
-        self.ballot_dict = self.get_ballot_dictionary()        
+        # self.ballot_dict = self.get_ballot_dictionary()        
         self.ballot_matrix = self.create_ballot_matrix()
-                    
+
 
     def create_ballot_matrix(self):
-        """This function converts a ballot containing a score for each guac into
-        a matrix of runner (rows) vs opponent (columns), where wins (and only wins) are marked as 1.
+        # Need to sort by the index because the ballot is returned in the
+        # order of the random sample
+        ballot = self.sample_guac_df.sort_index()["Subjective Ratings"].values
 
-        Returns:
-            numpy ballot matrix
-        """
+        # This is numpy magic for doing a pairwise comparison
+        pairwise_comparison = (ballot[:, None] > ballot)
+
+        # Transforms from bool to int
+        pairwise_comparison = pairwise_comparison * 1 
+        return pairwise_comparison
+
+
+
+    # def create_ballot_matrix(self):
+    #     """This function converts a ballot containing a score for each guac into
+    #     a matrix of runner (rows) vs opponent (columns), where wins (and only wins) are marked as 1.
+
+    #     Returns:
+    #         numpy ballot matrix
+    #     """
         
-        # Create the ballot matrix, row by row.
-        ballot_matrix = []
+    #     # Create the ballot matrix, row by row.
+    #     ballot_matrix = []
 
-        #loop on runners
-        for runner in self.guac_names:   
+    #     #loop on runners
+    #     for runner in self.guac_names:   
 
-            #if this runner wasn't in the ballot, then fill in with 0s and move to the next
-            if runner not in self.ballot_dict.keys():
-                ballot_matrix.append([0 for i in range(len(self.guac_names))])
-                continue
+    #         #if this runner wasn't in the ballot, then fill in with 0s and move to the next
+    #         if runner not in self.ballot_dict.keys():
+    #             ballot_matrix.append([0 for i in range(len(self.guac_names))])
+    #             continue
 
-            ballot_array = []
-            #loop on opponents
-            for opponent in self.guac_names:
+    #         ballot_array = []
+    #         #loop on opponents
+    #         for opponent in self.guac_names:
 
-                #if this opponent wasn't in the ballot, add a 0 and move to the next
-                if opponent not in self.ballot_dict.keys():
-                    ballot_array.append(0)
-                    continue
+    #             #if this opponent wasn't in the ballot, add a 0 and move to the next
+    #             if opponent not in self.ballot_dict.keys():
+    #                 ballot_array.append(0)
+    #                 continue
                     
-                #if runner beats the opponent, record the win
-                if self.ballot_dict[runner] > self.ballot_dict[opponent]:
-                    ballot_array.append(1)
-                else: 
-                    ballot_array.append(0)
+    #             #if runner beats the opponent, record the win
+    #             if self.ballot_dict[runner] > self.ballot_dict[opponent]:
+    #                 ballot_array.append(1)
+    #             else: 
+    #                 ballot_array.append(0)
 
-            #append to then create a ballot matrix
-            ballot_matrix.append(ballot_array)
+    #         #append to then create a ballot matrix
+    #         ballot_matrix.append(ballot_array)
     
-        ballot_matrix = np.matrix(ballot_matrix)
+    #     ballot_matrix = np.matrix(ballot_matrix)
 
-        return ballot_matrix
+    #     return ballot_matrix
 
 
-    def get_ballot_dictionary(self):
-        """This function extract a dictionary with guac and vote
+    # def get_ballot_dictionary(self):
+    #     """This function extract a dictionary with guac and vote
 
-        Returns:
-            guac:vote dictionary
-        """
-        ballot_dict = dict(zip(self.sample_guac_df['ID'], self.sample_guac_df['Subjective Ratings']))        
-        return ballot_dict
+    #     Returns:
+    #         guac:vote dictionary
+    #     """
+    #     ballot_dict = dict(zip(self.sample_guac_df['ID'], self.sample_guac_df['Subjective Ratings']))        
+    #     return ballot_dict
 
 
     def get_schwartz_relations_matrix(self, sum_ballots_matrix):
@@ -92,7 +174,7 @@ class CondorcetCounting():
             matrix of preferences
         """
         #initialize a matrix with all zeros 
-        matrix_of_more_preferred = np.zeros([self.num_guacs,self.num_guacs], dtype=np.bool) # Init to False (loss)
+        matrix_of_more_preferred = np.zeros([self.num_guacs,self.num_guacs], dtype=bool) # Init to False (loss)
         #loop through all guacs and check the runner vs opponent preferences. 
         #when the runner is more preferred than the opponent (by more votes), flip the matrix location to True
         for runner in range(self.num_guacs):
@@ -114,7 +196,7 @@ class CondorcetCounting():
 
         """
         #assume every guac belongs, then knock them off
-        is_in_smith_or_schwartz_set = np.ones(self.num_guacs,dtype=np.bool) #Init to True
+        is_in_smith_or_schwartz_set = np.ones(self.num_guacs,dtype=bool) #Init to True
 
         # Use transitive properties to determine winners. 
         # E.g., if B > A and A > C then B > C
@@ -149,7 +231,9 @@ class CondorcetCounting():
             winning guac
         """
         #sum all ballot matrices
-        ballot_matrices_sum = self.sum_ballot_matrices(ballots_matrix_list)
+        # ballot_matrices_sum = self.sum_ballot_matrices(ballots_matrix_list)
+        ballot_matrices_sum = sum(bm for bm in ballots_matrix_list)
+        assert(ballot_matrices_sum.shape == ballots_matrix_list[0].shape)
 
         #find the runners more preferred
         matrix_of_more_preferred = self.get_schwartz_relations_matrix(ballot_matrices_sum)
@@ -249,24 +333,26 @@ class CondorcetCounting():
         
         pass
 
-    def sum_ballot_matrices(self, ballots_matrix_list):
-        """This function sums all the ballot matrices
+    # def sum_ballot_matrices(self, ballots_matrix_list):
+    #     """This function sums all the ballot matrices
 
-        Args:
-            ballots_matrix_list (list): list of numpy matrices
+    #     Args:
+    #         ballots_matrix_list (list): list of numpy matrices
 
-        Returns:
-            numpy matrix containing the sum of matrix ballots
-        """
-        null_matrix = np.zeros([len(self.guac_df),len(self.guac_df)])
+    #     Returns:
+    #         numpy matrix containing the sum of matrix ballots
+    #     """
+    #     null_matrix = np.zeros([len(self.guac_df),len(self.guac_df)])
+    #     print("null_matrix.shape: ", null_matrix.shape)
         
-        ballots_matrix_sum = null_matrix.copy()
+    #     ballots_matrix_sum = null_matrix.copy()
+    #     print("ballots_matrix_list[0].shape: ", ballots_matrix_list[0].shape)
         
-        for bm in ballots_matrix_list:
-            ballots_matrix_sum += bm
+    #     for bm in ballots_matrix_list:
+    #         ballots_matrix_sum += bm
 
-        if np.array_equal(ballots_matrix_sum, null_matrix) == True:
-            # import pdb;pdb.set_trace()
-            sys.exit("Ballot matrix sum is null, something is wrong...") 
+    #     if np.array_equal(ballots_matrix_sum, null_matrix) == True:
+    #         # import pdb;pdb.set_trace()
+    #         sys.exit("Ballot matrix sum is null, something is wrong...") 
 
-        return ballots_matrix_sum
+    #     return ballots_matrix_sum

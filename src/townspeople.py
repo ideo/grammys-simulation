@@ -5,15 +5,15 @@ import numpy as np
 class Townsperson:
     def __init__(self, st_dev = 1, assigned_guacs = 20, fullness_factor = 0.0, 
                 person_number = None, 
-                min_allowed_vote = 1, max_allowed_vote = 10, 
+                # min_allowed_vote = 1, max_allowed_vote = 10, 
                 mean_offset = 0, carlos_crony = False):
         self.number = person_number
         self.st_dev = st_dev
         self.fullness_factor = fullness_factor
         self.assigned_guacs = int(assigned_guacs)
         self.mean_offset = mean_offset
-        self.min_allowed_vote = min_allowed_vote
-        self.max_allowed_vote = max_allowed_vote
+        # self.min_allowed_vote = min_allowed_vote
+        # self.max_allowed_vote = max_allowed_vote
         self.carlos_crony = carlos_crony
         self.carlos_index = None
         self.voted_for_our_boy = False
@@ -69,8 +69,8 @@ class Townsperson:
             subj = np.random.normal(mu, self.st_dev)
 
             #allowing townspeople to use decimal points, but not more precision than that...
-            subj = round(subj, 1)
-            subj = self.max_allowed_vote if subj > self.max_allowed_vote else subj
-            subj = self.min_allowed_vote if subj < self.min_allowed_vote else subj
+            # subj = round(subj, 1)
+            # subj = self.max_allowed_vote if subj > self.max_allowed_vote else subj
+            # subj = self.min_allowed_vote if subj < self.min_allowed_vote else subj
             return subj
 

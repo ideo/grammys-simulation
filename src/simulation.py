@@ -4,17 +4,40 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
-from .townspeople import Townsperson
-from .condorcet_counting import CondorcetCounting
-from .ranked_choice_voting import RankChoiceVoting
+
+# from .townspeople import Townsperson
+# from .condorcet_counting import CondorcetCounting
+# from .ranked_choice_voting import RankChoiceVoting
+from src.townspeople import Townsperson
+from src.condorcet_counting import CondorcetCounting, Condorcet
+from src.ranked_choice_voting import RankChoiceVoting
+
+
+# Move this!
+np.random.seed(42)
+
+
+def generate_objective_scores(num_songs):
+    """
+    TKTK
+    """
+    _mean = 50
+    _std = 15
+
+    objective_scores = np.random.normal(loc=_mean, scale=_std, size=num_songs)
+    song_df = pd.DataFrame(objective_scores, columns=["Objective Ratings"])
+    song_df["ID"] = song_df.index
+    return song_df
 
 
 class Simulation:
     def __init__(
             self, guac_df, num_townspeople=200, st_dev=1.0, fullness_factor = 0.0,
-            assigned_guacs=20, perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
-            method="sum", rank_limit=None, seed=None
+            assigned_guacs=20, 
+            # perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
+            method="condorcet", rank_limit=None, seed=None
         ):
         self.guac_df = guac_df
         self.num_townspeople = num_townspeople
@@ -22,9 +45,9 @@ class Simulation:
         self.st_dev = st_dev
         self.fullness_factor = fullness_factor
         self.assigned_guacs = assigned_guacs
-        self.perc_fra = perc_fra
-        self.perc_pepe = perc_pepe
-        self.perc_carlos = perc_carlos
+        # self.perc_fra = perc_fra
+        # self.perc_pepe = perc_pepe
+        # self.perc_carlos = perc_carlos
         self.method = method.lower()
         self.rank_limit=rank_limit if self.method == "rcv" else None
         if seed:
@@ -44,9 +67,9 @@ class Simulation:
             "assigned_guacs":   self.assigned_guacs,
             "st_dev":           self.st_dev,
             "fullness_factor":  self.fullness_factor,
-            "perc_fra":         self.perc_fra,
-            "perc_pepe":        self.perc_pepe,
-            "perc_carlos":      self.perc_carlos,
+            # "perc_fra":         self.perc_fra,
+            # "perc_pepe":        self.perc_pepe,
+            # "perc_carlos":      self.perc_carlos,
             "method":           self.method,
             "rank_limit":       self.rank_limit,
             # "num_entrants":     self.guac_df.shape[0],
@@ -68,32 +91,36 @@ class Simulation:
 
         Returns: None
         """
+        print("Creating Agents")
+        # TODO: Remove these characters
         #Pepes tend to score people higher
-        if self.perc_pepe > 0:
-            num_pepes = self.num_townspeople * self.perc_pepe
-            num_pepes = int(round(num_pepes))
-            for _ in range(num_pepes):
-                self.add_agent(mean_offset=3, carlos_crony=False)
+        # if self.perc_pepe > 0:
+        #     num_pepes = self.num_townspeople * self.perc_pepe
+        #     num_pepes = int(round(num_pepes))
+        #     for _ in range(num_pepes):
+        #         self.add_agent(mean_offset=3, carlos_crony=False)
 
-        #Fras tend to score people lower
-        if self.perc_fra > 0:
-            num_fras = self.num_townspeople * self.perc_fra
-            num_fras = int(round(num_fras))
-            for _ in range(num_fras):
-                self.add_agent(mean_offset=-3, carlos_crony=False)
+        # #Fras tend to score people lower
+        # if self.perc_fra > 0:
+        #     num_fras = self.num_townspeople * self.perc_fra
+        #     num_fras = int(round(num_fras))
+        #     for _ in range(num_fras):
+        #         self.add_agent(mean_offset=-3, carlos_crony=False)
 
-        #Carlos's Cronies are colluding to vote Carlos the best
-        if self.perc_carlos > 0:
-            num_carlos = self.num_townspeople * self.perc_carlos
-            num_carlos = int(round(num_carlos))
-            for _ in range(num_carlos):
-                self.add_agent(mean_offset=0, carlos_crony=True)
+        # #Carlos's Cronies are colluding to vote Carlos the best
+        # if self.perc_carlos > 0:
+        #     num_carlos = self.num_townspeople * self.perc_carlos
+        #     num_carlos = int(round(num_carlos))
+        #     for _ in range(num_carlos):
+        #         self.add_agent(mean_offset=0, carlos_crony=True)
         
         #Reasonable townspeopole tend to score people fairly
+        # Everyone else who's not a character
         num_reasonable = self.num_townspeople - len(self.townspeople)
-        for _ in range(num_reasonable):
+        for _ in tqdm(range(num_reasonable)):
                 self.add_agent()
 
+        # TODO: Why do this separately?
         for ii, person in enumerate(self.townspeople):
             person.number = ii
 
@@ -110,8 +137,9 @@ class Simulation:
 
     def taste_and_vote(self):
         """Tabulate each voter's ballot into one dataframe"""
+        print("Voting")
         df = pd.DataFrame(list(self.guac_df.index), columns = ["ID"])
-        for person in self.townspeople:
+        for person in tqdm(self.townspeople):
             ballot = person.taste_and_vote(self.guac_df)
             df[f"Scores {person.number}"] = ballot["Subjective Ratings"]
         return df
@@ -180,53 +208,64 @@ class Simulation:
 
 
     def tally_by_condorcet_method(self):
-        #finding the mean
-        columns_to_consider = self.results_df.columns
-        # columns_to_consider.remove("sum")
-        self.results_df["Mean"] = self.results_df[columns_to_consider].mean(axis=1)
-
-        #creating the list that will contain each matrix ballot (needed for condorcet)
-        # ballots_matrix_list = []
-        
-        #filling in the ballots dataframe, for the various characters
-        # condorcet_elements = None
-        condorcet_elements, ballots_matrix_list = self.condorcet_results()
-        self.condorcet_winner = condorcet_elements.declare_winner(self.results_df, ballots_matrix_list)
-        self.condorcet_winners = condorcet_elements.winners
-        # self.condo_success = self.condorcet_winner == self.objective_winner
-        return self.condorcet_winner
-
-
-    def condorcet_results(self, ballots_matrix_list=[]):
-        """This function collects the results of a simulation on a set of people
-
-        Args:
-            num_people (int): number of town people
-            mean_offset (float): offset to apply to the objective score (we use this to account for personas)
-            ballots_matrix_sum (numpy matrix): matrix needed for the calculation of the condorcet winner
-
-        Returns:
-            condorcet counting object containing the details of the condorcet method to compute the winner
         """
-        condorcet_elements = None
+        Simplified Condorcet method that simply returns the top 10 nominees.
+        """
+        self.condorcet = Condorcet(self.results_df)
+        winner = self.condorcet.top_nominee_ids[0]
+        return winner
 
-        for person in self.townspeople:
 
-            #creating the elements to compute the condorcet winner
-            condorcet_elements = CondorcetCounting(self.guac_df, person.ballot)
-            # condorcet_elements = person.taste_and_vote(self.guac_df)
+    # def tally_by_condorcet_method(self):
+    #     #finding the mean score for each nominee
+    #     columns_to_consider = self.results_df.set_index("ID").columns
+    #     # columns_to_consider.remove("sum")
+    #     self.results_df["Mean"] = self.results_df[columns_to_consider].mean(axis=1)
 
-            #collect ballox matrices
-            ballots_matrix_list.append(condorcet_elements.ballot_matrix)
+    #     #creating the list that will contain each matrix ballot (needed for condorcet)
+    #     # ballots_matrix_list = []
+        
+    #     #filling in the ballots dataframe, for the various characters
+    #     # condorcet_elements = None
+    #     condorcet_elements, ballots_matrix_list = self.condorcet_results()
+    #     self.ballots_matrix_list = ballots_matrix_list
+    #     self.condorcet_winner = condorcet_elements.declare_winner(self.results_df, ballots_matrix_list)
+    #     self.condorcet_winners = condorcet_elements.winners
+    #     # self.condo_success = self.condorcet_winner == self.objective_winner
+    #     return self.condorcet_winner
 
-            #add the results to the results dataframe with a new column name
-            # self.results_df[f"Scores {person.number}"] = self.guac_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
 
-            if len(self.results_df[self.results_df[f"Scores {person.number}"].isnull()]) == len(self.results_df):
-                sys.exit(f"No scores recorder from person.number {person.number}. Something is wrong...") 
+    # def condorcet_results(self, ballots_matrix_list=[]):
+    #     """This function collects the results of a simulation on a set of people
+
+    #     Args:
+    #         num_people (int): number of town people
+    #         mean_offset (float): offset to apply to the objective score (we use this to account for personas)
+    #         ballots_matrix_sum (numpy matrix): matrix needed for the calculation of the condorcet winner
+
+    #     Returns:
+    #         condorcet counting object containing the details of the condorcet method to compute the winner
+    #     """
+    #     condorcet_elements = None
+
+    #     print("Tallying")
+    #     for person in tqdm(self.townspeople):
+
+    #         #creating the elements to compute the condorcet winner
+    #         condorcet_elements = CondorcetCounting(self.guac_df, person.ballot)
+    #         # condorcet_elements = person.taste_and_vote(self.guac_df)
+
+    #         #collect ballox matrices
+    #         ballots_matrix_list.append(condorcet_elements.ballot_matrix)
+
+    #         #add the results to the results dataframe with a new column name
+    #         # self.results_df[f"Scores {person.number}"] = self.guac_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
+
+    #         if len(self.results_df[self.results_df[f"Scores {person.number}"].isnull()]) == len(self.results_df):
+    #             sys.exit(f"No scores recorder from person.number {person.number}. Something is wrong...") 
             
-        #returning the last condorcet element calculated. 
-        return condorcet_elements, ballots_matrix_list
+    #     #returning the last condorcet element calculated. 
+    #     return condorcet_elements, ballots_matrix_list
 
 
     def tally_by_ranked_choice(self, N=None):

@@ -44,6 +44,14 @@ poetry run python -m unittest test.test_condorcet_method
 
 If you add a new voting method class, please also add tests to `tests/` to verify it. You can use the existing tests as templates.
 
+
+### Development Notes
+
+1. Streamlit Cloud doesn't provide away to do a `--without dev` install of dependencies when using Poetry. However, if there is a `requirements.txt` file, Streamlit Cloud will install from that first and ignore any other dependency files. The below command exports only production dependencies to a requirements file.
+    ```bash
+    poetry export --without-hashes --without dev --format=requirements.txt > requirements.txt
+    ```
+
 1. Optionally, if you would like to work with jupyter notebooks while using poetry, after running `poetry install`, run:
    ```bash
    poetry run python -m ipykernel install --user --name grammys-simulation
