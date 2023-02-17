@@ -199,7 +199,6 @@ def format_condorcet_results_chart_df(sim):
     # Assign names to top nominees
     chart_df["sum"] = chart_df.sum(axis=1)
     chart_df["Entrant"] = sim.song_df["ID"].astype(str)
-    st.write(chart_df)
     return chart_df
 
 

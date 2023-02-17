@@ -48,6 +48,7 @@ ballot_limit = col2.slider(label,
     min_value=10, 
     max_value=song_limit,
     disabled=True)
+    
 sim2 = lg.simulation_section(song_df, section_title, song_limit=song_limit)
 
 
