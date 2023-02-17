@@ -11,9 +11,9 @@ from stqdm import stqdm
 
 
 class Condorcet:
-    def __init__(self, results_df):
+    def __init__(self, results_df, n_winners=10):
         self.results_df = self.clean_results_df(results_df)
-        self.n_nominees = self.results_df.shape[0]
+        self.n_winners = n_winners
         self.pairwise_sums = self.compute_sum_of_ballot_pairwise_comparisons()
         self.top_nominee_ids, self.top_vote_counts = self.top_nominees()
 
@@ -33,7 +33,8 @@ class Condorcet:
         """
         TKTK
         """
-        pairwise_sums = np.zeros((self.n_nominees, self.n_nominees))
+        n_nominees = self.results_df.shape[0]
+        pairwise_sums = np.zeros((n_nominees, n_nominees))
         for col in stqdm(self.results_df.columns, desc="Tallying votes"):
             ballot = self.results_df[col]
             pairwise_sums += self.pairwise_comparison(ballot)
@@ -60,14 +61,15 @@ class Condorcet:
         return pairwise_comparison
 
 
-    def top_nominees(self, top_N=10):
-        if top_N > self.pairwise_sums.shape[0]:
-            top_N = self.pairwise_sums.shape[0]
+    def top_nominees(self):
+        if self.n_winners > self.pairwise_sums.shape[0]:
+            self.n_winners = self.pairwise_sums.shape[0]
 
         row_sums = self.pairwise_sums.sum(axis=1)
-        ii = np.argpartition(row_sums, -top_N)[-top_N:]
+        ii = np.argpartition(row_sums, -self.n_winners)[-self.n_winners:]
         ii = ii[np.argsort(row_sums[ii])]
         ii = np.flip(ii)
+        print(len(ii))
         return ii, row_sums[ii]
 
 

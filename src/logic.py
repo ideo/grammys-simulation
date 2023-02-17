@@ -30,7 +30,7 @@ def initialize_session_state():
         "reset_visuals":        True,
         "num_voters":           200,
         "num_songs":            100,
-        "num_nominees":         5,
+        "num_nominees":         10,
         "st_dev":               10,    #This will need to change
     }
     for key, value in initial_values.items():
@@ -141,8 +141,10 @@ def simulation_section(song_df, section_title, song_limit=None):
     A high level container for running a simulation.
     """
     num_voters = st.session_state["num_voters"]
+    num_nominees = st.session_state["num_nominees"]
     sim = Simulation(song_df, num_voters, 
-        song_limit=song_limit, 
+        song_limit=song_limit,
+        num_nominees=num_nominees,
         name=section_title)
 
     col1, col2 = st.columns([2, 5])
@@ -170,7 +172,7 @@ def initialize_empty_chart_df():
     """
     To display an empty bar chart before the simulation runs
     """
-    num_nominees = 10
+    num_nominees = st.session_state["num_nominees"]
     data = [0]*num_nominees
     chart_df = pd.DataFrame(data, columns=["sum"])
     chart_df["Entrant"] = chart_df.index
