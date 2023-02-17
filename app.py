@@ -25,8 +25,7 @@ song_df = load_or_generate_objective_scores(num_songs)
 section_title = "simulation_1"
 st.subheader("Let's Listen and Vote!")
 lg.write_story(section_title)
-lg.simulation_section(song_df, section_title)
-
+sim1 = lg.simulation_section(song_df, section_title)
 
 
 section_title = "simulation_2"
@@ -37,7 +36,10 @@ song_limit = st.slider(label,
     value=num_songs//2, 
     min_value=10, 
     max_value=num_songs)
-lg.simulation_section(song_df, section_title, song_limit=song_limit)
+sim2 = lg.simulation_section(song_df, section_title, song_limit=song_limit)
+
+
+lg.print_params([sim1, sim2])
 
 
 

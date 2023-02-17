@@ -45,7 +45,7 @@ def load_or_generate_objective_scores(num_songs):
 
 
 def generate_objective_scores(num_songs):
-    # These parameters may become variables later
+    # These parameters could become variables later, but likely not
     _mean = 50
     _std = 15
 
@@ -57,26 +57,26 @@ def generate_objective_scores(num_songs):
 
 class Simulation:
     def __init__(
-            self, song_df, num_voters, st_dev=1.0, song_limit=None, 
+            self, song_df, num_voters, st_dev=1.0, song_limit=None, name=None,
             # fullness_factor = 0.0, perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
-            method="condorcet", rank_limit=None, seed=None
+            # method="condorcet", rank_limit=None, seed=None
         ):
         self.song_df = song_df
         self.num_voters = num_voters
         self.voters = []
         self.st_dev = st_dev
-        # self.fullness_factor = fullness_factor
+        
         if song_limit:
             self.song_limit = song_limit
         else:
             self.song_limit = song_df.shape[0]
-        # self.perc_fra = perc_fra
-        # self.perc_pepe = perc_pepe
-        # self.perc_carlos = perc_carlos
-        self.method = method.lower()
-        self.rank_limit=rank_limit if self.method == "rcv" else None
-        if seed:
-            random.seed(seed)
+
+        self.name = name
+
+        # self.method = method.lower()
+        # self.rank_limit=rank_limit if self.method == "rcv" else None
+        # if seed:
+        #     random.seed(seed)
 
         # Initalizing
         self.results_df = None
@@ -88,17 +88,10 @@ class Simulation:
     @property
     def params(self):
         param_dict = {
-            "num_voters":  self.num_voters,
+            "name":         self.name,
+            "num_voters":   self.num_voters,
             "song_limit":   self.song_limit,
-            "st_dev":           self.st_dev,
-            "fullness_factor":  self.fullness_factor,
-            # "perc_fra":         self.perc_fra,
-            # "perc_pepe":        self.perc_pepe,
-            # "perc_carlos":      self.perc_carlos,
-            "method":           self.method,
-            "rank_limit":       self.rank_limit,
-            # "num_entrants":     self.song_df.shape[0],
-            # "scenario":       scenario,
+            "st_dev":       self.st_dev,
         }
         return param_dict
 
@@ -171,18 +164,32 @@ class Simulation:
 
 
     def tally_votes(self, results_df):
-        if self.method == "sum":
-            winner = self.tally_by_summing()
+        winner = self.tally_by_condorcet_method()
+        return winner
 
-        elif self.method == "condorcet":
-            winner = self.tally_by_condorcet_method()
 
-        elif self.method == "rcv":
-            winner = self.tally_by_ranked_choice(N=self.rank_limit)
+    # def tally_votes(self, results_df):
+    #     if self.method == "sum":
+    #         winner = self.tally_by_summing()
 
-        elif self.method == "fptp":
-            winner = self.tally_by_first_past_the_post(results_df)
+    #     elif self.method == "condorcet":
+    #         winner = self.tally_by_condorcet_method()
 
+    #     elif self.method == "rcv":
+    #         winner = self.tally_by_ranked_choice(N=self.rank_limit)
+
+    #     elif self.method == "fptp":
+    #         winner = self.tally_by_first_past_the_post(results_df)
+
+    #     return winner
+
+
+    def tally_by_condorcet_method(self):
+        """
+        Simplified Condorcet method that simply returns the top 10 nominees.
+        """
+        self.condorcet = Condorcet(self.results_df)
+        winner = self.condorcet.top_nominee_ids[0]
         return winner
 
 
@@ -197,48 +204,42 @@ class Simulation:
         self.success = self.winner == self.objective_winner
 
         
-    def tally_by_summing(self):
-        """This function determines the winner considering the sum.
+    # def tally_by_summing(self):
+    #     """This function determines the winner considering the sum.
 
-        Returns:
-            integer: guac ID of winner
-        """
-        #putting the results together
-        self.results_df.set_index(["ID"], inplace = True)
-        self.results_df["sum"] = self.results_df.sum(axis=1)
+    #     Returns:
+    #         integer: guac ID of winner
+    #     """
+    #     #putting the results together
+    #     self.results_df.set_index(["ID"], inplace = True)
+    #     self.results_df["sum"] = self.results_df.sum(axis=1)
         
-        #sort the scores to have the sum at the top
-        sorted_scores = self.results_df.sort_values(by="sum", ascending=False)
-        sorted_scores['ID'] = sorted_scores.index
+    #     #sort the scores to have the sum at the top
+    #     sorted_scores = self.results_df.sort_values(by="sum", ascending=False)
+    #     sorted_scores['ID'] = sorted_scores.index
 
-        #extract highest sum        
-        winning_sum = sorted_scores.iloc[0]["sum"]
+    #     #extract highest sum        
+    #     winning_sum = sorted_scores.iloc[0]["sum"]
 
-        #create a dictionary of sums - winners to catch multiple winners
-        sum_winners_dict = {}
-        for s, w in zip(sorted_scores["sum"].tolist(), sorted_scores['ID'].tolist()):
-            if s in sum_winners_dict.keys():
-                sum_winners_dict[s].append(w)
-            else:
-                sum_winners_dict[s] = [w]
+    #     #create a dictionary of sums - winners to catch multiple winners
+    #     sum_winners_dict = {}
+    #     for s, w in zip(sorted_scores["sum"].tolist(), sorted_scores['ID'].tolist()):
+    #         if s in sum_winners_dict.keys():
+    #             sum_winners_dict[s].append(w)
+    #         else:
+    #             sum_winners_dict[s] = [w]
 
-        self.sum_winners = sum_winners_dict[winning_sum]
-        self.sum_winner = self.sum_winners[0]
-        # self.sum_success = self.sum_winner == self.objective_winner
+    #     self.sum_winners = sum_winners_dict[winning_sum]
+    #     self.sum_winner = self.sum_winners[0]
+    #     # self.sum_success = self.sum_winner == self.objective_winner
 
-        if len(self.sum_winners) > 1:
-            print("\n\n\nMultiple sum winners, picking one at random...\n\n\n")
+    #     if len(self.sum_winners) > 1:
+    #         print("\n\n\nMultiple sum winners, picking one at random...\n\n\n")
 
-        return self.sum_winner
+    #     return self.sum_winner
 
 
-    def tally_by_condorcet_method(self):
-        """
-        Simplified Condorcet method that simply returns the top 10 nominees.
-        """
-        self.condorcet = Condorcet(self.results_df)
-        winner = self.condorcet.top_nominee_ids[0]
-        return winner
+
 
 
     # def tally_by_condorcet_method(self):
@@ -293,35 +294,35 @@ class Simulation:
     #     return condorcet_elements, ballots_matrix_list
 
 
-    def tally_by_ranked_choice(self, N=None):
-        """TODO: Incorporate N"""
+    # def tally_by_ranked_choice(self, N=None):
+    #     """TODO: Incorporate N"""
 
-        # I want to display their names not their IDs
-        self.results_df["Entrant"] = self.song_df["Entrant"]
-        self.results_df.set_index("Entrant", inplace=True)
-        self.results_df.drop(columns=["ID"], inplace=True)
+    #     # I want to display their names not their IDs
+    #     self.results_df["Entrant"] = self.song_df["Entrant"]
+    #     self.results_df.set_index("Entrant", inplace=True)
+    #     self.results_df.drop(columns=["ID"], inplace=True)
 
-        rcv = RankChoiceVoting(N)
-        ranks = rcv.convert_score_ballots_to_implicit_ranks(self.results_df)
-        self.rankings = rcv.tally_results(ranks)
-        self.rcv = rcv
-        return self.rankings[0][0]
+    #     rcv = RankChoiceVoting(N)
+    #     ranks = rcv.convert_score_ballots_to_implicit_ranks(self.results_df)
+    #     self.rankings = rcv.tally_results(ranks)
+    #     self.rcv = rcv
+    #     return self.rankings[0][0]
 
 
-    def tally_by_first_past_the_post(self, results_df):
-        """
-        Interpret each voter's top score as their one favorite choice. Tally
-        all these single choices with first-past-the-post.
+    # def tally_by_first_past_the_post(self, results_df):
+    #     """
+    #     Interpret each voter's top score as their one favorite choice. Tally
+    #     all these single choices with first-past-the-post.
 
-        If there is a tie, it is broken randomly simply by calling .idxmax()
-        """
-        results_df.drop(columns=["ID"], inplace=True)
-        names = self.song_df["Entrant"]
-        votes = []
+    #     If there is a tie, it is broken randomly simply by calling .idxmax()
+    #     """
+    #     results_df.drop(columns=["ID"], inplace=True)
+    #     names = self.song_df["Entrant"]
+    #     votes = []
 
-        choose_fav = lambda ballot: votes.append(names.iloc[ballot.idxmax()])
-        results_df.apply(choose_fav, axis=0)
+    #     choose_fav = lambda ballot: votes.append(names.iloc[ballot.idxmax()])
+    #     results_df.apply(choose_fav, axis=0)
 
-        tallies = [(name, count) for name, count in Counter(votes).items()]
-        self.rankings = sorted(tallies, key=lambda x: x[1], reverse=True)
-        return self.rankings[0][0]
+    #     tallies = [(name, count) for name, count in Counter(votes).items()]
+    #     self.rankings = sorted(tallies, key=lambda x: x[1], reverse=True)
+    #     return self.rankings[0][0]
