@@ -3,14 +3,14 @@ import numpy as np
 
 
 class Townsperson:
-    def __init__(self, st_dev = 1, assigned_guacs = 20, fullness_factor = 0.0, 
+    def __init__(self, st_dev = 1, song_limit = 20, fullness_factor = 0.0, 
                 person_number = None, 
                 # min_allowed_vote = 1, max_allowed_vote = 10, 
                 mean_offset = 0, carlos_crony = False):
         self.number = person_number
         self.st_dev = st_dev
         self.fullness_factor = fullness_factor
-        self.assigned_guacs = int(assigned_guacs)
+        self.song_limit = int(song_limit)
         self.mean_offset = mean_offset
         # self.min_allowed_vote = min_allowed_vote
         # self.max_allowed_vote = max_allowed_vote
@@ -31,7 +31,7 @@ class Townsperson:
         Returns:
             This agent's ballot of subjective rankings
         """
-        self.ballot = guac_df.sample(n=self.assigned_guacs, replace=False)
+        self.ballot = guac_df.sample(n=self.song_limit, replace=False)
         self.ballot["Subjective Ratings"] = self.ballot[["Objective Ratings"]].apply(
             lambda x: self.taste(x, self.ballot.index), axis=1)
         return self.ballot

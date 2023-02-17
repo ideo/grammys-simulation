@@ -9,7 +9,7 @@ import pandas as pd
 from tqdm import tqdm
 
 
-# from .townspeople import Townsperson
+# from .voters import Townsperson
 # from .condorcet_counting import CondorcetCounting
 # from .ranked_choice_voting import RankChoiceVoting
 from src.townspeople import Townsperson
@@ -57,17 +57,19 @@ def generate_objective_scores(num_songs):
 
 class Simulation:
     def __init__(
-            self, guac_df, num_townspeople=200, st_dev=1.0, fullness_factor = 0.0,
-            assigned_guacs=20, 
-            # perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
+            self, song_df, num_voters, st_dev=1.0, song_limit=None, 
+            # fullness_factor = 0.0, perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
             method="condorcet", rank_limit=None, seed=None
         ):
-        self.guac_df = guac_df
-        self.num_townspeople = num_townspeople
-        self.townspeople = []
+        self.song_df = song_df
+        self.num_voters = num_voters
+        self.voters = []
         self.st_dev = st_dev
-        self.fullness_factor = fullness_factor
-        self.assigned_guacs = assigned_guacs
+        # self.fullness_factor = fullness_factor
+        if song_limit:
+            self.song_limit = song_limit
+        else:
+            self.song_limit = song_df.shape[0]
         # self.perc_fra = perc_fra
         # self.perc_pepe = perc_pepe
         # self.perc_carlos = perc_carlos
@@ -78,7 +80,7 @@ class Simulation:
 
         # Initalizing
         self.results_df = None
-        self.objective_winner = self.guac_df["Objective Ratings"].idxmax()
+        self.objective_winner = self.song_df["Objective Ratings"].idxmax()
         self.success = False
         self.rankings = None
 
@@ -86,8 +88,8 @@ class Simulation:
     @property
     def params(self):
         param_dict = {
-            "num_townspeople":  self.num_townspeople,
-            "assigned_guacs":   self.assigned_guacs,
+            "num_voters":  self.num_voters,
+            "song_limit":   self.song_limit,
             "st_dev":           self.st_dev,
             "fullness_factor":  self.fullness_factor,
             # "perc_fra":         self.perc_fra,
@@ -95,7 +97,7 @@ class Simulation:
             # "perc_carlos":      self.perc_carlos,
             "method":           self.method,
             "rank_limit":       self.rank_limit,
-            # "num_entrants":     self.guac_df.shape[0],
+            # "num_entrants":     self.song_df.shape[0],
             # "scenario":       scenario,
         }
         return param_dict
@@ -118,52 +120,52 @@ class Simulation:
         # TODO: Remove these characters
         #Pepes tend to score people higher
         # if self.perc_pepe > 0:
-        #     num_pepes = self.num_townspeople * self.perc_pepe
+        #     num_pepes = self.num_voters * self.perc_pepe
         #     num_pepes = int(round(num_pepes))
         #     for _ in range(num_pepes):
         #         self.add_agent(mean_offset=3, carlos_crony=False)
 
         # #Fras tend to score people lower
         # if self.perc_fra > 0:
-        #     num_fras = self.num_townspeople * self.perc_fra
+        #     num_fras = self.num_voters * self.perc_fra
         #     num_fras = int(round(num_fras))
         #     for _ in range(num_fras):
         #         self.add_agent(mean_offset=-3, carlos_crony=False)
 
         # #Carlos's Cronies are colluding to vote Carlos the best
         # if self.perc_carlos > 0:
-        #     num_carlos = self.num_townspeople * self.perc_carlos
+        #     num_carlos = self.num_voters * self.perc_carlos
         #     num_carlos = int(round(num_carlos))
         #     for _ in range(num_carlos):
         #         self.add_agent(mean_offset=0, carlos_crony=True)
         
         #Reasonable townspeopole tend to score people fairly
         # Everyone else who's not a character
-        num_reasonable = self.num_townspeople - len(self.townspeople)
+        num_reasonable = self.num_voters - len(self.voters)
         for _ in tqdm(range(num_reasonable)):
                 self.add_agent()
 
         # TODO: Why do this separately?
-        for ii, person in enumerate(self.townspeople):
+        for ii, person in enumerate(self.voters):
             person.number = ii
 
 
     def add_agent(self, mean_offset=0, carlos_crony=False):
         agent = Townsperson(
             st_dev=self.st_dev, 
-            assigned_guacs=self.assigned_guacs, 
+            song_limit=self.song_limit, 
             mean_offset=mean_offset, 
             carlos_crony=carlos_crony,
             )
-        self.townspeople.append(agent)
+        self.voters.append(agent)
 
 
     def taste_and_vote(self):
         """Tabulate each voter's ballot into one dataframe"""
         print("Voting")
-        df = pd.DataFrame(list(self.guac_df.index), columns = ["ID"])
-        for person in tqdm(self.townspeople):
-            ballot = person.taste_and_vote(self.guac_df)
+        df = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
+        for person in tqdm(self.voters):
+            ballot = person.taste_and_vote(self.song_df)
             df[f"Scores {person.number}"] = ballot["Subjective Ratings"]
         return df
 
@@ -189,7 +191,7 @@ class Simulation:
         # TODO: we need consistency in how we save the winner, name or ID
         if isinstance(self.winner, str):
             # winner is a name, convert to ID
-            ind = self.guac_df[self.guac_df["Entrant"] == self.winner].index[0]
+            ind = self.song_df[self.song_df["Entrant"] == self.winner].index[0]
             self.winner = ind
 
         self.success = self.winner == self.objective_winner
@@ -272,17 +274,17 @@ class Simulation:
     #     condorcet_elements = None
 
     #     print("Tallying")
-    #     for person in tqdm(self.townspeople):
+    #     for person in tqdm(self.voters):
 
     #         #creating the elements to compute the condorcet winner
-    #         condorcet_elements = CondorcetCounting(self.guac_df, person.ballot)
-    #         # condorcet_elements = person.taste_and_vote(self.guac_df)
+    #         condorcet_elements = CondorcetCounting(self.song_df, person.ballot)
+    #         # condorcet_elements = person.taste_and_vote(self.song_df)
 
     #         #collect ballox matrices
     #         ballots_matrix_list.append(condorcet_elements.ballot_matrix)
 
     #         #add the results to the results dataframe with a new column name
-    #         # self.results_df[f"Scores {person.number}"] = self.guac_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
+    #         # self.results_df[f"Scores {person.number}"] = self.song_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
 
     #         if len(self.results_df[self.results_df[f"Scores {person.number}"].isnull()]) == len(self.results_df):
     #             sys.exit(f"No scores recorder from person.number {person.number}. Something is wrong...") 
@@ -295,7 +297,7 @@ class Simulation:
         """TODO: Incorporate N"""
 
         # I want to display their names not their IDs
-        self.results_df["Entrant"] = self.guac_df["Entrant"]
+        self.results_df["Entrant"] = self.song_df["Entrant"]
         self.results_df.set_index("Entrant", inplace=True)
         self.results_df.drop(columns=["ID"], inplace=True)
 
@@ -314,7 +316,7 @@ class Simulation:
         If there is a tie, it is broken randomly simply by calling .idxmax()
         """
         results_df.drop(columns=["ID"], inplace=True)
-        names = self.guac_df["Entrant"]
+        names = self.song_df["Entrant"]
         votes = []
 
         choose_fav = lambda ballot: votes.append(names.iloc[ballot.idxmax()])

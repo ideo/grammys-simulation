@@ -29,6 +29,18 @@ lg.simulation_section(song_df, section_title)
 
 
 
+section_title = "simulation_2"
+st.subheader("Next Section!")
+lg.write_story(section_title)
+label = "How many songs does each voter get to listen to?"
+song_limit = st.slider(label, 
+    value=num_songs//2, 
+    min_value=10, 
+    max_value=num_songs)
+lg.simulation_section(song_df, section_title, song_limit=song_limit)
+
+
+
 
 # st.subheader(section_title.replace("_", " ").title())
 

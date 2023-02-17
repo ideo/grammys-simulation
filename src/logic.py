@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 import pandas as pd
 import time
@@ -39,9 +41,12 @@ def initialize_session_state():
 
 
 def reset_visuals():
-    for key in st.session_state:
-        if "_keep_chart_visible" in key:
-            st.session_state[key] = False
+    # for key in st.session_state:
+    #     if "_keep_chart_visible" in key:
+    #         st.session_state[key] = False
+    for filename in os.listdir(DATA_DIR):
+        if "chart_df" in filename:
+            os.remove(DATA_DIR / filename)
 
 
 def write_story(section_title):
@@ -79,14 +84,16 @@ def sidebar():
         min_value=1000, 
         max_value=20000,
         step=500,
-        key="num_voters")
+        key="num_voters",
+        on_change=reset_visuals)
 
     label = "How many songs have been nominated?"
     _ = st.sidebar.slider(label,
         min_value=50, 
         max_value=15000,
         step=50,
-        key="num_songs")
+        key="num_songs",
+        on_change=reset_visuals)
 
     # st_dev = 2.0
     # fullness_factor = 1.0
@@ -111,7 +118,10 @@ def sidebar():
 def load_chart_df(key):
     filename = f"chart_df_{key}.pkl"
     filepath = DATA_DIR / filename
-    chart_df = pd.read_pickle(filepath)
+    if os.path.exists(filepath):
+        chart_df = pd.read_pickle(filepath)
+    else:
+        chart_df = initialize_empty_chart_df()
     return chart_df
 
 
@@ -121,10 +131,13 @@ def save_chart_df(chart_df, key):
     chart_df.to_pickle(filepath)
 
 
-def simulation_section(song_df, section_title):
+def simulation_section(song_df, section_title, song_limit=None):
     """
     A high level container for running a simulation.
     """
+    num_voters = st.session_state["num_voters"]
+    sim = Simulation(song_df, num_voters, song_limit=song_limit)
+
     col1, col2 = st.columns([2, 5])
 
     with col1:
@@ -133,23 +146,30 @@ def simulation_section(song_df, section_title):
         with cntr:
             start_btn = st.button("Simulate", key=section_title)
 
-    with col2:
-        pass
-
-
-def run_a_simulation(song_df, num_voters, song_limit, key):
-    """
-    Load an empty dataframe to initialize the chart. When and only when the 
-    button is clicked, run the simulation to overwrite the chart.
-    """
-
-    st_dev = st.session_state["st_dev"]
-
-    start_btn = st.button("Simulate", key=key)
-    sim = Simulation(song_df, num_voters, st_dev, assigned_guacs=song_limit)
     if start_btn:
         sim.simulate()
-    return sim
+        chart_df = format_condorcet_results_chart_df(sim)
+        save_chart_df(chart_df, section_title)
+
+    with col2:
+        chart_df = load_chart_df(section_title)
+        chart_df, spec = format_spec(chart_df, sim)
+        st.vega_lite_chart(chart_df, spec, use_container_width=True)
+
+
+# TODO
+# Generate empty chart
+# Sum all ballot columns not just winners
+
+def initialize_empty_chart_df():
+    """
+    To display an empty bar chart before the simulation runs
+    """
+    num_nominees = 10
+    data = [0]*num_nominees
+    chart_df = pd.DataFrame(data, columns=["sum"])
+    chart_df["Entrant"] = chart_df.index
+    return chart_df
 
 
 def format_condorcet_results_chart_df(sim, col_limit=None):
@@ -160,7 +180,8 @@ def format_condorcet_results_chart_df(sim, col_limit=None):
     """
     _sums = sim.condorcet.pairwise_sums
     ii = sim.condorcet.top_nominee_ids
-    chart_df = pd.DataFrame(_sums).iloc[ii, ii]
+    # chart_df = pd.DataFrame(_sums).iloc[ii, ii]
+    chart_df = pd.DataFrame(_sums).iloc[ii]
 
     # For the animation
     if col_limit:
@@ -244,7 +265,8 @@ def get_winner_image(sim, key):
         col2.image("img/badge2.png", width=100, caption="badge test.")
 
 
-def format_spec(sim, subtitle, y_max, col_limit=None):
+# def format_spec(sim, subtitle, y_max, col_limit=None):
+def format_spec(chart_df, sim):
     """Format the chart to be shown in each frame of the animation"""
 
     # if col_limit:
@@ -252,15 +274,17 @@ def format_spec(sim, subtitle, y_max, col_limit=None):
     #     chart_df["sum"] = chart_df.sum(axis=1)
     # else:
     #     chart_df = sim.results_df.copy()
-    chart_df = format_condorcet_results_chart_df(sim, col_limit=col_limit)
+    # chart_df = format_condorcet_results_chart_df(sim, col_limit=col_limit)
 
-    color_spec = None
+    # color_spec = None
     # chart_df["Entrant"] = sim.guac_df["Entrant"]
-    if col_limit is None:
-        subtitle += f"Guacamole No. {sim.winner}!"
+    # if col_limit is None:
+    #     subtitle += f"Guacamole No. {sim.winner}!"
         # chart_df = format_bar_colors(chart_df, sim.objective_winner, sim.winner)
         # color_spec = {"field": "Color", "type": "nomical", "scale": None}
 
+    y_max = chart_df["sum"].max() if chart_df["sum"].max() > 0 else 1000
+    subtitle = "Subtitle"
     spec = {
             "height":   275,
             "mark": {"type": "bar"},
@@ -270,7 +294,7 @@ def format_spec(sim, subtitle, y_max, col_limit=None):
                     "axis": {"labelAngle": 45}},
                 "y":    {
                     "field": "sum", "type": "quantitative", 
-                    "scale": {"domain": [0, y_max]},
+                    # "scale": {"domain": [0, y_max]},
                     "title": "Vote Tallies"},
                 # "color":    color_spec,
             },
