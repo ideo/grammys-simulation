@@ -31,11 +31,19 @@ sim1 = lg.simulation_section(song_df, section_title)
 section_title = "simulation_2"
 st.subheader("Next Section!")
 lg.write_story(section_title)
+
+col1, col2 = st.columns(2)
 label = "How many songs does each voter get to listen to?"
-song_limit = st.slider(label, 
+song_limit = col1.slider(label, 
     value=num_songs//2, 
     min_value=10, 
     max_value=num_songs)
+label = "How many songs does each voter get to rank.?"
+ballot_limit = col2.slider(label, 
+    value=num_songs//4, 
+    min_value=10, 
+    max_value=song_limit,
+    disabled=True)
 sim2 = lg.simulation_section(song_df, section_title, song_limit=song_limit)
 
 
