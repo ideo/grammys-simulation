@@ -1,5 +1,4 @@
 __pycache__/
 .python-version
 *.ipynb
-data/objective_scores*
-data/chart_df_*
+data/
