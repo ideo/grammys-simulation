@@ -8,7 +8,7 @@ import inflect
 # from .simulation import Simulation
 from src.story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
 from src.config import COLORS, ENTRANTS, DEMO_CONTEST
-from src.simulation import Simulation
+from src.simulation import Simulation, DATA_DIR
 
 
 import warnings
@@ -72,6 +72,7 @@ def sidebar():
     Let's put all the sidebar controls here!
     """
     st.sidebar.subheader("Simulation Parameters")
+    st.sidebar.write("We can use this sidebar to tune the simulation as we develop it. Then we'll disable this section once we're ready to hand it off to the client.")
 
     label = "How many members vote in the contest?"
     _ = st.sidebar.slider(label, 
@@ -107,15 +108,41 @@ def sidebar():
     # return num_voters, num_songs, st_dev, fullness_factor
 
 
-def generate_objective_scores(num_songs):
+def load_chart_df(key):
+    filename = f"chart_df_{key}.pkl"
+    filepath = DATA_DIR / filename
+    chart_df = pd.read_pickle(filepath)
+    return chart_df
+
+
+def save_chart_df(chart_df, key):
+    filename = f"chart_df_{key}.pkl"
+    filepath = DATA_DIR / filename
+    chart_df.to_pickle(filepath)
+
+
+def simulation_section(song_df, section_title):
     """
-    An array of randomly generated scores, ranging from 0 to 100, following a 
-    
+    A high level container for running a simulation.
     """
-    pass
+    col1, col2 = st.columns([2, 5])
+
+    with col1:
+        write_instructions(section_title)
+        _, cntr, _ = st.columns([1,5,1])
+        with cntr:
+            start_btn = st.button("Simulate", key=section_title)
+
+    with col2:
+        pass
 
 
 def run_a_simulation(song_df, num_voters, song_limit, key):
+    """
+    Load an empty dataframe to initialize the chart. When and only when the 
+    button is clicked, run the simulation to overwrite the chart.
+    """
+
     st_dev = st.session_state["st_dev"]
 
     start_btn = st.button("Simulate", key=key)
@@ -123,93 +150,6 @@ def run_a_simulation(song_df, num_voters, song_limit, key):
     if start_btn:
         sim.simulate()
     return sim
-
-
-
-# def choose_scenario(key="intro"):
-#     """
-#     The user selects a scenario, which determines the 'objective ratings' to be
-#     used in the simulation.
-#     """
-
-#     #define the structure of the entry as 2 columns
-#     col1, col2 = st.columns([2,5])
-
-#     #one column has a widget with 2 options
-#     options = list(ENTRANTS[0].keys())
-#     options.remove("ID")
-#     options.remove("Entrant")
-
-#     scenario = col1.radio(
-#         "Choose a scenario", 
-#         options=options,
-#         index=0,
-#         on_change=reset_visuals,
-#         key=key)
-#     df = get_scenario_dataframe(scenario)
-
-#     if key == "sandbox":
-#         num_guacs = col1.slider("How many contestants?",
-#             min_value=5,
-#             max_value=20,
-#             value=20,
-#             key="num_guacs")
-
-#         if num_guacs < 20:
-#             df = df.sample(n=num_guacs, random_state=42)
-#             df.sort_index(inplace=True)
-#             df = format_scenario_colors(df)
-#             df.index = list(range(df.shape[0]))
-
-#     winner = df["Objective Ratings"].idxmax()
-#     #draw the chart
-#     spec = {
-#         "height":   275,
-#         "mark": {"type": "bar"},
-#         "encoding": {
-#             "x":    {
-#                 "field": "Entrant", "type": "nominal", "sort": "ID", 
-#                 "axis": {"labelAngle": 45}
-#                 },
-#             "y":    {"field": "Objective Ratings", "type": "quantitative"},
-#             "color":    {"field": "Color", "type": "nominal", "scale": None}
-#         },
-#         "title":    {
-#             "text": scenario, 
-#             "subtitle": f"The Best Guac is Guac No. {winner}"},   
-#     }
-
-#     col2.vega_lite_chart(df, spec)
-#     return df, scenario
-
-
-# def get_scenario_dataframe(scenario):
-#     df = pd.DataFrame(data=ENTRANTS)
-#     df["Objective Ratings"] = df[scenario].copy()
-#     # winning_score = df["Objective Ratings"].max()
-#     # df["Color"] = df["Objective Ratings"].apply(
-#     #     lambda x: COLORS["green"] if x==winning_score else COLORS["blue"])
-#     df = format_scenario_colors(df)
-#     return df
-
-
-# def format_scenario_colors(df):
-#     winning_score = df["Objective Ratings"].max()
-#     df["Color"] = df["Objective Ratings"].apply(
-#         lambda x: COLORS["green"] if x==winning_score else COLORS["blue"])
-#     return df
-
-
-def animate_results(sim, key):
-    """The one function to be called in app.py"""
-    if sim.method == "sum":
-        animate_summation_results(sim, key=key)
-    elif sim.method == "condorcet":
-        animate_condorcet_simulation(sim, key=key)
-    elif sim.method == "rcv":
-        show_rcv_rankings(sim)
-    elif sim.method == "fptp":
-        show_fptp_rankings(sim.rankings, sim.num_townspeople)     
 
 
 def format_condorcet_results_chart_df(sim, col_limit=None):
@@ -232,6 +172,18 @@ def format_condorcet_results_chart_df(sim, col_limit=None):
     return chart_df
 
 
+# def animate_results(sim, key):
+#     """The one function to be called in app.py"""
+#     if sim.method == "sum":
+#         animate_summation_results(sim, key=key)
+#     elif sim.method == "condorcet":
+#         animate_condorcet_simulation(sim, key=key)
+#     elif sim.method == "rcv":
+#         show_rcv_rankings(sim)
+#     elif sim.method == "fptp":
+#         show_fptp_rankings(sim.rankings, sim.num_townspeople)     
+
+
 def animate_summation_results(sim, key):
     """
     Creates the `Simulate` button, animated chart, and success/fail message
@@ -246,6 +198,7 @@ def animate_summation_results(sim, key):
         # results_df = sim.results_df.copy()
         # results_df.drop(columns=["sum"], inplace=True)
         chart_df = format_condorcet_results_chart_df(sim)
+        st.write(chart_df)
         subtitle = "And the winner is... "
         y_max = int(chart_df["sum"].max())
         # y_max = sim.condorcet.top_vote_counts.max()

@@ -1,6 +1,8 @@
+import os
 import sys
 import random
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -11,7 +13,7 @@ from tqdm import tqdm
 # from .condorcet_counting import CondorcetCounting
 # from .ranked_choice_voting import RankChoiceVoting
 from src.townspeople import Townsperson
-from src.condorcet_counting import CondorcetCounting, Condorcet
+from src.condorcet_counting import Condorcet
 from src.ranked_choice_voting import RankChoiceVoting
 
 
@@ -19,10 +21,31 @@ from src.ranked_choice_voting import RankChoiceVoting
 np.random.seed(42)
 
 
+REPO_ROOT_DIR = Path(__file__).parent.parent
+DATA_DIR = REPO_ROOT_DIR / "data"
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_or_generate_objective_scores(num_songs):
+    """
+    In order for each simulation to see the same set of songs, we need to 
+    generate them once and save them.
+    """
+    filename = f"objective_scores_for_{num_songs}_songs.pkl"
+    filepath = DATA_DIR / filename
+
+    if os.path.exists(filepath):
+        song_df = pd.read_pickle(filepath)
+
+    else:
+        song_df = generate_objective_scores(num_songs)
+        song_df.to_pickle(filepath)
+
+    return song_df
+
+
 def generate_objective_scores(num_songs):
-    """
-    TKTK
-    """
+    # These parameters may become variables later
     _mean = 50
     _std = 15
 
