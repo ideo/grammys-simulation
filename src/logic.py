@@ -30,6 +30,7 @@ def initialize_session_state():
         "reset_visuals":        True,
         "num_voters":           200,
         "num_songs":            100,
+        "num_nominees":         5,
         "st_dev":               10,    #This will need to change
     }
     for key, value in initial_values.items():
@@ -47,8 +48,12 @@ def reset_visuals():
             os.remove(DATA_DIR / filename)
 
 
-def write_story(section_title):
+def write_story(section_title, **kwargs):
     for paragraph in STORY[section_title]:
+        for key, value in kwargs.items():
+            key, value = str(key), str(value)
+            if key in paragraph:
+                paragraph = paragraph.replace(key, value)
         st.write(paragraph)
 
 
@@ -96,6 +101,14 @@ def sidebar():
         max_value=5000,
         step=50,
         key="num_songs",
+        on_change=reset_visuals)
+
+    label = "How many nominees move to the next round?"
+    _ = st.sidebar.slider(label,
+        min_value=5, 
+        max_value=20,
+        step=1,
+        key="num_nominees",
         on_change=reset_visuals)
 
     st.sidebar.subheader("Under the Hood Variables")

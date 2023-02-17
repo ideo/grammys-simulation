@@ -14,8 +14,12 @@ st.set_page_config(
 lg.initialize_session_state()
 lg.sidebar()
 
+
+
 st.title("The Isle of Musica")
-lg.write_story("introduction")
+num_voters = st.session_state["num_voters"]
+num_songs = st.session_state["num_songs"]
+lg.write_story("introduction", num_voters=num_voters, num_songs=num_songs)
 
 
 num_songs = st.session_state["num_songs"]

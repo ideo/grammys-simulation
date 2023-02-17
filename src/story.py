@@ -13,7 +13,7 @@ STORY = {
         Anyone who believes a song they wrote within the last year is particularly special can bring a clip of it to the town plaza on an upcoming Sunday at Bangers Only O’Clock. This is when all the citizens of the Isle of Musica can gather, listen to every song entered, and vote for their favorite. Citizens are so excited to participate in this celebration of their community. Word gets around, and everyone signs up.
         """,
         """
-        That Sunday at Bangers Only O’Clock, at Bass Clef Stadium, the entire Isle of Musica– that’s 12,000 people!-- show up to participate in the search for the SONG OF THE YEAR. There were 4,000 songs nominated, and all the artists gathered in the center of the plaza. Woah, Mayor Melody thinks to herself. We’ve got a lot of people participating, and a LOT of songs to decide between. How to fairly choose just one?? 
+        That Sunday at Bangers Only O’Clock, at Bass Clef Stadium, the entire Isle of Musica– that’s num_voters people!-- show up to participate in the search for the SONG OF THE YEAR. There were num_songs songs nominated, and all the artists gathered in the center of the plaza. Woah, Mayor Melody thinks to herself. We’ve got a lot of people participating, and a LOT of songs to decide between. How to fairly choose just one?? 
         """,
     ],
 
