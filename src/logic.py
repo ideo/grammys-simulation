@@ -3,7 +3,7 @@ import os
 import streamlit as st
 import pandas as pd
 import time
-import inflect
+# import inflect
 
 # from .story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
 # from .config import COLORS, ENTRANTS, DEMO_CONTEST
@@ -17,7 +17,7 @@ import warnings
 # warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.filterwarnings('ignore')
 
-p = inflect.engine()
+# p = inflect.engine()
 
 
 def initialize_session_state():
@@ -84,16 +84,16 @@ def sidebar():
     st.sidebar.subheader("Reader Visible Variables")
     label = "How many members vote in the contest?"
     _ = st.sidebar.slider(label, 
-        min_value=1000, 
-        max_value=20000,
-        step=500,
+        min_value=100, 
+        max_value=3000,
+        step=100,
         key="num_voters",
         on_change=reset_visuals)
 
     label = "How many songs have been nominated?"
     _ = st.sidebar.slider(label,
         min_value=50, 
-        max_value=15000,
+        max_value=5000,
         step=50,
         key="num_songs",
         on_change=reset_visuals)
