@@ -30,7 +30,7 @@ def initialize_session_state():
         "reset_visuals":        True,
         "num_voters":           200,
         "num_songs":            100,
-        "num_nominees":         10,
+        "num_winners":         10,
         "st_dev":               10,    #This will need to change
     }
     for key, value in initial_values.items():
@@ -103,12 +103,12 @@ def sidebar():
         key="num_songs",
         on_change=reset_visuals)
 
-    label = "How many nominees move to the next round?"
+    label = "How many winning songs are declared?"
     _ = st.sidebar.slider(label,
         min_value=5, 
         max_value=20,
         step=1,
-        key="num_nominees",
+        key="num_winners",
         on_change=reset_visuals)
 
     st.sidebar.subheader("Under the Hood Variables")
@@ -136,15 +136,21 @@ def save_chart_df(chart_df, key):
     chart_df.to_pickle(filepath)
 
 
+# def delete_chart_df(key):
+#     filename = f"chart_df_{key}.pkl"
+#     filepath = DATA_DIR / filename
+#     os.remove(filepath)
+    
+
 def simulation_section(song_df, section_title, song_limit=None):
     """
     A high level container for running a simulation.
     """
     num_voters = st.session_state["num_voters"]
-    num_nominees = st.session_state["num_nominees"]
+    num_winners = st.session_state["num_winners"]
     sim = Simulation(song_df, num_voters, 
         song_limit=song_limit,
-        num_nominees=num_nominees,
+        num_winners=num_winners,
         name=section_title)
 
     col1, col2 = st.columns([2, 5])
@@ -156,6 +162,7 @@ def simulation_section(song_df, section_title, song_limit=None):
             start_btn = st.button("Simulate", key=section_title)
 
     if start_btn:
+        # delete_chart_df(section_title)
         sim.simulate()
         chart_df = format_condorcet_results_chart_df(sim)
         save_chart_df(chart_df, section_title)
@@ -172,8 +179,8 @@ def initialize_empty_chart_df():
     """
     To display an empty bar chart before the simulation runs
     """
-    num_nominees = st.session_state["num_nominees"]
-    data = [0]*num_nominees
+    num_winners = st.session_state["num_winners"]
+    data = [0]*num_winners
     chart_df = pd.DataFrame(data, columns=["sum"])
     chart_df["Entrant"] = chart_df.index
     return chart_df
@@ -191,7 +198,8 @@ def format_condorcet_results_chart_df(sim):
 
     # Assign names to top nominees
     chart_df["sum"] = chart_df.sum(axis=1)
-    chart_df["Entrant"] = sim.song_df["ID"]
+    chart_df["Entrant"] = sim.song_df["ID"].astype(str)
+    st.write(chart_df)
     return chart_df
 
 

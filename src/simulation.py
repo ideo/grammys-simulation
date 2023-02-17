@@ -71,7 +71,7 @@ def generate_objective_scores(num_songs):
 class Simulation:
     def __init__(
             self, song_df, num_voters, st_dev=1.0, song_limit=None, name=None,
-            num_nominees=10,
+            num_winners=10,
             # fullness_factor = 0.0, perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
             # method="condorcet", rank_limit=None, seed=None
         ):
@@ -86,7 +86,7 @@ class Simulation:
             self.song_limit = song_df.shape[0]
 
         self.name = name
-        self.num_nominees = num_nominees
+        self.num_winners = num_winners
 
         # self.method = method.lower()
         # self.rank_limit=rank_limit if self.method == "rcv" else None
@@ -202,7 +202,7 @@ class Simulation:
         """
         Simplified Condorcet method that simply returns the top 10 nominees.
         """
-        self.condorcet = Condorcet(self.results_df, self.num_nominees)
+        self.condorcet = Condorcet(self.results_df, self.num_winners)
         winner = self.condorcet.top_nominee_ids[0]
         return winner
 
