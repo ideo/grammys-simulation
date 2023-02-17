@@ -164,7 +164,7 @@ def initialize_empty_chart_df():
     return chart_df
 
 
-def format_condorcet_results_chart_df(sim, col_limit=None):
+def format_condorcet_results_chart_df(sim):
     """
     Take the pariwise sums from the condorcet results and return a dataframe
     that matches the input that we had previously fed the tally by sums chart
@@ -172,16 +172,11 @@ def format_condorcet_results_chart_df(sim, col_limit=None):
     """
     _sums = sim.condorcet.pairwise_sums
     ii = sim.condorcet.top_nominee_ids
-    # chart_df = pd.DataFrame(_sums).iloc[ii, ii]
     chart_df = pd.DataFrame(_sums).iloc[ii]
-
-    # For the animation
-    if col_limit:
-        chart_df = chart_df.iloc[:, :col_limit].copy()
 
     # Assign names to top nominees
     chart_df["sum"] = chart_df.sum(axis=1)
-    chart_df["Entrant"] = chart_df.index
+    chart_df["Entrant"] = sim.song_df["ID"]
     return chart_df
 
 
@@ -279,29 +274,16 @@ def print_params(simulations):
 def format_spec(chart_df, sim):
     """Format the chart to be shown in each frame of the animation"""
 
-    # if col_limit:
-    #     chart_df = sim.results_df.iloc[:, :col_limit].copy()
-    #     chart_df["sum"] = chart_df.sum(axis=1)
-    # else:
-    #     chart_df = sim.results_df.copy()
-    # chart_df = format_condorcet_results_chart_df(sim, col_limit=col_limit)
-
-    # color_spec = None
-    # chart_df["Entrant"] = sim.guac_df["Entrant"]
-    # if col_limit is None:
-    #     subtitle += f"Guacamole No. {sim.winner}!"
-        # chart_df = format_bar_colors(chart_df, sim.objective_winner, sim.winner)
-        # color_spec = {"field": "Color", "type": "nomical", "scale": None}
-
-    y_max = chart_df["sum"].max() if chart_df["sum"].max() > 0 else 1000
-    subtitle = "Subtitle"
+    # subtitle = "Subtitle"
     spec = {
             "height":   275,
             "mark": {"type": "bar"},
             "encoding": {
                 "x":    {
-                    "field": "Entrant", "type": "nominal", "sort": "ID",
-                    "axis": {"labelAngle": 45}},
+                    "field": "Entrant", 
+                    "type": "nominal", 
+                    # "sort": "ID",
+                    "axis": {"labelAngle": -45}},
                 "y":    {
                     "field": "sum", "type": "quantitative", 
                     # "scale": {"domain": [0, y_max]},
@@ -310,7 +292,7 @@ def format_spec(chart_df, sim):
             },
             "title":    {
                 "text": f"Simulation Results",
-                "subtitle": subtitle, 
+                # "subtitle": subtitle, 
             }  
         }
     return chart_df, spec

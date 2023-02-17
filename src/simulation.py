@@ -3,10 +3,11 @@ import sys
 import random
 from collections import Counter
 from pathlib import Path
+from random import shuffle
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
+from stqdm import stqdm
 
 
 # from .voters import Townsperson
@@ -51,7 +52,19 @@ def generate_objective_scores(num_songs):
 
     objective_scores = np.random.normal(loc=_mean, scale=_std, size=num_songs)
     song_df = pd.DataFrame(objective_scores, columns=["Objective Ratings"])
+    
+    # Bring in fun names for top songs.
+    song_df = song_df.sort_values(by="Objective Ratings", ascending=False).reset_index()
     song_df["ID"] = song_df.index
+    song_df.drop(columns="index", inplace=True)
+
+    filename = "Grammys-Simuation_Song-Names - Sheet1.csv"
+    fictional_names = pd.read_csv(DATA_DIR / filename)
+    fictional_names = fictional_names["Song Name by Artist"].values
+    shuffle(fictional_names)
+    for ii, song_name in enumerate(fictional_names):
+        song_df["ID"].iloc[ii] = song_name
+
     return song_df
 
 
@@ -135,7 +148,7 @@ class Simulation:
         #Reasonable townspeopole tend to score people fairly
         # Everyone else who's not a character
         num_reasonable = self.num_voters - len(self.voters)
-        for _ in tqdm(range(num_reasonable)):
+        for _ in range(num_reasonable):
                 self.add_agent()
 
         # TODO: Why do this separately?
@@ -155,9 +168,8 @@ class Simulation:
 
     def taste_and_vote(self):
         """Tabulate each voter's ballot into one dataframe"""
-        print("Voting")
         df = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
-        for person in tqdm(self.voters):
+        for person in stqdm(self.voters, desc="Voting"):
             ballot = person.taste_and_vote(self.song_df)
             df[f"Scores {person.number}"] = ballot["Subjective Ratings"]
         return df
@@ -275,9 +287,10 @@ class Simulation:
     #     condorcet_elements = None
 
     #     print("Tallying")
-    #     for person in tqdm(self.voters):
+    #     for person in stqdm(self.voters):
 
-    #         #creating the elements to compute the condorcet winner
+    #         #creating the el
+    # ements to compute the condorcet winner
     #         condorcet_elements = CondorcetCounting(self.song_df, person.ballot)
     #         # condorcet_elements = person.taste_and_vote(self.song_df)
 

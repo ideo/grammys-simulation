@@ -7,7 +7,7 @@ from unittest import runner
 import numpy as np
 import pandas as pd
 import sys
-from tqdm import tqdm
+from stqdm import stqdm
 
 
 class Condorcet:
@@ -34,8 +34,7 @@ class Condorcet:
         TKTK
         """
         pairwise_sums = np.zeros((self.n_nominees, self.n_nominees))
-        print("Tallying")
-        for col in tqdm(self.results_df.columns):
+        for col in stqdm(self.results_df.columns, desc="Tallying votes"):
             ballot = self.results_df[col]
             pairwise_sums += self.pairwise_comparison(ballot)
         return pairwise_sums
