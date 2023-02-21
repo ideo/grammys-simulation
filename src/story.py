@@ -51,15 +51,15 @@ STORY = {
 
 INSTRUCTIONS = {
     "simulation_1": [
-        "Here are some instructions TKTKTKTKT."
+        "This first contest sets the baseline that we can compare against in subsequent contests. Each voter listens and votes on every single song."
     ],
 
     "simulation_2": [
-        "Here are some instructions TKTKTKTKT."
+        "In our second contest, voters only listen to a random sample of nominated songs. They then submit a ballot ranking their top choices from that sample."
     ],
 
      "simulation_3": [
-        "Here are some more instructions TKTKTKTKT."
+        "In our third contest, slsls."
     ],
 }
 
