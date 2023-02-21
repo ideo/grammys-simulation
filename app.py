@@ -96,7 +96,7 @@ mafia_size = col2.slider(label,
     max_value=max_mafia_size,
     step=5)
     
-st.note("Hi Christina. Still working on corrupting the votes, but here's the widgets!")
+st.text("Hi Christina. Still working on corrupting the votes, but here's the widgets!")
 sim3, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit, ballot_limit=ballot_limit,
     theoretical_results=theoretical_results,
