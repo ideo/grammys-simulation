@@ -58,7 +58,7 @@ def generate_objective_scores(num_songs):
     song_df["ID"] = song_df.index
     song_df.drop(columns="index", inplace=True)
 
-    filename = "Grammys-Simuation_Song-Names - Sheet1.csv"
+    filename = "Grammys-Simuation_Song-Names - Top Scoring Songs.csv"
     fictional_names = pd.read_csv(DATA_DIR / filename)
     fictional_names = fictional_names["Song Name by Artist"].values
     shuffle(fictional_names)
@@ -72,7 +72,8 @@ class Simulation:
     def __init__(
             self, song_df, num_voters, st_dev=1.0, 
             listen_limit=None, ballot_limit=None, num_winners=10, 
-            name=None, 
+            num_mafiosos=None, mafia_size=None,
+            name=None,  
         ):
         self.song_df = song_df
         self.num_voters = num_voters
@@ -84,8 +85,10 @@ class Simulation:
             self.listen_limit = song_df.shape[0]
         
         self.ballot_limit = ballot_limit
-        self.name = name
         self.num_winners = num_winners
+        self.num_mafiosos = num_mafiosos
+        self.mafia_size = mafia_size
+        self.name = name
 
         # Initalizing
         self.ballots = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
@@ -141,6 +144,21 @@ class Simulation:
             # self.ballots is initialized in __init__
 
         return self.ballots
+
+
+    def corrupt_ballots(self):
+        """TKTK"""      
+        # App input limits ensure that at most this will be equal to num_voters
+        len_sample = int(self.num_mafiosos * self.mafia_size)
+
+        corrupt_voters = self.song_df.sample(n=len_sample, replace=False)
+
+        percentile = 0.70
+        percentile_ranks = self.song_df["Objective Ratings"].rank(pct=True)
+        for _ in range(self.num_mafiosos):
+            ii = self.song_df[percentile_ranks == percentile]
+
+
 
 
     def tally_votes(self, ballots):

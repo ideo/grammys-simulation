@@ -2,14 +2,14 @@ import os
 
 import streamlit as st
 import pandas as pd
-import time
+# import time
 # import inflect
 
 # from .story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
 # from .config import COLORS, ENTRANTS, DEMO_CONTEST
 # from .simulation import Simulation
-from src.story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
-from src.config import COLORS, ENTRANTS, DEMO_CONTEST
+from src.story import STORY, INSTRUCTIONS#, SUCCESS_MESSAGES
+from src.config import COLORS#, ENTRANTS, DEMO_CONTEST
 from src.simulation import Simulation, DATA_DIR
 
 
@@ -32,6 +32,7 @@ def initialize_session_state():
         "num_songs":            100,
         "num_winners":         10,
         "st_dev":               10,    #This will need to change
+        # "theoretical_exists":   False,
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
@@ -65,14 +66,14 @@ def write_instructions(section_title, st_col=None):
             st.caption(paragraph)
 
 
-def success_message(section_key, success, guac_limit=None, name=None, percent=None):
-    for paragraph in SUCCESS_MESSAGES[section_key][success]:
-        if guac_limit is not None:
-            st.caption(paragraph.replace("GUAC_LIMIT", str(guac_limit)).replace("MISSING_GUACS", str(20-guac_limit)))
-        if name is not None:
-            st.caption(paragraph.replace("NAME", name).replace("PERCENT", percent))
-        else:
-            st.caption(paragraph)
+# def success_message(section_key, success, guac_limit=None, name=None, percent=None):
+#     for paragraph in SUCCESS_MESSAGES[section_key][success]:
+#         if guac_limit is not None:
+#             st.caption(paragraph.replace("GUAC_LIMIT", str(guac_limit)).replace("MISSING_GUACS", str(20-guac_limit)))
+#         if name is not None:
+#             st.caption(paragraph.replace("NAME", name).replace("PERCENT", percent))
+#         else:
+#             st.caption(paragraph)
 
 
 def sidebar():
@@ -144,7 +145,8 @@ def save_chart_df(chart_df, key):
 
 def simulation_section(song_df, section_title, 
         listen_limit=None, ballot_limit=None,
-        theoretical_results=None):
+        theoretical_results=None,
+        num_mafiosos=None, mafia_size=None):
     """
     A high level container for running a simulation.
     """
@@ -154,7 +156,9 @@ def simulation_section(song_df, section_title,
         listen_limit=listen_limit,
         ballot_limit=ballot_limit,
         num_winners=num_winners,
-        name=section_title)
+        name=section_title,
+        num_mafiosos=num_mafiosos, 
+        mafia_size=mafia_size)
 
     col1, col2 = st.columns([2, 5])
 
@@ -243,6 +247,7 @@ def format_spec(chart_df, sim):
     else:
         color_spec = None
 
+    # TODO: Subtitle could display simulation settings.
     subtitle = "How Many Votes Cast for the Highest Scoring Songs"
     spec = {
             # "height":   275,

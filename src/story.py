@@ -29,7 +29,17 @@ STORY = {
 
     "simulation_2": [
         """
-        TKTK        
+        Randomness is cool, man.        
+        """,
+        """
+        """,
+        """
+        """,
+    ],
+
+    "simulation_3": [
+        """
+        It's the Illunimati.        
         """,
         """
         """,
@@ -47,63 +57,67 @@ INSTRUCTIONS = {
     "simulation_2": [
         "Here are some instructions TKTKTKTKT."
     ],
+
+     "simulation_3": [
+        "Here are some more instructions TKTKTKTKT."
+    ],
 }
 
 
-SUCCESS_MESSAGES = {
-    "simulation_1": {
-        True:  [
-            "Success! Even though people had so many guacs to try, and probably became quite full by the end, having everyone taste in random orders ensured the contest still had a fair result.",
-            ],
-        False:  [
-            "Oh no! The contest didn't reach a fair conclusion. That's not supposed to happen!"
-        ]
-    },
+# SUCCESS_MESSAGES = {
+#     "simulation_1": {
+#         True:  [
+#             "Success! Even though people had so many guacs to try, and probably became quite full by the end, having everyone taste in random orders ensured the contest still had a fair result.",
+#             ],
+#         False:  [
+#             "Oh no! The contest didn't reach a fair conclusion. That's not supposed to happen!"
+#         ]
+#     },
 
-    "simulation_2": {
-        True:   [
-            "Success! Even though the tasters missed out on trying MISSING_GUACS guacs each, we had enough participants that we still reached a fair result.",
-            "Try again! Can we push that number even lower than GUAC_LIMIT still get a fair result?"
-        ],
-        False:  [
-            "Oh no! Looks like missing out on trying MISSING_GUACS guacs each was too many to skip. Perhaps if we had more tasters we could've compensated."
-        ]
-    },
+#     "simulation_2": {
+#         True:   [
+#             "Success! Even though the tasters missed out on trying MISSING_GUACS guacs each, we had enough participants that we still reached a fair result.",
+#             "Try again! Can we push that number even lower than GUAC_LIMIT still get a fair result?"
+#         ],
+#         False:  [
+#             "Oh no! Looks like missing out on trying MISSING_GUACS guacs each was too many to skip. Perhaps if we had more tasters we could've compensated."
+#         ]
+#     },
 
-    "simulation_3": {
-        True:  [
-            "Success!",
-            ],
-        False:  [
-            "Oh no!"
-        ]
-    },
+#     "simulation_3": {
+#         True:  [
+#             "Success!",
+#             ],
+#         False:  [
+#             "Oh no!"
+#         ]
+#     },
 
-    "100_times": {
-        True:   [
-            "Across 100 simulations, NAME still took home the trophy more than anyone else, winning PERCENT of the contents. Take a look at who else took home the trophy at times and whether or not their guacamole deserved the win.",
-        ],
-        False:  [
-            "Across 100 simulations, NAME took home the trophy more than anyone else, but they did so less than half the time. In PERCENT of our contents, someone other than whom you decided had the best guacamole took home the win. Take a look at who they were and if they deserved it.",
-        ],
-    },
+#     "100_times": {
+#         True:   [
+#             "Across 100 simulations, NAME still took home the trophy more than anyone else, winning PERCENT of the contents. Take a look at who else took home the trophy at times and whether or not their guacamole deserved the win.",
+#         ],
+#         False:  [
+#             "Across 100 simulations, NAME took home the trophy more than anyone else, but they did so less than half the time. In PERCENT of our contents, someone other than whom you decided had the best guacamole took home the win. Take a look at who they were and if they deserved it.",
+#         ],
+#     },
 
-    "condorcet": {
-        True:  [
-            "Success!",
-            ],
-        False:  [
-            "Oh no!"
-        ]
-    },
+#     "condorcet": {
+#         True:  [
+#             "Success!",
+#             ],
+#         False:  [
+#             "Oh no!"
+#         ]
+#     },
 
-    "sandbox": {
-        True:  [
-            "Success!",
-            ],
-        False:  [
-            "Oh no!"
-        ]
-    },
+#     "sandbox": {
+#         True:  [
+#             "Success!",
+#             ],
+#         False:  [
+#             "Oh no!"
+#         ]
+#     },
     
-}
+# }
