@@ -110,8 +110,11 @@ class Simulation:
 
     def simulate(self):
         """TODO: For unittests, we can update this to have inputs and outputs"""
-        self.ballots = self.cast_ballots()
-        self.winner = self.tally_votes(self.ballots)
+        self.cast_ballots()
+        if self.num_mafiosos:
+            self.non_corrupt_ballots = self.ballots.copy()
+            self.corrupt_ballots()
+        self.winner = self.tally_votes()
         self.record_outcome()      
 
 
@@ -140,28 +143,43 @@ class Simulation:
             # to that here.
             if self.ballot_limit is not None:
                 bllt = bllt.sort_values(ascending=False).head(self.ballot_limit)
-            self.ballots[f"Scores {ii}"] = bllt
+            # self.ballots[f"Scores {ii}"] = bllt
+            self.ballots[ii] = bllt
             # self.ballots is initialized in __init__
 
-        return self.ballots
+        # return self.ballots
 
 
     def corrupt_ballots(self):
         """TKTK"""      
-        # App input limits ensure that at most this will be equal to num_voters
-        len_sample = int(self.num_mafiosos * self.mafia_size)
+        high_score = self.ballots.max().max()
 
-        corrupt_voters = self.song_df.sample(n=len_sample, replace=False)
-
-        percentile = 0.70
+        percentile = 66
         percentile_ranks = self.song_df["Objective Ratings"].rank(pct=True)
-        for _ in range(self.num_mafiosos):
-            ii = self.song_df[percentile_ranks == percentile]
+        for ii_boss in range(self.num_mafiosos):
+            # Which song
+            ii_song = self.song_df[percentile_ranks == percentile/100].index[0]
+
+            # Which voters
+            voter_start = int(ii_boss*self.mafia_size)
+            voter_stop = int((ii_boss+1)*self.mafia_size)
+            corrupt_voter_ids = range(voter_start, voter_stop)
+            voter_columns = [col for col in self.ballots.columns if col in corrupt_voter_ids]
+
+            # Change votes
+            # By converting it to a boolean first, I only increate score values
+            # if they were already non-null, i.e. votes were already cast
+            vote_cast = self.ballots.loc[ii_song, voter_columns].apply(
+                lambda x: int(~np.isnan(x))
+            )
+            voter_columns = tuple(voter_columns)
+            self.ballots.at[ii_song, voter_columns] = vote_cast * high_score
+
+            # Set Next Song
+            percentile -= 2
 
 
-
-
-    def tally_votes(self, ballots):
+    def tally_votes(self):
         winner = self.tally_by_condorcet_method()
         return winner
 

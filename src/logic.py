@@ -218,13 +218,13 @@ def print_params(simulations):
     # st.text("Parameter Summary:")
     with st.expander("Parameter Summaries", expanded=False):
         for sim in simulations:
-            tab_width = 6
+            tab_width = 8
             msg = "{\n"
-            for k, v in sim.params.items():
-                v = f"'{v}'" if isinstance(v, str) else v
-                num_tabs = 3 - len(k)//tab_width
+            for key, value in sim.params.items():
+                value = f"'{value}'" if isinstance(value, str) else value
+                num_tabs = 3 - (len(key)+1)//tab_width
                 tabs = "\t"*num_tabs
-                msg += f"\t'{k}':{tabs}{v},\n"
+                msg += f"\t'{key}':{tabs}{value},\n"
             msg += "}"
             st.code(msg)
 
