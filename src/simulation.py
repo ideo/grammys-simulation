@@ -70,31 +70,25 @@ def generate_objective_scores(num_songs):
 
 class Simulation:
     def __init__(
-            self, song_df, num_voters, st_dev=1.0, song_limit=None, name=None,
-            num_winners=10,
-            # fullness_factor = 0.0, perc_fra=0.0, perc_pepe=0.0, perc_carlos=0.0,
-            # method="condorcet", rank_limit=None, seed=None
+            self, song_df, num_voters, st_dev=1.0, 
+            listen_limit=None, ballot_limit=None, num_winners=10, 
+            name=None, 
         ):
         self.song_df = song_df
         self.num_voters = num_voters
-        self.voters = []
         self.st_dev = st_dev
         
-        if song_limit:
-            self.song_limit = song_limit
+        if listen_limit:
+            self.listen_limit = listen_limit
         else:
-            self.song_limit = song_df.shape[0]
-
+            self.listen_limit = song_df.shape[0]
+        
+        self.ballot_limit = ballot_limit
         self.name = name
         self.num_winners = num_winners
 
-        # self.method = method.lower()
-        # self.rank_limit=rank_limit if self.method == "rcv" else None
-        # if seed:
-        #     random.seed(seed)
-
         # Initalizing
-        self.results_df = None
+        self.ballots = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
         self.objective_winner = self.song_df["Objective Ratings"].idxmax()
         self.success = False
         self.rankings = None
@@ -105,7 +99,7 @@ class Simulation:
         param_dict = {
             "name":         self.name,
             "num_voters":   self.num_voters,
-            "song_limit":   self.song_limit,
+            "listen_limit":   self.listen_limit,
             "st_dev":       self.st_dev,
         }
         return param_dict
@@ -113,96 +107,52 @@ class Simulation:
 
     def simulate(self):
         """TODO: For unittests, we can update this to have inputs and outputs"""
-        self.create_agents()
-        self.results_df = self.taste_and_vote()
-        self.winner = self.tally_votes(self.results_df)
+        self.ballots = self.cast_ballots()
+        self.winner = self.tally_votes(self.ballots)
         self.record_outcome()      
-        
 
-    def create_agents(self):
-        """Create the agents to be used in the simulation
 
-        Returns: None
+    def cast_ballots(self):
         """
-        print("Creating Agents")
-        # TODO: Remove these characters
-        #Pepes tend to score people higher
-        # if self.perc_pepe > 0:
-        #     num_pepes = self.num_voters * self.perc_pepe
-        #     num_pepes = int(round(num_pepes))
-        #     for _ in range(num_pepes):
-        #         self.add_agent(mean_offset=3, carlos_crony=False)
+        Here each voter "listens" to each song and returns a ballot ranking
+        every song in their listen_limit. 
 
-        # #Fras tend to score people lower
-        # if self.perc_fra > 0:
-        #     num_fras = self.num_voters * self.perc_fra
-        #     num_fras = int(round(num_fras))
-        #     for _ in range(num_fras):
-        #         self.add_agent(mean_offset=-3, carlos_crony=False)
+        The listen_limit is how many songs a voter gets to listen to, the size 
+        of the random sample. The ballot_limit is how many songs they rank, the 
+        top N songs our of the ones they listened to.
 
-        # #Carlos's Cronies are colluding to vote Carlos the best
-        # if self.perc_carlos > 0:
-        #     num_carlos = self.num_voters * self.perc_carlos
-        #     num_carlos = int(round(num_carlos))
-        #     for _ in range(num_carlos):
-        #         self.add_agent(mean_offset=0, carlos_crony=True)
-        
-        #Reasonable townspeopole tend to score people fairly
-        # Everyone else who's not a character
-        num_reasonable = self.num_voters - len(self.voters)
-        for _ in range(num_reasonable):
-                self.add_agent()
+        This process was originally done by creating independent agents that
+        each cast a vote. Once the simulation was simplified that process
+        proved unnecessary.
 
-        # TODO: Why do this separately?
-        for ii, person in enumerate(self.voters):
-            person.number = ii
+        The objective scores are already sorted, so when enforcing a ballot
+        limit, only the beginning rows of the dataframe will have results.
+        """
+        listen_and_vote = lambda score: np.random.normal(score, self.st_dev)
+
+        for ii in stqdm(range(self.num_voters), desc="Voting"):
+            song_sample = self.song_df.sample(n=self.listen_limit, replace=False)
+            bllt = song_sample["Objective Ratings"].apply(listen_and_vote)
+            # if recording the number of listens each song gets, we need to
+            # to that here.
+            if self.ballot_limit is not None:
+                bllt = bllt.sort_values(ascending=False).head(self.ballot_limit)
+            self.ballots[f"Scores {ii}"] = bllt
+            # self.ballots is initialized in __init__
+
+        return self.ballots
 
 
-    def add_agent(self, mean_offset=0, carlos_crony=False):
-        agent = Townsperson(
-            st_dev=self.st_dev, 
-            song_limit=self.song_limit, 
-            mean_offset=mean_offset, 
-            carlos_crony=carlos_crony,
-            )
-        self.voters.append(agent)
-
-
-    def taste_and_vote(self):
-        """Tabulate each voter's ballot into one dataframe"""
-        df = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
-        for person in stqdm(self.voters, desc="Voting"):
-            ballot = person.taste_and_vote(self.song_df)
-            df[f"Scores {person.number}"] = ballot["Subjective Ratings"]
-        return df
-
-
-    def tally_votes(self, results_df):
+    def tally_votes(self, ballots):
         winner = self.tally_by_condorcet_method()
         return winner
-
-
-    # def tally_votes(self, results_df):
-    #     if self.method == "sum":
-    #         winner = self.tally_by_summing()
-
-    #     elif self.method == "condorcet":
-    #         winner = self.tally_by_condorcet_method()
-
-    #     elif self.method == "rcv":
-    #         winner = self.tally_by_ranked_choice(N=self.rank_limit)
-
-    #     elif self.method == "fptp":
-    #         winner = self.tally_by_first_past_the_post(results_df)
-
-    #     return winner
 
 
     def tally_by_condorcet_method(self):
         """
         Simplified Condorcet method that simply returns the top 10 nominees.
         """
-        self.condorcet = Condorcet(self.results_df, self.num_winners)
+        self.condorcet = Condorcet(self.ballots, self.num_winners)
         winner = self.condorcet.top_nominee_ids[0]
         return winner
 
@@ -217,6 +167,26 @@ class Simulation:
 
         self.success = self.winner == self.objective_winner
 
+
+# The previous simulation was set up to incorporate multiple tallying 
+# techniques. Leaving this code commented out here to preserve that intent, 
+# since it may very well come back.
+
+    # def tally_votes(self, ballots):
+    #     if self.method == "sum":
+    #         winner = self.tally_by_summing()
+
+    #     elif self.method == "condorcet":
+    #         winner = self.tally_by_condorcet_method()
+
+    #     elif self.method == "rcv":
+    #         winner = self.tally_by_ranked_choice(N=self.rank_limit)
+
+    #     elif self.method == "fptp":
+    #         winner = self.tally_by_first_past_the_post(ballots)
+
+    #     return winner
+
         
     # def tally_by_summing(self):
     #     """This function determines the winner considering the sum.
@@ -225,11 +195,11 @@ class Simulation:
     #         integer: guac ID of winner
     #     """
     #     #putting the results together
-    #     self.results_df.set_index(["ID"], inplace = True)
-    #     self.results_df["sum"] = self.results_df.sum(axis=1)
+    #     self.ballots.set_index(["ID"], inplace = True)
+    #     self.ballots["sum"] = self.ballots.sum(axis=1)
         
     #     #sort the scores to have the sum at the top
-    #     sorted_scores = self.results_df.sort_values(by="sum", ascending=False)
+    #     sorted_scores = self.ballots.sort_values(by="sum", ascending=False)
     #     sorted_scores['ID'] = sorted_scores.index
 
     #     #extract highest sum        
@@ -253,14 +223,11 @@ class Simulation:
     #     return self.sum_winner
 
 
-
-
-
     # def tally_by_condorcet_method(self):
     #     #finding the mean score for each nominee
-    #     columns_to_consider = self.results_df.set_index("ID").columns
+    #     columns_to_consider = self.ballots.set_index("ID").columns
     #     # columns_to_consider.remove("sum")
-    #     self.results_df["Mean"] = self.results_df[columns_to_consider].mean(axis=1)
+    #     self.ballots["Mean"] = self.ballots[columns_to_consider].mean(axis=1)
 
     #     #creating the list that will contain each matrix ballot (needed for condorcet)
     #     # ballots_matrix_list = []
@@ -269,7 +236,7 @@ class Simulation:
     #     # condorcet_elements = None
     #     condorcet_elements, ballots_matrix_list = self.condorcet_results()
     #     self.ballots_matrix_list = ballots_matrix_list
-    #     self.condorcet_winner = condorcet_elements.declare_winner(self.results_df, ballots_matrix_list)
+    #     self.condorcet_winner = condorcet_elements.declare_winner(self.ballots, ballots_matrix_list)
     #     self.condorcet_winners = condorcet_elements.winners
     #     # self.condo_success = self.condorcet_winner == self.objective_winner
     #     return self.condorcet_winner
@@ -300,9 +267,9 @@ class Simulation:
     #         ballots_matrix_list.append(condorcet_elements.ballot_matrix)
 
     #         #add the results to the results dataframe with a new column name
-    #         # self.results_df[f"Scores {person.number}"] = self.song_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
+    #         # self.ballots[f"Scores {person.number}"] = self.song_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
 
-    #         if len(self.results_df[self.results_df[f"Scores {person.number}"].isnull()]) == len(self.results_df):
+    #         if len(self.ballots[self.ballots[f"Scores {person.number}"].isnull()]) == len(self.ballots):
     #             sys.exit(f"No scores recorder from person.number {person.number}. Something is wrong...") 
             
     #     #returning the last condorcet element calculated. 
@@ -313,30 +280,30 @@ class Simulation:
     #     """TODO: Incorporate N"""
 
     #     # I want to display their names not their IDs
-    #     self.results_df["Entrant"] = self.song_df["Entrant"]
-    #     self.results_df.set_index("Entrant", inplace=True)
-    #     self.results_df.drop(columns=["ID"], inplace=True)
+    #     self.ballots["Entrant"] = self.song_df["Entrant"]
+    #     self.ballots.set_index("Entrant", inplace=True)
+    #     self.ballots.drop(columns=["ID"], inplace=True)
 
     #     rcv = RankChoiceVoting(N)
-    #     ranks = rcv.convert_score_ballots_to_implicit_ranks(self.results_df)
+    #     ranks = rcv.convert_score_ballots_to_implicit_ranks(self.ballots)
     #     self.rankings = rcv.tally_results(ranks)
     #     self.rcv = rcv
     #     return self.rankings[0][0]
 
 
-    # def tally_by_first_past_the_post(self, results_df):
+    # def tally_by_first_past_the_post(self, ballots):
     #     """
     #     Interpret each voter's top score as their one favorite choice. Tally
     #     all these single choices with first-past-the-post.
 
     #     If there is a tie, it is broken randomly simply by calling .idxmax()
     #     """
-    #     results_df.drop(columns=["ID"], inplace=True)
+    #     ballots.drop(columns=["ID"], inplace=True)
     #     names = self.song_df["Entrant"]
     #     votes = []
 
     #     choose_fav = lambda ballot: votes.append(names.iloc[ballot.idxmax()])
-    #     results_df.apply(choose_fav, axis=0)
+    #     ballots.apply(choose_fav, axis=0)
 
     #     tallies = [(name, count) for name, count in Counter(votes).items()]
     #     self.rankings = sorted(tallies, key=lambda x: x[1], reverse=True)

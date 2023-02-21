@@ -11,32 +11,32 @@ from stqdm import stqdm
 
 
 class Condorcet:
-    def __init__(self, results_df, n_winners=10):
-        self.results_df = self.clean_results_df(results_df)
+    def __init__(self, ballot_df, n_winners=10):
+        self.ballot_df = self.clean_ballot_df(ballot_df)
         self.n_winners = n_winners
         self.pairwise_sums = self.compute_sum_of_ballot_pairwise_comparisons()
         self.top_nominee_ids, self.top_vote_counts = self.top_nominees()
 
 
-    def clean_results_df(self, results_df):
+    def clean_ballot_df(self, ballot_df):
         """
         The current simluation code adds some extraneous columns
         """
         columns = ["ID", "Mean"]
-        columns_to_drop = [col for col in columns if col in results_df.columns]
+        columns_to_drop = [col for col in columns if col in ballot_df.columns]
         if columns_to_drop:
-            results_df.drop(columns=columns_to_drop, inplace=True)
-        return results_df
+            ballot_df.drop(columns=columns_to_drop, inplace=True)
+        return ballot_df
 
 
     def compute_sum_of_ballot_pairwise_comparisons(self):
         """
         TKTK
         """
-        n_nominees = self.results_df.shape[0]
+        n_nominees = self.ballot_df.shape[0]
         pairwise_sums = np.zeros((n_nominees, n_nominees))
-        for col in stqdm(self.results_df.columns, desc="Tallying votes"):
-            ballot = self.results_df[col]
+        for col in stqdm(self.ballot_df.columns, desc="Tallying votes"):
+            ballot = self.ballot_df[col]
             pairwise_sums += self.pairwise_comparison(ballot)
         return pairwise_sums
 
@@ -44,7 +44,7 @@ class Condorcet:
     def pairwise_comparison(self, ballot):
         """
         ballot (pd.Series): 
-            One column of the results_df. A single voters's ballot.
+            One column of the ballot_df. A single voters's ballot.
 
         Computes pairwise comparisons. Row-Col, was nominee at row ranked 
         higher than nominee at col?
@@ -69,7 +69,7 @@ class Condorcet:
         ii = np.argpartition(row_sums, -self.n_winners)[-self.n_winners:]
         ii = ii[np.argsort(row_sums[ii])]
         ii = np.flip(ii)
-        print(len(ii))
+        # print(len(ii))
         return ii, row_sums[ii]
 
 
@@ -289,7 +289,7 @@ class CondorcetCounting():
         #if there are multiple winners
         else:
             # self.break_tie(ballots_matrix_list, results_df)
-            print ("Picking winner at random among winners, for simplicity")
+            # print ("Picking winner at random among winners, for simplicity")
 
             # print(f"\n\n\nWinner = {self.winners.iloc[0]['ID']}")
             return self.winners[0]

@@ -142,14 +142,17 @@ def save_chart_df(chart_df, key):
 #     os.remove(filepath)
     
 
-def simulation_section(song_df, section_title, song_limit=None):
+def simulation_section(song_df, section_title, 
+        listen_limit=None, ballot_limit=None,
+        theoretical_results=None):
     """
     A high level container for running a simulation.
     """
     num_voters = st.session_state["num_voters"]
     num_winners = st.session_state["num_winners"]
     sim = Simulation(song_df, num_voters, 
-        song_limit=song_limit,
+        listen_limit=listen_limit,
+        ballot_limit=ballot_limit,
         num_winners=num_winners,
         name=section_title)
 
@@ -164,7 +167,7 @@ def simulation_section(song_df, section_title, song_limit=None):
     if start_btn:
         # delete_chart_df(section_title)
         sim.simulate()
-        chart_df = format_condorcet_results_chart_df(sim)
+        chart_df = format_condorcet_results_chart_df(sim, theoretical_results)
         save_chart_df(chart_df, section_title)
 
     with col2:
@@ -172,7 +175,7 @@ def simulation_section(song_df, section_title, song_limit=None):
         chart_df, spec = format_spec(chart_df, sim)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
     
-    return sim
+    return sim, chart_df
 
 
 def initialize_empty_chart_df():
@@ -186,7 +189,7 @@ def initialize_empty_chart_df():
     return chart_df
 
 
-def format_condorcet_results_chart_df(sim):
+def format_condorcet_results_chart_df(sim, theoretical_results=None):
     """
     Take the pariwise sums from the condorcet results and return a dataframe
     that matches the input that we had previously fed the tally by sums chart
@@ -199,6 +202,8 @@ def format_condorcet_results_chart_df(sim):
     # Assign names to top nominees
     chart_df["sum"] = chart_df.sum(axis=1)
     chart_df["Entrant"] = sim.song_df["ID"].astype(str)
+    if theoretical_results:
+        chart_df["Success"] = chart_df["Entrant"].isin(theoretical_results)
     return chart_df
 
 
@@ -220,101 +225,46 @@ def print_params(simulations):
             st.code(msg)
 
 
-# def animate_results(sim, key):
-#     """The one function to be called in app.py"""
-#     if sim.method == "sum":
-#         animate_summation_results(sim, key=key)
-#     elif sim.method == "condorcet":
-#         animate_condorcet_simulation(sim, key=key)
-#     elif sim.method == "rcv":
-#         show_rcv_rankings(sim)
-#     elif sim.method == "fptp":
-#         show_fptp_rankings(sim.rankings, sim.num_townspeople)     
-
-
-# def animate_summation_results(sim, key):
-#     """
-#     Creates the `Simulate` button, animated chart, and success/fail message
-#     """
-#     col1, col2 = st.columns([2,5])
-#     # start_btn = col1.button("Simulate", key=key)
-
-#     bar_chart = None
-#     # if start_btn:
-#     if sim.townspeople:
-
-#         # results_df = sim.results_df.copy()
-#         # results_df.drop(columns=["sum"], inplace=True)
-#         chart_df = format_condorcet_results_chart_df(sim)
-#         st.write(chart_df)
-#         subtitle = "And the winner is... "
-#         y_max = int(chart_df["sum"].max())
-#         # y_max = sim.condorcet.top_vote_counts.max()
-
-
-#         animation_duration = 10 #second
-#         time_per_frame = animation_duration / chart_df.shape[0] / 20
-
-#     # bar_chart = None
-#     # if start_btn:
-#         st.session_state[f"{key}_keep_chart_visible"] = True
-#         for NN in range(chart_df.shape[1]):
-#             chart_df, spec = format_spec(sim, subtitle, y_max, col_limit=NN)
-#             if bar_chart is not None:
-#                 bar_chart.vega_lite_chart(chart_df, spec, use_container_width=True)
-#             else:
-#                 bar_chart = col2.vega_lite_chart(chart_df, spec, use_container_width=True)
-
-#             # time.sleep(.01/2)
-#             time.sleep(time_per_frame)
-
-#     if sim.townspeople and st.session_state[f"{key}_keep_chart_visible"]:
-#         # Ensure the final chart stays visible
-#         chart_df, spec = format_spec(sim, subtitle, y_max)
-#         if bar_chart is not None:
-#             bar_chart.vega_lite_chart(chart_df, spec, use_container_width=True)
-#         else:
-#             bar_chart = col2.vega_lite_chart(chart_df, spec, use_container_width=True)
-
-#         # message_var = None
-#         # if sim.assigned_guacs < results_df.shape[0]:
-#         #     message_var = results_df.shape[0] - sim.assigned_guacs
-#         # success_message(key, sim.success, message_var)
-
-
-# #this is an experiment, to include an image with the winner        
-# def get_winner_image(sim, key):
-#     col1, col2 = st.columns([2,5])
-#     start_btn = col1.button("Simulate", key=key)
-
-#     if start_btn:
-#         col1, col2, col3 = st.columns(3)
-#         col2.image("img/badge2.png", width=100, caption="badge test.")
-
-
-# def format_spec(sim, subtitle, y_max, col_limit=None):
 def format_spec(chart_df, sim):
     """Format the chart to be shown in each frame of the animation"""
 
-    # subtitle = "Subtitle"
+    red = COLORS["red"]
+    green = COLORS["avocado-green"]
+
+    if "Success" in chart_df.columns:
+        chart_df["Color"] = chart_df["Success"].apply(
+            lambda x: green if x else red)
+
+        color_spec = {
+            "field":    "Color",
+            "type":     "nominal",
+            "scale":    None,
+        }
+    else:
+        color_spec = None
+
+    subtitle = "How Many Votes Cast for the Highest Scoring Songs"
     spec = {
-            "height":   275,
+            # "height":   275,
             "mark": {"type": "bar"},
             "encoding": {
-                "x":    {
+                "y":    {
                     "field": "Entrant", 
                     "type": "nominal", 
-                    # "sort": "ID",
-                    "axis": {"labelAngle": -45}},
-                "y":    {
-                    "field": "sum", "type": "quantitative", 
-                    # "scale": {"domain": [0, y_max]},
-                    "title": "Vote Tallies"},
-                # "color":    color_spec,
+                    "sort": "-x",
+                    "axis": {"labelAngle": 0, "labelLimit": 0},
+                    "title":    None,
+                    },
+                "x":    {
+                    "field": "sum", 
+                    "type": "quantitative", 
+                    "title": "Vote Tallies"
+                    },
+                "color": color_spec,
             },
             "title":    {
                 "text": f"Simulation Results",
-                # "subtitle": subtitle, 
+                "subtitle": subtitle, 
             }  
         }
     return chart_df, spec
