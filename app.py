@@ -30,12 +30,8 @@ song_df = load_or_generate_objective_scores(num_songs)
 section_title = "simulation_1"
 st.subheader("Let's Listen and Vote!")
 lg.write_story(section_title)
-sim1, chart_df = lg.simulation_section(song_df, section_title)
-
-# TODO: move to function to disable later sims if theoretical results have
-# not been set.
-theoretical_results = chart_df["Entrant"].tolist()
-# st.session_state["theoretical_exists"] = True
+sim1, sim1_chart_df = lg.simulation_section(song_df, section_title)
+baseline_results = sim1_chart_df["Entrant"].tolist()
 
 
 # Random Samples
@@ -60,7 +56,8 @@ ballot_limit = col2.slider(label,
 sim2, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit,
     ballot_limit=ballot_limit,
-    theoretical_results=theoretical_results)
+    baseline_results=baseline_results,
+    disabled=not sim1_chart_df["sum"].sum())
 
 
 # Bloc Voting
@@ -98,8 +95,9 @@ mafia_size = col2.slider(label,
     
 sim3, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit, ballot_limit=ballot_limit,
-    theoretical_results=theoretical_results,
-    num_mafiosos=num_mafiosos, mafia_size=mafia_size)
+    baseline_results=baseline_results,
+    num_mafiosos=num_mafiosos, mafia_size=mafia_size,
+    disabled=not sim1_chart_df["sum"].sum())
 
 
 lg.print_params([sim1, sim2, sim3])

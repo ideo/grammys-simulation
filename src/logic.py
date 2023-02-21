@@ -28,9 +28,9 @@ def initialize_session_state():
     """
     initial_values = {
         "reset_visuals":        True,
-        "num_voters":           200,
-        "num_songs":            100,
-        "num_winners":         10,
+        "num_voters":           2000,
+        "num_songs":            1000,
+        "num_winners":          10,
         "st_dev":               10,    #This will need to change
         # "theoretical_exists":   False,
     }
@@ -49,17 +49,24 @@ def reset_visuals():
             os.remove(DATA_DIR / filename)
 
 
+def insert_variables(paragraph, **kwargs):
+    for key, value in kwargs.items():
+        key, value = str(key), str(value)
+        if key in paragraph:
+            paragraph = paragraph.replace(key, value)
+    return paragraph
+        
+
+
 def write_story(section_title, **kwargs):
     for paragraph in STORY[section_title]:
-        for key, value in kwargs.items():
-            key, value = str(key), str(value)
-            if key in paragraph:
-                paragraph = paragraph.replace(key, value)
+        paragraph = insert_variables(paragraph, **kwargs)
         st.write(paragraph)
 
 
-def write_instructions(section_title, st_col=None):
+def write_instructions(section_title, st_col=None, **kwargs):
     for paragraph in INSTRUCTIONS[section_title]:
+        paragraph = insert_variables(paragraph, **kwargs)
         if st_col is not None:
             st_col.caption(paragraph)
         else:
@@ -135,18 +142,13 @@ def save_chart_df(chart_df, key):
     filename = f"chart_df_{key}.pkl"
     filepath = DATA_DIR / filename
     chart_df.to_pickle(filepath)
-
-
-# def delete_chart_df(key):
-#     filename = f"chart_df_{key}.pkl"
-#     filepath = DATA_DIR / filename
-#     os.remove(filepath)
     
 
 def simulation_section(song_df, section_title, 
         listen_limit=None, ballot_limit=None,
-        theoretical_results=None,
-        num_mafiosos=None, mafia_size=None):
+        baseline_results=None,
+        num_mafiosos=None, mafia_size=None,
+        disabled=False):
     """
     A high level container for running a simulation.
     """
@@ -163,15 +165,23 @@ def simulation_section(song_df, section_title,
     col1, col2 = st.columns([2, 5])
 
     with col1:
-        write_instructions(section_title)
+        kwargs = {
+            "num_voters":   num_voters,
+            "num_songs":    song_df.shape[0],
+            "listen_limit": listen_limit,
+            "ballot_limit": ballot_limit,
+        }
+        write_instructions(section_title, **kwargs)
         _, cntr, _ = st.columns([1,5,1])
         with cntr:
-            start_btn = st.button("Simulate", key=section_title)
+            start_btn = st.button("Simulate", 
+                key=section_title, 
+                disabled=disabled)
 
     if start_btn:
         # delete_chart_df(section_title)
         sim.simulate()
-        chart_df = format_condorcet_results_chart_df(sim, theoretical_results)
+        chart_df = format_condorcet_results_chart_df(sim, baseline_results)
         save_chart_df(chart_df, section_title)
 
     with col2:

@@ -51,11 +51,11 @@ STORY = {
 
 INSTRUCTIONS = {
     "simulation_1": [
-        "This first contest sets the baseline that we can compare against in subsequent contests. Each voter listens and votes on every single song."
+        "This first contest sets the baseline that we can compare against in subsequent contests. All num_voters voters listen and vote on all num_songs songs. "
     ],
 
     "simulation_2": [
-        "In our second contest, voters only listen to a random sample of nominated songs. They then submit a ballot ranking their top choices from that sample."
+        "In our second contest, voters are randomly assigned listen_limit songs of the num_songs nominated. They then submit a ballot ranking their top ballot_limit choices from that sample."
     ],
 
      "simulation_3": [

@@ -95,6 +95,7 @@ class Simulation:
         self.objective_winner = self.song_df["Objective Ratings"].idxmax()
         self.success = False
         self.rankings = None
+        self.complete = False
 
 
     @property
@@ -115,7 +116,8 @@ class Simulation:
             self.non_corrupt_ballots = self.ballots.copy()
             self.corrupt_ballots()
         self.winner = self.tally_votes()
-        self.record_outcome()      
+        self.record_outcome()
+        self.complete = True
 
 
     def cast_ballots(self):
