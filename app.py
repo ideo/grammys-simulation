@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src import logic as lg
-from src.simulation import load_or_generate_objective_scores
+from src import load_or_generate_objective_scores
 
 
 st.set_page_config(
@@ -10,23 +10,30 @@ st.set_page_config(
     initial_sidebar_state="expanded")
 
 lg.initialize_session_state()
-lg.sidebar()
-
+# lg.sidebar()
 
 
 st.title("The Isle of Musica")
 num_voters = st.session_state["num_voters"]
 num_songs = st.session_state["num_songs"]
+num_winners = st.session_state["num_winners"]
 lg.write_story("introduction")
 song_df = load_or_generate_objective_scores(num_songs)
 
 
 # Baseline
 section_title = "simulation_1"
-st.subheader("Let's Listen and Vote!")
+st.subheader("Establishing a Baseline")
 lg.write_story(section_title)
 sim1, sim1_chart_df = lg.simulation_section(song_df, section_title)
-baseline_results = sim1_chart_df["Entrant"].tolist()
+
+
+st.markdown("##### Repeated Contests")
+num_contests=100
+st.session_state["num_contests"] = num_contests
+lg.write_story("simulation_1_repeated")
+repeated_results = lg.display_results_of_repeated_contests(sim1, num_contests)
+baseline_results = repeated_results.head(num_winners)["ID"].tolist()
 
 
 # Random Samples

@@ -4,27 +4,25 @@
 STORY = {
     "introduction":  [
         """
-        Welcome to the Isle of Musica — an idyllic locale where every citizen lives, breathes, even eats to make music. The Isle of Musica is inhabited by talented professional musicians, engineers, songwriters, and producers— all with different expertises and genre focuses. They all live on Isle of Musica because of the one value they have in common: their reverence, respect, and passion for MUSIC.
+        Welcome to the Isle of Musica — an idyllic locale where every citizen lives, breathes, even eats to make music. The Isle of Musica is inhabited by talented professional musicians, engineers, songwriters, and producers — all with different expertises and genre focuses. They all live on the Isle of Musica because of the one value they have in common: their reverence, respect, and passion for music.
         """,
         """
-        That’s one thing everyone can agree on on the Isle: that music is something to be studied and taken seriously. The problem is, no one can agree which artists, albums, or songs are the “best,” – and if asked, they’d probably nominate themselves, or a close collaborator. So in the spirit of wanting to give her citizens their well-deserved props, Mayor Melody suggests the town hold a first annual contest to decide which of this year’s song was SONG OF THE YEAR.  
+        That is the one thing everyone can agree on here on the Isle: music is something to be studied and taken seriously. No one can agree, however, on which artists, albums, or songs are the “best,” – and if asked, they’d probably nominate themselves, or a close collaborator. So in the spirit of wanting to give her citizens their well-deserved props, Mayor Melody suggests the town hold a first annual contest to decide which of this year’s songs was SONG OF THE YEAR.   
         """,
         """
-        Anyone who believes a song they wrote within the last year is particularly special can bring a clip of it to the town plaza on an upcoming Sunday at Bangers Only O’Clock. This is when all the citizens of the Isle of Musica can gather, listen to every song entered, and vote for their favorite. Citizens are so excited to participate in this celebration of their community. Word gets around, and everyone signs up.
-        """,
-        """
-        That Sunday at Bangers Only O’Clock, at Bass Clef Stadium, the entire Isle of Musica - that’s num_voters people! - show up to participate in the search for the SONG OF THE YEAR. There were num_songs songs nominated, and all the artists gathered in the center of the plaza. Woah, Mayor Melody thinks to herself. We’ve got a lot of people participating, and a LOT of songs to decide between. How to fairly choose just one??  
+        Anyone who believes a song they wrote this year is particularly special can nominate it for the contest. num_voters people live on the Isle, and when Mayor Melody sees the lists of nominees, surprise surprise num_songs have been nominated. Everyone must have picked their personal best. Running a contest with this many entrants is going to be tricky, but the mayor has a plan.
         """,
     ],
 
     "simulation_1": [
         """
-        Mayor Melody begins by making sure everyone has every song loaded onto their music players.
+        Mayor Melody wants to make sure her citizens have time to judge each song fairly, so she’s given everyone the month off to ensure they can take the time to listen and assess each one. Her and her staff have also printed off massive ballots. She knows her citizens want to know who their competition is, so it’s important the voters submit an ordered ranking of all num_songs songs.
         """,
+    ],
+
+    "simulation_1_repeated": [
         """
-        She hands out score cards, so citizens can score each song on a scale from 1-10. In a perfect world, the Mayor would ask everyone to listen to each song and then rank them from best to worst, but there are quite a lot of songs– and music can so often be a matter of taste. Trying to keep track of num_songs songs would simply be too hard and overwhelming. If they did set aside time to do it this way, it would be an objective way to figure out who wins SONG OF THE YEAR– from this, Musica could determine the best num_winners songs and ultimately, a number one winner.
-        """,
-        """
+        The power of simulations is that we can repeat events multiple times to assess the range of possible outcomes. Below we can see how many times songs were ranked within the top num_winners after simulating this contest num_contests times. We will use these results to establish our baseline, i.e. which num_winners songs deserve to win this contest? If subsequent contests deviate from these results, we know the voting method is flawed.
         """,
     ],
 

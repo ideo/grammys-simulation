@@ -1,7 +1,4 @@
 import os
-import sys
-import random
-from collections import Counter
 from pathlib import Path
 from random import shuffle
 
@@ -9,17 +6,11 @@ import numpy as np
 import pandas as pd
 from stqdm import stqdm
 
-
-# from .voters import Townsperson
-# from .condorcet_counting import CondorcetCounting
-# from .ranked_choice_voting import RankChoiceVoting
-from src.townspeople import Townsperson
-from src.condorcet_counting import Condorcet
-from src.ranked_choice_voting import RankChoiceVoting
+from .condorcet_counting import Condorcet
 
 
 # Move this!
-np.random.seed(42)
+# np.random.seed(42)
 
 
 REPO_ROOT_DIR = Path(__file__).parent.parent
@@ -70,7 +61,7 @@ def generate_objective_scores(num_songs):
 
 class Simulation:
     def __init__(
-            self, song_df, num_voters, st_dev=1.0, 
+            self, song_df, num_voters, st_dev=10.0, 
             listen_limit=None, ballot_limit=None, num_winners=10, 
             num_mafiosos=None, mafia_size=None,
             name=None,  
@@ -91,7 +82,6 @@ class Simulation:
         self.name = name
 
         # Initalizing
-        self.ballots = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
         self.objective_winner = self.song_df["Objective Ratings"].idxmax()
         self.success = False
         self.rankings = None
@@ -111,6 +101,7 @@ class Simulation:
 
     def simulate(self):
         """TODO: For unittests, we can update this to have inputs and outputs"""
+        self.reset_ballots()
         self.cast_ballots()
         if self.num_mafiosos:
             self.non_corrupt_ballots = self.ballots.copy()
@@ -118,6 +109,10 @@ class Simulation:
         self.winner = self.tally_votes()
         self.record_outcome()
         self.complete = True
+
+
+    def reset_ballots(self):
+        self.ballots = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
 
 
     def cast_ballots(self):

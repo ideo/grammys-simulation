@@ -1,23 +1,22 @@
 import os
+from copy import deepcopy
+from collections import Counter
 
 import streamlit as st
 import pandas as pd
-# import time
-# import inflect
+# import numpy as np
+import inflect
 
-# from .story import STORY, INSTRUCTIONS, SUCCESS_MESSAGES
-# from .config import COLORS, ENTRANTS, DEMO_CONTEST
-# from .simulation import Simulation
-from src.story import STORY, INSTRUCTIONS#, SUCCESS_MESSAGES
-from src.config import COLORS#, ENTRANTS, DEMO_CONTEST
-from src.simulation import Simulation, DATA_DIR
+from .story import STORY, INSTRUCTIONS
+from .config import COLORS
+from .simulation import Simulation, DATA_DIR
 
 
 import warnings
 # warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.filterwarnings('ignore')
 
-# p = inflect.engine()
+p = inflect.engine()
 
 
 def initialize_session_state():
@@ -29,10 +28,9 @@ def initialize_session_state():
     initial_values = {
         "reset_visuals":        True,
         "num_voters":           2000,
-        "num_songs":            1000,
+        "num_songs":            2000,
         "num_winners":          10,
         "st_dev":               10,    #This will need to change
-        # "theoretical_exists":   False,
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
@@ -49,23 +47,32 @@ def reset_visuals():
             os.remove(DATA_DIR / filename)
 
 
-def insert_variables(paragraph):
+def insert_variables(paragraph, section_title):
     for key, value in st.session_state.items():
-        key, value = str(key), str(value)
+        key, value = str(key), value
         if key in paragraph:
+            
+            if section_title == "introduction" and key == "num_voters":
+                threshold = None
+                value = p.number_to_words(value, threshold=threshold)
+                value = value.capitalize()
+            else:
+                threshold = 10
+                value = p.number_to_words(value, threshold=threshold)
+
             paragraph = paragraph.replace(key, value)
     return paragraph
         
 
 def write_story(section_title):
     for paragraph in STORY[section_title]:
-        paragraph = insert_variables(paragraph)
+        paragraph = insert_variables(paragraph, section_title)
         st.write(paragraph)
 
 
 def write_instructions(section_title, st_col=None):
     for paragraph in INSTRUCTIONS[section_title]:
-        paragraph = insert_variables(paragraph)
+        paragraph = insert_variables(paragraph, section_title)
         if st_col is not None:
             st_col.caption(paragraph)
         else:
@@ -124,7 +131,8 @@ def sidebar():
         min_value=1,
         max_value=20,
         step=1,
-        key="st_dev")
+        key="st_dev",
+        disabled=True)
 
 
 def load_chart_df(key):
@@ -251,7 +259,11 @@ def format_spec(chart_df):
         color_spec = None
 
     # TODO: Subtitle could display simulation settings.
-    subtitle = "How Many Votes Cast for the Highest Scoring Songs"
+    if chart_df["sum"].sum() == 0:
+        subtitle = "Click 'Simulate' to see the results"
+    else:
+        subtitle = "How Many Votes Cast for the Highest Scoring Songs"
+
     spec = {
             # "height":   275,
             "mark": {"type": "bar"},
@@ -278,10 +290,89 @@ def format_spec(chart_df):
     return chart_df, spec
 
 
-def set_a_baseline(sim, N=100):
-    """
-    Run the first simulation N times and compare the list of nominees.
-    """
+# def set_a_baseline(sim, num_contests=10):
+#     """
+#     Run the first simulation num_contests times and compare the list of nominees.
+#     """
+#     sim = deepcopy(sim)
+#     # sim.num_winners = 50
+#     df = pd.DataFrame(index=range(10))
+#     df.index.name = "Winners"
+    
+#     for ii in range(num_contests):
+#         sim.simulate()
+#         df[f"Contest {ii}"] = sim.condorcet.top_nominee_ids
+#         print(f"Contest {ii} complete")
+
+#     # This returns the top N noninees specifed by sim.num_winners
+#     # unique_orderings = set([tuple(winners) for winners in df.T.values])
+#     # unique_winners = set([tuple(sorted(winners)) for winners in df.T.values])
+#     # return unique_orderings, unique_winners
+
+#     # How many times did each song make it into the top 10?
+#     contest_tallies = Counter(np.concatenate(df.values))
+#     chart_df = pd.DataFrame(
+#         index=contest_tallies.keys(), 
+#         data=contest_tallies.values(),
+#         columns=[f"How Many Times a Song Made it into the Top {sim.num_winners}"])
+    
+#     print(sim.song_df)
+#     print(chart_df)
+#     chart_df = chart_df.merge(sim.song_df, 
+#         left_index=True, 
+#         right_index=True,
+#         how="left")
+
+#     # Save Results
+#     filename = format_repeated_results_filename(sim, num_contests)
+#     chart_df.to_pickle(DATA_DIR / filename)
+#     return sim, num_contests
+
+
+def format_repeated_results_filename(sim, num_contests):
+    filename = f"Repeated-Results"
+    filename += f"_{sim.num_voters}-Voters"
+    filename += f"_{sim.song_df.shape[0]}-Songs"
+    filename += f"_{sim.num_winners}-Winners"
+    filename += ".pkl"
+    return filename
+
+
+def display_results_of_repeated_contests(sim, num_contests=10):
+    """This establishes the baseline for Simulation One"""
+    filename = format_repeated_results_filename(sim, num_contests)
+    filepath = DATA_DIR / filename
+    chart_df = pd.read_pickle(filepath)
+
+    x_label = f"How Many Times a Song Made it into the Top {sim.num_winners}"
+    title = "Who Deserves to Win?"
+    num_contests = st.session_state["num_contests"]
+    subtitle = f"The results of running {num_contests} repeated simulated contests."
+    spec = {
+            "mark": {"type": "bar"},
+            "encoding": {
+                "y":    {
+                    "field": "ID", 
+                    "type": "nominal", 
+                    "sort": "-x",
+                    "axis": {"labelAngle": 0, "labelLimit": 0},
+                    "title":    None,
+                    },
+                "x":    {
+                    "field": x_label, 
+                    "type": "quantitative", 
+                    # "title": "Vote Tallies"
+                    },
+                # "color": color_spec,
+            },
+            "title":    {
+                "text": title,
+                "subtitle": subtitle, 
+            }  
+        }
+    st.write("")
+    st.vega_lite_chart(chart_df, spec, use_container_width=True)
+    return chart_df
 
 
 
