@@ -49,24 +49,23 @@ def reset_visuals():
             os.remove(DATA_DIR / filename)
 
 
-def insert_variables(paragraph, **kwargs):
-    for key, value in kwargs.items():
+def insert_variables(paragraph):
+    for key, value in st.session_state.items():
         key, value = str(key), str(value)
         if key in paragraph:
             paragraph = paragraph.replace(key, value)
     return paragraph
         
 
-
-def write_story(section_title, **kwargs):
+def write_story(section_title):
     for paragraph in STORY[section_title]:
-        paragraph = insert_variables(paragraph, **kwargs)
+        paragraph = insert_variables(paragraph)
         st.write(paragraph)
 
 
-def write_instructions(section_title, st_col=None, **kwargs):
+def write_instructions(section_title, st_col=None):
     for paragraph in INSTRUCTIONS[section_title]:
-        paragraph = insert_variables(paragraph, **kwargs)
+        paragraph = insert_variables(paragraph)
         if st_col is not None:
             st_col.caption(paragraph)
         else:
@@ -165,13 +164,7 @@ def simulation_section(song_df, section_title,
     col1, col2 = st.columns([2, 5])
 
     with col1:
-        kwargs = {
-            "num_voters":   num_voters,
-            "num_songs":    song_df.shape[0],
-            "listen_limit": listen_limit,
-            "ballot_limit": ballot_limit,
-        }
-        write_instructions(section_title, **kwargs)
+        write_instructions(section_title)
         _, cntr, _ = st.columns([1,5,1])
         with cntr:
             start_btn = st.button("Simulate", 
@@ -186,7 +179,7 @@ def simulation_section(song_df, section_title,
 
     with col2:
         chart_df = load_chart_df(section_title)
-        chart_df, spec = format_spec(chart_df, sim)
+        chart_df, spec = format_spec(chart_df)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
     
     return sim, chart_df
@@ -239,7 +232,7 @@ def print_params(simulations):
             st.code(msg)
 
 
-def format_spec(chart_df, sim):
+def format_spec(chart_df):
     """Format the chart to be shown in each frame of the animation"""
 
     red = COLORS["red"]
@@ -283,6 +276,13 @@ def format_spec(chart_df, sim):
             }  
         }
     return chart_df, spec
+
+
+def set_a_baseline(sim, N=100):
+    """
+    Run the first simulation N times and compare the list of nominees.
+    """
+
 
 
 # def format_bar_colors(chart_df, should_win, actually_won):

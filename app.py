@@ -1,8 +1,6 @@
 import streamlit as st
 
-# from src import STORY
 from src import logic as lg
-from src import Simulation
 from src.simulation import load_or_generate_objective_scores
 
 
@@ -19,10 +17,7 @@ lg.sidebar()
 st.title("The Isle of Musica")
 num_voters = st.session_state["num_voters"]
 num_songs = st.session_state["num_songs"]
-lg.write_story("introduction", num_voters=num_voters, num_songs=num_songs)
-
-
-num_songs = st.session_state["num_songs"]
+lg.write_story("introduction")
 song_df = load_or_generate_objective_scores(num_songs)
 
 
@@ -36,7 +31,7 @@ baseline_results = sim1_chart_df["Entrant"].tolist()
 
 # Random Samples
 section_title = "simulation_2"
-st.subheader("Next Section!")
+st.subheader("The Power of Randomness")
 lg.write_story(section_title)
 
 col1, col2 = st.columns(2)
@@ -62,7 +57,7 @@ sim2, _ = lg.simulation_section(song_df, section_title,
 
 # Bloc Voting
 section_title = "simulation_3"
-st.subheader("Third Times the Charm!")
+st.subheader("Nullifying Bloc Voting")
 lg.write_story(section_title)
 
 col1, col2 = st.columns(2)
@@ -100,4 +95,6 @@ sim3, _ = lg.simulation_section(song_df, section_title,
     disabled=not sim1_chart_df["sum"].sum())
 
 
+st.subheader("Conclusion")
+lg.write_story("conclusion")
 lg.print_params([sim1, sim2, sim3])
