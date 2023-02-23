@@ -158,7 +158,8 @@ class Simulation:
         """TKTK"""      
         high_score = self.ballots.max().max()
 
-        percentile = 66
+        # percentile = 66
+        percentile = 88
         percentile_ranks = self.song_df["Objective Ratings"].rank(pct=True)
         for ii_boss in range(self.num_mafiosos):
             # Which song

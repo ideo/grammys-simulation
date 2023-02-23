@@ -6,6 +6,8 @@ from src import load_or_generate_objective_scores
 
 # TODO: Include the num_winners as a user visible variable
 # TODO: Display how many times the right top 10 existed.
+# TODO: Add to the story "good but not great" B-
+# TODO: How many times did a crony get to contort their ballot
 
 
 st.set_page_config(
@@ -49,13 +51,14 @@ col1, col2 = st.columns(2)
 label = "How many songs does each voter get to listen to?"
 listen_limit = col1.slider(label, 
     value=st.session_state["listen_limit"], 
-    min_value=10, 
+    min_value=50, 
     max_value=num_songs,
     step=10,
     key=section_title+"_listen_limit")
 label = "How many songs does each voter get to rank?"
+initial = st.session_state["ballot_limit"] 
 ballot_limit = col2.slider(label, 
-    value=st.session_state["ballot_limit"], 
+    value=initial if initial < listen_limit else listen_limit,
     min_value=10, 
     max_value=listen_limit,
     step=10,
@@ -75,14 +78,15 @@ lg.write_story(section_title)
 col1, col2 = st.columns(2)
 label = "How many songs does each voter get to listen to?"
 listen_limit = col1.slider(label, 
-    value=st.session_state["listen_limit"], 
-    min_value=10, 
+    value=st.session_state["listen_limit"],
+    min_value=50, 
     max_value=num_songs,
     step=10,
     key=section_title+"_listen_limit")
 label = "How many songs does each voter get to rank?"
+initial = st.session_state["ballot_limit"] 
 ballot_limit = col2.slider(label, 
-    value=st.session_state["ballot_limit"], 
+    value=initial if initial < listen_limit else listen_limit,
     min_value=10, 
     max_value=listen_limit,
     step=10,
