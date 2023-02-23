@@ -1,10 +1,10 @@
 import os
-from copy import deepcopy
-from collections import Counter
+# from copy import deepcopy
+# from collections import Counter
+import pickle
 
 import streamlit as st
 import pandas as pd
-# import numpy as np
 import inflect
 
 from .story import STORY, INSTRUCTIONS
@@ -27,9 +27,9 @@ def initialize_session_state():
     """
     initial_values = {
         "reset_visuals":        True,
-        "num_voters":           2000,
-        "num_songs":            2000,
-        "num_winners":          10,
+        "num_voters":           1000,
+        "num_songs":            1000,
+        "num_winners":          15,
         "st_dev":               10,    #This will need to change
     }
     for key, value in initial_values.items():
@@ -259,7 +259,7 @@ def format_spec(chart_df):
     if chart_df["sum"].sum() == 0:
         subtitle = "Click 'Simulate' to see the results"
     else:
-        subtitle = "How Many Votes Cast for the Highest Scoring Songs"
+        subtitle = "Vote tallies of the highest scoring songs."
 
     spec = {
             # "height":   275,
@@ -291,30 +291,31 @@ def format_spec(chart_df):
     return chart_df, spec
 
 
-def format_repeated_results_filename(sim, num_contests):
-    filename = f"Repeated-Results"
-    filename += f"_{sim.num_voters}-Voters"
-    filename += f"_{sim.song_df.shape[0]}-Songs"
-    num_winners = 20
-    filename += f"_{num_winners}-Winners"
-    filename += ".pkl"
-    return filename
+def format_filepath(sim):
+    n_songs = sim.song_df.shape[0]
+    n_voters = sim.num_voters
+    filename = f"Repeated-Simulations_Sums_{n_songs}-Songs_{n_voters}-Voters.pkl"
+    filepath = DATA_DIR / filename
+    return filepath
 
 
 def display_results_of_repeated_contests(sim):
     """This establishes the baseline for Simulation One"""
-    # these settings for all repeated runs
-    num_contests = 100
-    num_winners=20
+    filepath = format_filepath(sim)
+    with open(filepath, "rb") as pkl_file:
+        repeated_contests = pickle.load(pkl_file)
 
-    filename = format_repeated_results_filename(sim, num_contests)
-    filepath = DATA_DIR / filename
-    chart_df = pd.read_pickle(filepath)
-    chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
-
-    x_label = f"How Many Times a Song Made it into the Top {num_winners}"
     title = "Who Deserves to Win?"
-    subtitle = f"The results of running {num_contests} simulated contests."
+    subtitle = f"Vote tallies after running {repeated_contests.num_contests} simulated contests."
+    x_label = f"Vote Tallies"
+
+    sums_per_song = repeated_contests.sum_of_sums.sum(axis=1)
+    chart_df = pd.DataFrame(sums_per_song)
+    chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
+    chart_df["ID"] = sim.song_df["ID"]
+    chart_df.rename(columns={0: x_label}, inplace=True)
+    chart_df = chart_df.head(sim.num_winners)
+    
     spec = {
             "mark": {"type": "bar"},
             "encoding": {
@@ -347,12 +348,10 @@ def display_results_of_repeated_contests(sim):
 
 
 def establish_baseline(repeated_results):
-    # num_winners = st.session_state["num_winners"]
-    num_winners = 20
-    col = f"How Many Times a Song Made it into the Top {num_winners}"
-    repeated_results = repeated_results.sort_values(col, ascending=False)
+    x_label = f"Vote Tallies"
+    repeated_results = repeated_results.sort_values(x_label, ascending=False)
 
-    num_winners = 10
+    num_winners = st.session_state["num_winners"]
     baseline_results = repeated_results.head(num_winners)["ID"].tolist()
     return baseline_results
 

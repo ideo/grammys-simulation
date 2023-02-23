@@ -15,7 +15,7 @@ class Condorcet:
         self.ballot_df = self.clean_ballot_df(ballot_df)
         self.n_winners = n_winners
         self.pairwise_sums = self.compute_sum_of_ballot_pairwise_comparisons()
-        self.top_nominee_ids, self.top_vote_counts = self.top_nominees()
+        self.top_nominee_ids, self.top_vote_counts = self.top_nominees(self.pairwise_sums, self.n_winners)
 
 
     def clean_ballot_df(self, ballot_df):
@@ -61,17 +61,26 @@ class Condorcet:
         return pairwise_comparison
 
 
-    def top_nominees(self):
-        if self.n_winners > self.pairwise_sums.shape[0]:
-            self.n_winners = self.pairwise_sums.shape[0]
+    # def top_nominees(self):
+    #     if self.n_winners > self.pairwise_sums.shape[0]:
+    #         self.n_winners = self.pairwise_sums.shape[0]
 
-        row_sums = self.pairwise_sums.sum(axis=1)
-        ii = np.argpartition(row_sums, -self.n_winners)[-self.n_winners:]
+    #     row_sums = self.pairwise_sums.sum(axis=1)
+    #     ii = np.argpartition(row_sums, -self.n_winners)[-self.n_winners:]
+    #     ii = ii[np.argsort(row_sums[ii])]
+    #     ii = np.flip(ii)
+    #     return ii, row_sums[ii]
+
+    @staticmethod
+    def top_nominees(pairwise_sums, n_winners):
+        if n_winners > pairwise_sums.shape[0]:
+            n_winners = pairwise_sums.shape[0]
+
+        row_sums = pairwise_sums.sum(axis=1)
+        ii = np.argpartition(row_sums, -n_winners)[-n_winners:]
         ii = ii[np.argsort(row_sums[ii])]
         ii = np.flip(ii)
-        # print(len(ii))
         return ii, row_sums[ii]
-
 
 
 

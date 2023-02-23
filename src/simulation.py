@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
-from random import shuffle
+# from random import shuffle
+import pickle
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from stqdm import stqdm
 
 from .condorcet_counting import Condorcet
@@ -52,9 +54,14 @@ def generate_objective_scores(num_songs):
     filename = "Grammys-Simuation_Song-Names - Top Scoring Songs.csv"
     fictional_names = pd.read_csv(DATA_DIR / filename)
     fictional_names = fictional_names["Song Name by Artist"].values
-    shuffle(fictional_names)
+    # shuffle(fictional_names)
     for ii, song_name in enumerate(fictional_names):
-        song_df["ID"].iloc[ii] = song_name
+        try:
+            song_df["ID"].iloc[ii] = song_name
+        except IndexError:
+            # Fictional Names is longer than song_df. This occurs when testing
+            # with small numbers
+            pass
 
     return song_df
 
@@ -199,6 +206,39 @@ class Simulation:
             self.winner = ind
 
         self.success = self.winner == self.objective_winner
+
+
+class RepeatedSimulations:
+    def __init__(self, song_df, num_voters, 
+                 listen_limit=None, ballot_limit=None, num_winners=10,
+                 filepath=None):
+        
+        self.song_df = song_df
+        self.num_voters = num_voters
+        self.listen_limit = listen_limit
+        self.ballot_limit = ballot_limit
+        self.num_winners = num_winners
+        self.filepath = filepath
+
+        self.sim = Simulation(song_df, num_voters,
+            listen_limit = listen_limit,
+            ballot_limit = ballot_limit,
+            num_winners = num_winners)
+        
+        num_songs = song_df.shape[0]
+        self.sum_of_sums = np.zeros((num_songs, num_songs))
+        self.num_contests = 0
+        
+        
+    def simulate(self, num_repetitions=10):
+        for _ in tqdm(range(num_repetitions)):
+            self.sim.simulate()
+            self.sum_of_sums += self.sim.condorcet.pairwise_sums
+            self.num_contests += 1
+
+            if self.filepath is not None:
+                with open(self.filepath, "wb") as pkl_file:
+                    pickle.dump(self, pkl_file)
 
 
 # The previous simulation was set up to incorporate multiple tallying 
