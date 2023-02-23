@@ -1,14 +1,16 @@
 import os
-# from copy import deepcopy
-# from collections import Counter
+import json
 import pickle
+from collections import defaultdict
 
 import streamlit as st
+import altair as alt
 import pandas as pd
+import numpy as np
 import inflect
 
-from .story import STORY, INSTRUCTIONS
 from .config import COLORS
+from .story import STORY, INSTRUCTIONS
 from .simulation import Simulation, DATA_DIR
 
 
@@ -29,7 +31,7 @@ def initialize_session_state():
         "reset_visuals":        True,
         "num_voters":           1000,
         "num_songs":            1000,
-        "num_winners":          10,
+        "num_winners":          20,
         "listen_limit":         250,
         "ballot_limit":         50,
         "st_dev":               10,    #This will need to change
@@ -214,7 +216,8 @@ def format_condorcet_results_chart_df(sim, theoretical_results=None):
     that matches the input that we had previously fed the tally by sums chart
     animation
     """
-    _sums = sim.condorcet.pairwise_sums
+    # _sums = sim.condorcet.pairwise_sums
+    _sums = sim.condorcet.preferences
     ii = sim.condorcet.top_nominee_ids
     chart_df = pd.DataFrame(_sums).iloc[ii]
 
@@ -312,6 +315,7 @@ def display_results_of_repeated_contests(sim):
     x_label = f"Vote Tallies"
 
     sums_per_song = repeated_contests.sum_of_sums.sum(axis=1)
+    # sums_per_song = repeated_contests.preferences.sum(axis=1)
     chart_df = pd.DataFrame(sums_per_song)
     chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
     chart_df["ID"] = sim.song_df["ID"]
@@ -354,280 +358,77 @@ def establish_baseline(repeated_results):
     repeated_results = repeated_results.sort_values(x_label, ascending=False)
 
     num_winners = st.session_state["num_winners"]
-    baseline_results = repeated_results.head(num_winners)["ID"].tolist()
-    return baseline_results
+    baseline_titles = repeated_results.head(num_winners)["ID"].tolist()
+    baseline_indices = repeated_results.head(num_winners).index.tolist()
+    return baseline_titles, baseline_indices
+
+
+def explore_chaning_sample_size(sim, baseline):
+    num_songs = sim.song_df.shape[0]
+    filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs.pkl"
+    with open(filepath, "rb") as pkl_file:
+        exploration = pickle.load(pkl_file)
+
+    # This can all be done ahead of time. Only the chart_df needs to be saved
+    # Tally, on average, how many of the top N were fair
+    num_winners = len(baseline)
+    outcome_quality = defaultdict(dict)
+    num_contests = exploration[500][50].num_contests
+    num_contests = p.number_to_words(num_contests)
+    # num_songs = p.number_to_words(num_songs)
+
+    for num_voters, contests in exploration.items():
+        for listen_limit, outcomes in contests.items():
+            num_fair_winners = []
+            for _, results in outcomes.contest_winners.items():
+                winners = results[:num_winners]
+                num_fair_winners.append(len(set(winners).intersection(set(baseline))))
+            
+            # outcome_quality[num_voters][listen_limit] = np.mean(num_fair_winners)
+            outcome_quality[num_voters][listen_limit] = np.median(num_fair_winners)
+
+    # Format Heatmap
+    voter_range = list(outcome_quality.keys())
+    sample_range = list(outcome_quality[voter_range[0]].keys())
+    x, y = np.meshgrid(sample_range, voter_range)
+    source = pd.DataFrame({"x": x.ravel(), "y": y.ravel()})
+    source["z"] = source.apply(lambda row: outcome_quality.get(row.y, np.nan).get(row.x, np.nan), axis=1)
+
+    # First time doing an actual altair chart instead of doing a vega-lite spec
+    chart = alt.Chart(source).mark_rect().encode(
+        x=alt.X("x:O", axis=alt.Axis(
+            title="Sample Size: How Many Songs Voters Listened To",
+            labelAngle=0,
+            )), 
+        y=alt.Y("y:O", sort='descending', axis=alt.Axis(
+            title="No. Voters"
+            )), 
+        color=alt.Color(
+            "z:Q", 
+            scale=alt.Scale(scheme="RedBlue")
+        )
+    ).properties(
+        title={
+            "text": "Contest Consistency",
+            "subtitle": [
+                f"The median number of deserved winners within the top {num_winners}.",
+                f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of 50.",]
+        }
+    )
+    filepath = DATA_DIR / f"heatmap_{num_winners}.json"
+    chart.save(filepath)
 
 
 
-# def format_bar_colors(chart_df, should_win, actually_won):
-#     chart_df["Color"] = pd.Series([COLORS["blue"]]*chart_df.shape[0], index=chart_df.index)
-#     chart_df.at[actually_won, "Color"] = COLORS["red"]
-#     chart_df.at[should_win, "Color"] = COLORS["green"]
-#     return chart_df
-
-
-# def animate_results_of_100_runs(sim, scenario, key):
-#     col1, col2 = st.columns([2,5])
-#     start_btn = col1.button("Simulate 100 Times", key=key)
-
-#     chart_df = get_row_and_format_dataframe(sim, scenario)
-#     spec = format_N_times_chart_spec(chart_df)
-#     bar_chart = col2.vega_lite_chart(chart_df, spec)
-
-#     list_who_else_won(chart_df, sim)
-
-
-# def get_row_and_format_dataframe(sim, scenario):
-#     df = pd.read_csv("data/simulate_100_times_sum.csv")
-#     df.drop(columns=["Unnamed: 0"], inplace=True)
-#     chart_df = df[
-#         (df["num_townspeople"] == sim.num_townspeople) & \
-#         (df["st_dev"] == sim.st_dev) & \
-#         (df["assigned_guacs"] == sim.assigned_guacs) & \
-#         (df["perc_fra"] == sim.perc_fra) & \
-#         (df["perc_pepe"] == sim.perc_pepe) & \
-#         (df["perc_carlos"] == sim.perc_carlos) & \
-#         (df["scenario"] == scenario)
-#     ]
-#     columns = [
-#         "num_townspeople",
-#         "st_dev",
-#         "assigned_guacs",
-#         "perc_fra",
-#         "perc_pepe",
-#         "perc_carlos",
-#         "scenario",
-#     ]
-#     should_win = {
-#         "One Clear Winner":     5,
-#         "A Close Call":         9,
-#         "A Lot of Contenders":  12,
-#     }
-
-#     chart_df.drop(columns=columns, inplace=True)
-#     chart_df.fillna(value=0.0, inplace=True)
-#     _index = chart_df.index[0]
-#     chart_df = chart_df.T
-#     chart_df.rename(columns={_index: "No Times Won"}, inplace=True)
-#     chart_df["No Times Won"] = chart_df["No Times Won"].astype(int)
-#     chart_df.index = chart_df.index.astype(int)
-#     chart_df = format_bar_colors(chart_df, should_win[scenario], chart_df["No Times Won"].idxmax())
-#     chart_df.index.name = "ID"
-#     chart_df.reset_index(inplace=True)
-#     chart_df.sort_values(by="ID", inplace=True)
-#     chart_df["Entrant"] = chart_df["ID"].apply(lambda x: [ent["Entrant"] for ent in ENTRANTS if ent["ID"]==x][0])
-#     return chart_df
-
-
-# def format_N_times_chart_spec(chart_df):
-#     spec = {
-#             "height":   250,
-#             "mark": {"type": "bar"},
-#             "encoding": {
-#                 "x":    {
-#                     "field": "Entrant", "type": "nominal", "sort": "ID",
-#                     "axis": {"labelAngle": 45}},
-#                 "y":    {
-#                     "field": "No Times Won", "type": "quantitative", 
-#                     "scale": {"domain": [0, 100]},
-#                     "title": "No. Times Won"},
-#                 "color":    {
-#                     "field": "Color", 
-#                     "type": "nomical", 
-#                     "scale": None},
-#             },
-#             "title":    {
-#                 "text": f"Simulating the Contest 100 Times",
-#                 "subtitle": "How often was each person's guac voted best?", 
-#             }  
-#         }
-#     return spec
-
-
-# def list_who_else_won(df, sim):
-#     df = df[df["No Times Won"] > 0].copy()
-#     df.sort_values(by="No Times Won", ascending=False, inplace=True)
+def load_or_generate_heatmap_chart(sim, baseline, regenerate=False):
+    filepath = DATA_DIR / f"heatmap_{sim.num_winners}.json"
     
-#     name = df.iloc[0]["Entrant"]
-#     wins = df.iloc[0]["No Times Won"]
-#     success = wins > 50
-#     if success:
-#         percent = f"{wins}%"
-#     else:
-#         percent = f"{100 - wins}%"
-#     success_message("100_times", success, name=name, percent=percent)
-
-#     msg = f"**{p.plural('Result', df.shape[0])} of 100 Contests**"
-#     for ii in range(0, df.shape[0]):
-#         entrant = df.iloc[ii]["Entrant"]
-#         obj_score = sim.guac_df[sim.guac_df["Entrant"] == entrant]["Objective Ratings"].iloc[0]
-#         wins = df.iloc[ii]["No Times Won"]
-#         msg += f"\n- {entrant}, with an objective guac score of {obj_score}, won **{wins}** {p.plural('time', wins)}"
-
-#     st.markdown(msg)
-
-
-# def types_of_voters(key, pepe=None, fra=None, carlos=None):
-#     col1, col2, col3 = st.columns(3)
-#     pepe = col1.slider(
-#         """
-#         What percentage of people in town are like Perky Pepe, who loves 
-#         guacamole so much he'll have a hard time giving anyone a bad score?
-#         """,
-#         value=int(pepe*100) if pepe else 10,
-#         min_value=0,
-#         max_value=30,
-#         format="%g%%",
-#         key=key+"pepe")
-
-#     fra = col2.slider(
-#         """
-#         What percentage of people in town are like Finicky Francisca, who
-#         thinks all guacamole is basically mush and won't score any entry too high?
-#         """,
-#         value=int(fra*100) if fra else 8,
-#         min_value=0,
-#         max_value=30,
-#         format="%g%%",
-#         key=key+"fra")
-
-#     carlos = col3.slider(
-#         """
-#         What percentage of people in town are friends with Cliquey Carlos, and
-#         will score high guacamole as high as possible no matter what?
-#         """,
-#         value=int(carlos*100) if carlos else 12,
-#         min_value=0,
-#         max_value=30,
-#         format="%g%%",
-#         key=key+"carlos")
-
-#     pepe /= 100
-#     fra /= 100
-#     carlos /= 100
-#     return pepe, fra, carlos
-
+    if not os.path.exists(filepath) or regenerate:
+        explore_chaning_sample_size(sim, baseline) 
     
-# def animate_condorcet_simulation(sim, key=None):
-#     col1, col2 = st.columns([2,5])
-#     start_btn = col1.button("Simulate", key=key)
+    with open(filepath, "r") as json_object:
+        chart_dict = json.load(json_object)
 
-#     if start_btn:
-#         sim.simulate()
-#         st.session_state[f"{key}_keep_chart_visible"] = True
-        
-#     if st.session_state[f"{key}_keep_chart_visible"]:
-#         results_msg = format_condorcet_results(sim)
-#         col2.markdown(results_msg)
-
-
-# def format_condorcet_results(sim):
-#     if len(sim.condorcet_winners) > 1:
-#         msg = "And the winners are..."
-#         for ii, entrant_id in enumerate(sim.condorcet_winners):
-#             name = sim.guac_df["Entrant"].iloc[entrant_id]
-#             msg += f"\n - {ii}: Guacamole No. {entrant_id} by {name}!"
-    
-#     else:
-#         entrant_id = sim.condorcet_winner
-#         name = sim.guac_df["Entrant"].iloc[entrant_id]
-#         msg = f"""
-#             And the winner is...
-#             1. Guacamole No. {entrant_id} by {name}!
-#         """
-#     return msg
-
-
-# def demo_contest(scenario, st_dev):
-#     """TKTK"""
-#     if scenario == "One Clear Winner":
-#         data = [ENTRANTS[5], ENTRANTS[11], ENTRANTS[12]]
-#     elif scenario == "A Close Call":
-#         data = [ENTRANTS[9], ENTRANTS[11], ENTRANTS[12]]
-#     elif scenario == "A Lot of Contenders":
-#         data = [ENTRANTS[12], ENTRANTS[0], ENTRANTS[9]]
-
-#     df = pd.DataFrame(data=data)
-#     df["ID"] = pd.Series([0, 1, 2])
-#     df.rename(columns={scenario: "Objective Ratings"}, inplace=True)
-#     df = df[["ID", "Entrant", "Objective Ratings"]].copy()
-
-#     sim = Simulation(df, 5, st_dev, 
-#         assigned_guacs=df.shape[0],
-#         fullness_factor=0,
-#         seed=42)
-#     sim.simulate()
-
-#     start_btn = next_contestant(sim)
-#     if start_btn:
-#         st.button("Next Contestant", on_click=increment_entrant_num)
-    
-
-# def next_contestant(sim):
-#     col1, col2, col3 = st.columns(3)
-#     entrant_num = st.session_state["entrant_num"]
-#     col1.image(f"img/guac_icon_{entrant_num}.png", width=100)
-
-#     name =  sim.guac_df.loc[entrant_num]['Entrant']
-#     score = sim.guac_df.loc[entrant_num]['Objective Ratings']
-#     score = int(round(score))
-#     col2.markdown(f"**{name}'s Guacamole**")
-#     col2.metric("Your Assesment:", score)
-
-#     start_btn = col3.button("Taste and Score")
-
-#     if start_btn:
-#         columns = st.columns(5)
-#         for ii, col in enumerate(columns):
-#             person = sim.townspeople[ii]
-#             score = person.ballot.loc[entrant_num]["Subjective Ratings"]
-#             score = int(round(score))
-#             col.metric(f"Taster No. {person.number}", score)
-
-#     return start_btn
-
-
-# def increment_entrant_num():
-#     if st.session_state["entrant_num"] < 2:
-#         st.session_state["entrant_num"] += 1
-#     else:
-#         st.session_state["entrant_num"] = 0
-
-
-# def show_rcv_rankings(sim):
-#     rankings = sim.rankings
-#     winner = sim.rankings[0][0]
-
-#     msg = "Our winner is...  \n"
-#     winning_vote = rankings[0][1]
-#     perc = lambda vc: f"{int(round(vc/sim.num_townspeople*100, 0))}%"
-#     msg += f"> 1. **{winner}** with {winning_vote} votes! That's {perc(winning_vote)} of the vote.  \n"
-
-#     if sim.rcv.eliminations == 0:
-#         msg += f"""{winner} won an outright majority, with no need for 
-#             elimination rounds!  \n"""
-#     else:
-#         original_tally = int(sim.rcv.original_vote_counts.loc[winner, 1])
-#         msg += f"""{winner} had an original first-place-vote count of 
-#             {original_tally} votes (only {perc(original_tally)} of the vote), 
-#             but won a {sim.rcv.win_type} after {sim.rcv.eliminations} rounds of 
-#             elimination.  \n"""
-
-#     if len(rankings) > 1:
-#         msg += f"\nAnd our runners up are...  \n"
-#         for prsn in range(1, min(6, len(rankings))):
-#             msg += f"> {prsn+1}. {rankings[prsn][0]} with {rankings[prsn][1]} votes. That's {perc(rankings[prsn][1])} of the vote.  \n"
-#         st.markdown(msg)
-
-
-# def show_fptp_rankings(rankings, num_townspeople):
-#     msg = "Our winner is...  \n"
-#     winning_vote = rankings[0][1]
-#     perc = lambda vc: int(round(vc/num_townspeople*100, 0))
-
-#     msg += f"> 1. **{rankings[0][0]}** with {winning_vote} votes! That's {perc(winning_vote)}% of the vote.  \n"
-#     if len(rankings) > 1:
-#         msg += f"And our runners up are...  \n"
-#         for prsn in range(1, min(6, len(rankings))):
-#             msg += f"> {prsn+1}. {rankings[prsn][0]} with {rankings[prsn][1]} votes. That's {perc(rankings[prsn][1])}% of the vote.  \n"
-#         st.markdown(msg)
+    # Original chart specified as an Altair oject. When loaded as a dictionary
+    # we display it as a vega-lite object.
+    st.vega_lite_chart(chart_dict, use_container_width=True)

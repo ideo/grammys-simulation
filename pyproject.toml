@@ -13,6 +13,7 @@ pandas = "^1.5.3"
 inflect = "^6.0.2"
 tqdm = "^4.64.1"
 stqdm = "^0.0.5"
+altair = "^4.2.2"
 
 
 [tool.poetry.group.dev.dependencies]

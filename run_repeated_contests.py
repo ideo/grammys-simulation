@@ -40,21 +40,23 @@ def explore_listening_limit():
     Right now, this function overwrites the previous save each time it runs.
     """
     num_songs = 1000
-    # num_songs = 100
     song_df = load_or_generate_objective_scores(num_songs)
     filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs.pkl"
 
-    voter_counts = [500, 750, 1000, 1250, 1500]
-    sample_sizes = [50, 100, 150, 200, 250]    
-    # voter_counts = [int(x/10) for x in voter_counts]
-    # sample_sizes = [int(x/10) for x in sample_sizes]
+    with open(filepath, "rb") as pkl_file:
+        results = pickle.load(pkl_file)
 
-    results = defaultdict(dict)
+    ballot_limit = 50
+    # voter_counts = [500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500]
+    voter_counts = [2750, 3000]
+    sample_sizes = [50, 100, 150, 200, 250, 300, 350, 450, 500]    
+
     for num_voters in voter_counts:
         for listen_limit in sample_sizes:
             # Starts off quick, gets slower
             sim = RepeatedSimulations(song_df, num_voters, 
                     listen_limit=listen_limit, 
+                    ballot_limit=ballot_limit,
                     num_winners=25)
 
             print(f"Simualting {num_voters} voters listening to {listen_limit} songs each.")
@@ -66,5 +68,6 @@ def explore_listening_limit():
 
 
 if __name__ == "__main__":
+    # pass
     # establish_a_baseline()
     explore_listening_limit()

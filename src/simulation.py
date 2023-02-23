@@ -222,6 +222,7 @@ class RepeatedSimulations:
         
         num_songs = song_df.shape[0]
         self.sum_of_sums = np.zeros((num_songs, num_songs))
+        self.sum_of_rankings = np.zeros((num_songs, num_songs))
         self.contest_winners = {}
         self.num_contests = 0
         
@@ -230,6 +231,7 @@ class RepeatedSimulations:
         for _ in tqdm(range(num_repetitions)):
             self.sim.simulate()
             self.sum_of_sums += self.sim.condorcet.pairwise_sums
+            self.sum_of_rankings += self.sim.condorcet.preferences
             self.contest_winners[self.num_contests] = self.sim.condorcet.top_nominee_ids
             self.num_contests += 1
 

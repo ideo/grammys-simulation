@@ -39,7 +39,7 @@ num_contests=100
 st.session_state["num_contests"] = num_contests
 lg.write_story("simulation_1_repeated")
 repeated_results = lg.display_results_of_repeated_contests(sim1)
-baseline_results = lg.establish_baseline(repeated_results)
+baseline_titles, baseline_indices = lg.establish_baseline(repeated_results)
 # st.write(sim1.condorcet.top_nominee_ids)
 
 
@@ -68,8 +68,9 @@ ballot_limit = col2.slider(label,
 sim2, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit,
     ballot_limit=ballot_limit,
-    baseline_results=baseline_results)
-st.write(sim2.condorcet.top_nominee_ids)
+    baseline_results=baseline_titles)
+
+lg.load_or_generate_heatmap_chart(sim2, baseline_indices, regenerate=False)
 
 
 # Bloc Voting
@@ -110,7 +111,7 @@ mafia_size = col2.slider(label,
     
 sim3, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit, ballot_limit=ballot_limit,
-    baseline_results=baseline_results,
+    baseline_results=baseline_titles,
     num_mafiosos=num_mafiosos, mafia_size=mafia_size)
 
 

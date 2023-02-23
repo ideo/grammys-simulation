@@ -12,10 +12,17 @@ from stqdm import stqdm
 
 class Condorcet:
     def __init__(self, ballot_df, n_winners=10):
+        """
+        To move quickly, for the MVP, this method computes rankings but cannot
+        distinguish between ties. More work is needed for that, and we are 
+        just banking that the numbers we're using are high enough that ties 
+        should be rare.
+        """
         self.ballot_df = self.clean_ballot_df(ballot_df)
         self.n_winners = n_winners
         self.pairwise_sums = self.compute_sum_of_ballot_pairwise_comparisons()
-        self.top_nominee_ids, self.top_vote_counts = self.top_nominees(self.pairwise_sums, self.n_winners)
+        self.preferences = CondorcetCounting.get_schwartz_relations_matrix(self.pairwise_sums)
+        self.top_nominee_ids, self.top_vote_counts = self.top_nominees(self.preferences)
 
 
     def clean_ballot_df(self, ballot_df):
@@ -61,26 +68,24 @@ class Condorcet:
         return pairwise_comparison
 
 
-    # def top_nominees(self):
-    #     if self.n_winners > self.pairwise_sums.shape[0]:
-    #         self.n_winners = self.pairwise_sums.shape[0]
-
-    #     row_sums = self.pairwise_sums.sum(axis=1)
-    #     ii = np.argpartition(row_sums, -self.n_winners)[-self.n_winners:]
-    #     ii = ii[np.argsort(row_sums[ii])]
-    #     ii = np.flip(ii)
-    #     return ii, row_sums[ii]
-
-    @staticmethod
-    def top_nominees(pairwise_sums, n_winners):
-        if n_winners > pairwise_sums.shape[0]:
-            n_winners = pairwise_sums.shape[0]
+    def top_nominees(self, pairwise_sums):
+        """
+        Input can be either pairwise_sums or boolean preferences
+        """
+        if self.n_winners > pairwise_sums.shape[0]:
+            self.n_winners = pairwise_sums.shape[0]
 
         row_sums = pairwise_sums.sum(axis=1)
-        ii = np.argpartition(row_sums, -n_winners)[-n_winners:]
+        ii = np.argpartition(row_sums, -self.n_winners)[-self.n_winners:]
         ii = ii[np.argsort(row_sums[ii])]
         ii = np.flip(ii)
         return ii, row_sums[ii]
+
+    
+    # def get_top_songs(self, song_names):
+    #     preferences = CondorcetCounting.get_schwartz_relations_matrix(self.pairwise_sums)
+    #     smith_schwartz_set = CondorcetCounting.get_smith_or_schwartz_set_statuses(preferences, song_names)
+    #     return preferences, smith_schwartz_set
 
 
 
@@ -173,7 +178,8 @@ class CondorcetCounting():
     #     return ballot_dict
 
 
-    def get_schwartz_relations_matrix(self, sum_ballots_matrix):
+    @staticmethod
+    def get_schwartz_relations_matrix(sum_ballots_matrix):
         """This function creates a matrix of the preferences.
          True is in positions where a runner is preferred more than the opponent.
 
@@ -184,11 +190,12 @@ class CondorcetCounting():
             matrix of preferences
         """
         #initialize a matrix with all zeros 
-        matrix_of_more_preferred = np.zeros([self.num_guacs,self.num_guacs], dtype=bool) # Init to False (loss)
+        num_songs = sum_ballots_matrix.shape[0]
+        matrix_of_more_preferred = np.zeros([num_songs, num_songs], dtype=bool) # Init to False (loss)
         #loop through all guacs and check the runner vs opponent preferences. 
         #when the runner is more preferred than the opponent (by more votes), flip the matrix location to True
-        for runner in range(self.num_guacs):
-            for opponent in range(self.num_guacs):
+        for runner in range(num_songs):
+            for opponent in range(num_songs):
                 if runner == opponent: continue
                 if (sum_ballots_matrix[runner][opponent] > sum_ballots_matrix[opponent][runner]):
                     matrix_of_more_preferred[runner][opponent] = True # Victory (no tie)
@@ -196,7 +203,8 @@ class CondorcetCounting():
         return matrix_of_more_preferred
 
 
-    def get_smith_or_schwartz_set_statuses(self, matrix_of_more_preferred):
+    @staticmethod
+    def get_smith_or_schwartz_set_statuses(matrix_of_more_preferred, song_names):
         """Uses Floyd-Warshall algorithm to find out which candidates are in the Smith or Schwartz Set.
         The set returned is dependent on the calculation of the relations.
         Modeled after https://wiki.electorama.com/wiki/Maximal_elements_algorithms
@@ -206,44 +214,44 @@ class CondorcetCounting():
 
         """
         #assume every guac belongs, then knock them off
-        is_in_smith_or_schwartz_set = np.ones(self.num_guacs,dtype=bool) #Init to True
+        num_songs = matrix_of_more_preferred.shape[0]
+        is_in_smith_or_schwartz_set = np.ones(num_songs, dtype=bool) #Init to True
 
         # Use transitive properties to determine winners. 
         # E.g., if B > A and A > C then B > C
         matrix_of_more_preferred_tp = matrix_of_more_preferred.copy()
-        for runner in range(self.num_guacs):
-            for opponent in range(self.num_guacs):
+        for runner in range(num_songs):
+            for opponent in range(num_songs):
                 if runner != opponent:
-                    for middle_guac in range(self.num_guacs):
+                    for middle_guac in range(num_songs):
                         if ((runner != middle_guac) and (opponent != middle_guac)):
                             if (matrix_of_more_preferred_tp[opponent][runner] and matrix_of_more_preferred_tp[runner][middle_guac]):
                                 matrix_of_more_preferred_tp[opponent][middle_guac] = True
         
-        for runner in range(self.num_guacs):
-            for opponent in range(self.num_guacs):
+        for runner in range(num_songs):
+            for opponent in range(num_songs):
                 if (runner != opponent):
                     if (matrix_of_more_preferred_tp[opponent][runner] and not matrix_of_more_preferred_tp[runner][opponent]):
                         is_in_smith_or_schwartz_set[runner] = False
                         break
-        smith_schwartz_set_df = pd.DataFrame(index = self.guac_names)
+        smith_schwartz_set_df = pd.DataFrame(index = song_names)
         smith_schwartz_set_df['in_set'] = is_in_smith_or_schwartz_set
         return smith_schwartz_set_df
         
 
-    def declare_winner(self, results_df, ballots_matrix_list):
+    def declare_winner(self, ballots, ballots_matrix_list, ballot_matrices_sum):
         """This function computes the condorcet winner by ranking the guacs
         belonging to the smith set and ranking them by their average score
 
         Args:
-            results_df (dataframe): dataframe with the scores
+            ballots (dataframe): dataframe with the scores
             ballots_matrix_list (list): list of numpy matrices
         Returns:
             winning guac
         """
         #sum all ballot matrices
-        # ballot_matrices_sum = self.sum_ballot_matrices(ballots_matrix_list)
-        ballot_matrices_sum = sum(bm for bm in ballots_matrix_list)
-        assert(ballot_matrices_sum.shape == ballots_matrix_list[0].shape)
+        # ballot_matrices_sum = sum(bm for bm in ballots_matrix_list)
+        # assert(ballot_matrices_sum.shape == ballots_matrix_list[0].shape)
 
         #find the runners more preferred
         matrix_of_more_preferred = self.get_schwartz_relations_matrix(ballot_matrices_sum)
@@ -252,15 +260,16 @@ class CondorcetCounting():
         self.smith_schwartz_set_df = self.get_smith_or_schwartz_set_statuses(matrix_of_more_preferred)
         
         #add to the sets of winners and loosers the mean to find the absolute winner
-        self.smith_schwartz_set_df = self.smith_schwartz_set_df.join(results_df[['Mean']]) 
+        self.smith_schwartz_set_df = self.smith_schwartz_set_df.join(ballots[['Mean']]) 
         self.smith_schwartz_set_df['ID'] = self.smith_schwartz_set_df.index
 
         #filter out the winners
-        self.winner = self.get_winners(ballots_matrix_list, results_df)
+        self.winner = self.get_winners(ballots_matrix_list, ballots)
         return self.winner
 
 
-    def get_winners(self, ballots_matrix_list, results_df):
+    # @staticmethod
+    def get_winners(self, ballots_matrix_list, ballots):
         """This function computes the winner(s) from the smith_or_schwartz sets
 
         Args:
@@ -290,18 +299,18 @@ class CondorcetCounting():
                 mean_winners_dict[m] = [w]
         
         #extract the winners from the dictionary
-        self.winners = mean_winners_dict[winning_mean]
+        winners = mean_winners_dict[winning_mean]
 
         #if there's 1 winner
-        if len(self.winners)  == 1:
-            return self.winners[0]
+        if len(winners)  == 1:
+            return winners[0]
         #if there are multiple winners
         else:
-            # self.break_tie(ballots_matrix_list, results_df)
+            # break_tie(ballots_matrix_list, ballots)
             # print ("Picking winner at random among winners, for simplicity")
 
-            # print(f"\n\n\nWinner = {self.winners.iloc[0]['ID']}")
-            return self.winners[0]
+            # print(f"\n\n\nWinner = {winners.iloc[0]['ID']}")
+            return winners[0]
 
 
     #this below is WIP
