@@ -32,8 +32,8 @@ st.markdown("##### Repeated Contests")
 num_contests=100
 st.session_state["num_contests"] = num_contests
 lg.write_story("simulation_1_repeated")
-repeated_results = lg.display_results_of_repeated_contests(sim1, num_contests)
-baseline_results = repeated_results.head(num_winners)["ID"].tolist()
+repeated_results = lg.display_results_of_repeated_contests(sim1)
+baseline_results = lg.establish_baseline(repeated_results)
 
 
 # Random Samples
@@ -50,7 +50,7 @@ listen_limit = col1.slider(label,
     key=section_title+"_listen_limit")
 label = "How many songs does each voter get to rank?"
 ballot_limit = col2.slider(label, 
-    value=num_songs//4, 
+    value=num_songs//20, 
     min_value=10, 
     max_value=listen_limit,
     key=section_title+"_ballot_limit")
@@ -58,8 +58,7 @@ ballot_limit = col2.slider(label,
 sim2, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit,
     ballot_limit=ballot_limit,
-    baseline_results=baseline_results,
-    disabled=not sim1_chart_df["sum"].sum())
+    baseline_results=baseline_results)
 
 
 # Bloc Voting
@@ -83,7 +82,7 @@ ballot_limit = col2.slider(label,
 
 label = "How many corrupt artists are there?"
 num_mafiosos = col1.number_input(label,
-    value=1,
+    value=2,
     min_value=0,
     max_value=10,
     step=1)
@@ -98,8 +97,7 @@ mafia_size = col2.slider(label,
 sim3, _ = lg.simulation_section(song_df, section_title, 
     listen_limit=listen_limit, ballot_limit=ballot_limit,
     baseline_results=baseline_results,
-    num_mafiosos=num_mafiosos, mafia_size=mafia_size,
-    disabled=not sim1_chart_df["sum"].sum())
+    num_mafiosos=num_mafiosos, mafia_size=mafia_size)
 
 
 st.subheader("Conclusion")

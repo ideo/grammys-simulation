@@ -49,18 +49,19 @@ def reset_visuals():
 
 def insert_variables(paragraph, section_title):
     for key, value in st.session_state.items():
-        key, value = str(key), value
-        if key in paragraph:
-            
-            if section_title == "introduction" and key == "num_voters":
-                threshold = None
-                value = p.number_to_words(value, threshold=threshold)
-                value = value.capitalize()
-            else:
-                threshold = 10
-                value = p.number_to_words(value, threshold=threshold)
+        if type(value) in [int, float]:
+            key, value = str(key), value
+            if key in paragraph:
+                
+                if section_title == "introduction" and key == "num_voters":
+                    threshold = None
+                    value = p.number_to_words(value, threshold=threshold)
+                    value = value.capitalize()
+                else:
+                    threshold = 10
+                    value = p.number_to_words(value, threshold=threshold)
 
-            paragraph = paragraph.replace(key, value)
+                paragraph = paragraph.replace(key, value)
     return paragraph
         
 
@@ -159,6 +160,7 @@ def simulation_section(song_df, section_title,
     """
     A high level container for running a simulation.
     """
+    st.write("")
     num_voters = st.session_state["num_voters"]
     num_winners = st.session_state["num_winners"]
     sim = Simulation(song_df, num_voters, 
@@ -250,13 +252,8 @@ def format_spec(chart_df):
         chart_df["Color"] = chart_df["Success"].apply(
             lambda x: green if x else red)
 
-        color_spec = {
-            "field":    "Color",
-            "type":     "nominal",
-            "scale":    None,
-        }
     else:
-        color_spec = None
+        chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
 
     # TODO: Subtitle could display simulation settings.
     if chart_df["sum"].sum() == 0:
@@ -280,7 +277,11 @@ def format_spec(chart_df):
                     "type": "quantitative", 
                     "title": "Vote Tallies"
                     },
-                "color": color_spec,
+                "color": {
+                    "field":    "Color",
+                    "type":     "nominal",
+                    "scale":    None,
+                    },
             },
             "title":    {
                 "text": f"Simulation Results",
@@ -290,64 +291,30 @@ def format_spec(chart_df):
     return chart_df, spec
 
 
-# def set_a_baseline(sim, num_contests=10):
-#     """
-#     Run the first simulation num_contests times and compare the list of nominees.
-#     """
-#     sim = deepcopy(sim)
-#     # sim.num_winners = 50
-#     df = pd.DataFrame(index=range(10))
-#     df.index.name = "Winners"
-    
-#     for ii in range(num_contests):
-#         sim.simulate()
-#         df[f"Contest {ii}"] = sim.condorcet.top_nominee_ids
-#         print(f"Contest {ii} complete")
-
-#     # This returns the top N noninees specifed by sim.num_winners
-#     # unique_orderings = set([tuple(winners) for winners in df.T.values])
-#     # unique_winners = set([tuple(sorted(winners)) for winners in df.T.values])
-#     # return unique_orderings, unique_winners
-
-#     # How many times did each song make it into the top 10?
-#     contest_tallies = Counter(np.concatenate(df.values))
-#     chart_df = pd.DataFrame(
-#         index=contest_tallies.keys(), 
-#         data=contest_tallies.values(),
-#         columns=[f"How Many Times a Song Made it into the Top {sim.num_winners}"])
-    
-#     print(sim.song_df)
-#     print(chart_df)
-#     chart_df = chart_df.merge(sim.song_df, 
-#         left_index=True, 
-#         right_index=True,
-#         how="left")
-
-#     # Save Results
-#     filename = format_repeated_results_filename(sim, num_contests)
-#     chart_df.to_pickle(DATA_DIR / filename)
-#     return sim, num_contests
-
-
 def format_repeated_results_filename(sim, num_contests):
     filename = f"Repeated-Results"
     filename += f"_{sim.num_voters}-Voters"
     filename += f"_{sim.song_df.shape[0]}-Songs"
-    filename += f"_{sim.num_winners}-Winners"
+    num_winners = 20
+    filename += f"_{num_winners}-Winners"
     filename += ".pkl"
     return filename
 
 
-def display_results_of_repeated_contests(sim, num_contests=10):
+def display_results_of_repeated_contests(sim):
     """This establishes the baseline for Simulation One"""
+    # these settings for all repeated runs
+    num_contests = 100
+    num_winners=20
+
     filename = format_repeated_results_filename(sim, num_contests)
     filepath = DATA_DIR / filename
     chart_df = pd.read_pickle(filepath)
+    chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
 
-    x_label = f"How Many Times a Song Made it into the Top {sim.num_winners}"
+    x_label = f"How Many Times a Song Made it into the Top {num_winners}"
     title = "Who Deserves to Win?"
-    num_contests = st.session_state["num_contests"]
-    subtitle = f"The results of running {num_contests} repeated simulated contests."
+    subtitle = f"The results of running {num_contests} simulated contests."
     spec = {
             "mark": {"type": "bar"},
             "encoding": {
@@ -363,7 +330,11 @@ def display_results_of_repeated_contests(sim, num_contests=10):
                     "type": "quantitative", 
                     # "title": "Vote Tallies"
                     },
-                # "color": color_spec,
+                "color": {
+                    "field":    "Color",
+                    "type":     "nominal",
+                    "scale":    None,
+                    },
             },
             "title":    {
                 "text": title,
@@ -373,6 +344,17 @@ def display_results_of_repeated_contests(sim, num_contests=10):
     st.write("")
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
     return chart_df
+
+
+def establish_baseline(repeated_results):
+    # num_winners = st.session_state["num_winners"]
+    num_winners = 20
+    col = f"How Many Times a Song Made it into the Top {num_winners}"
+    repeated_results = repeated_results.sort_values(col, ascending=False)
+
+    num_winners = 10
+    baseline_results = repeated_results.head(num_winners)["ID"].tolist()
+    return baseline_results
 
 
 

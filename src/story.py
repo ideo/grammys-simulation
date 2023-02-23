@@ -40,7 +40,7 @@ STORY = {
 
     "simulation_3": [
         """
-        While making her rounds in the town square, Mayor Melody got a whiff that individual loyalties between citizens might threaten to throw off the otherwise fair Song of the Year contest. After some investigation, the cronyism going on between the Heads of certain neighborhoods became clear. For example, in Double Reed Village, Al Pacone was running a campaign to get people to vote for his buddy’s song, “Defenestration" by Kid Lincoln, by offering them a free session at his state-of-the-art studio. And Lucky Luke, over on de Sousa Cul de Sac, was telling his neighbors that if they voted for his song, “Entrepreneur,” that he’d do them a big musical favor at a later date. Mayor Melody had a feeling that this could possibly happen, so she began to think about how to mitigate this issue, to ensure that it didn’t overtake the voting enough to skew the final results. Use the sliders below to see how much (or how little) cronyism affects the final result of the contest.      
+        While making her rounds in the town square, Mayor Melody got a whiff that individual loyalties between citizens might threaten to throw off the otherwise fair Song of the Year contest. After some investigation, the cronyism going on between the heads of certain neighborhoods became clear. For example, in Double Reed Village, Al Pacone was running a campaign to get people to vote for his buddy Kid Linkcoln's song, “Defenestration", by offering them a free session at his state-of-the-art studio. And Lucky Luke, over on de Sousa Cul de Sac, was telling his neighbors that if they voted for his song, “Entrepreneur,” that he’d do them a big musical favor at a later date. Mayor Melody had a feeling that this could possibly happen, so she began to think about how to mitigate this issue, to ensure that it didn’t overtake the voting enough to skew the final results. Use the sliders below to see how much (or how little) cronyism affects the final result of the contest.      
         """,
     ],
 
@@ -58,11 +58,11 @@ INSTRUCTIONS = {
     ],
 
     "simulation_2": [
-        "In our second contest, voters are randomly assigned simulation_2_listen_limit songs of the num_songs nominated. They then submit a ballot ranking their top simulation_2_ballot_limit choices from that sample."
+        "In our second contest, voters are randomly assigned simulation_2_listen_limit songs from of the num_songs nominated. They then submit a ballot ranking their top simulation_2_ballot_limit choices from that sample."
     ],
 
      "simulation_3": [
-        "In our third contest, slsls."
+        "In our third contest, members of a corrupt voting bloc will rank their leader's song at the top of the ballot no matter what, contorting the results."
     ],
 }
 
