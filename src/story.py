@@ -10,7 +10,7 @@ STORY = {
         That is the one thing everyone can agree on here on the Isle: music is something to be studied and taken seriously. No one can agree, however, on which artists, albums, or songs are the “best,” – and if asked, they’d probably nominate themselves, or a close collaborator. So in the spirit of wanting to give her citizens their well-deserved props, Mayor Melody suggests the town hold a first annual contest to decide which of this year’s songs was SONG OF THE YEAR.   
         """,
         """
-        Anyone who believes a song they wrote this year is particularly special can nominate it for the contest. num_voters people live on the Isle, and when Mayor Melody sees the lists of nominees, surprise surprise num_songs have been nominated. Everyone must have picked their personal best. Running a contest with this many entrants is going to be tricky, but the mayor has a plan.
+        Anyone who believes a song they wrote this year is particularly special can nominate it for the contest. num_voters people live on the Isle, and when Mayor Melody sees the lists of nominees, surprise surprise, num_songs have been nominated. Everyone must have picked their personal best. Running a contest with this many entrants is going to be tricky, but the mayor has a plan.
         """,
     ],
 

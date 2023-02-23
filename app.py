@@ -4,6 +4,10 @@ from src import logic as lg
 from src import load_or_generate_objective_scores
 
 
+# TODO: Include the num_winners as a user visible variable
+# TODO: Display how many times the right top 10 existed.
+
+
 st.set_page_config(
     page_title="Grammys Simulation",
     page_icon="img/grammys_logo.png",
@@ -44,14 +48,14 @@ lg.write_story(section_title)
 col1, col2 = st.columns(2)
 label = "How many songs does each voter get to listen to?"
 listen_limit = col1.slider(label, 
-    value=num_songs//2, 
+    value=st.session_state["listen_limit"], 
     min_value=10, 
     max_value=num_songs,
     step=10,
     key=section_title+"_listen_limit")
 label = "How many songs does each voter get to rank?"
 ballot_limit = col2.slider(label, 
-    value=num_songs//20, 
+    value=st.session_state["ballot_limit"], 
     min_value=10, 
     max_value=listen_limit,
     step=10,
@@ -71,14 +75,14 @@ lg.write_story(section_title)
 col1, col2 = st.columns(2)
 label = "How many songs does each voter get to listen to?"
 listen_limit = col1.slider(label, 
-    value=num_songs//2, 
+    value=st.session_state["listen_limit"], 
     min_value=10, 
     max_value=num_songs,
     step=10,
     key=section_title+"_listen_limit")
 label = "How many songs does each voter get to rank?"
 ballot_limit = col2.slider(label, 
-    value=num_songs//4, 
+    value=st.session_state["ballot_limit"], 
     min_value=10, 
     max_value=listen_limit,
     step=10,
