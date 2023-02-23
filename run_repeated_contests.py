@@ -1,6 +1,6 @@
 import os
 from copy import deepcopy
-from collections import Counter
+from collections import Counter, defaultdict
 import pickle
 
 import numpy as np
@@ -11,18 +11,60 @@ from src import logic as lg
 from src import RepeatedSimulations, load_or_generate_objective_scores, DATA_DIR
 
 
-if __name__ == "__main__":
+def establish_a_baseline():
+    """
+    This runs 100 contests where voters listen to every song. This establishes
+    the baseline that is used throughout the story
+    """
     num_voters = 1000
     num_songs = 1000
-    num_winners = 10
     filepath = DATA_DIR / f"Repeated-Simulations_Sums_{num_songs}-Songs_{num_voters}-Voters.pkl"
 
     song_df = load_or_generate_objective_scores(num_songs)
     repeated_contests = RepeatedSimulations(song_df, num_voters, filepath=filepath)
     
-    for _ in range(10):
+    for ii in range(10):
         # Each call runs 10 simulations
+        print(f"{ii}:\tRunning 10 rounds of the contest.")
         repeated_contests.simulate()
 
     print(repeated_contests.num_contests)
     print(repeated_contests.sum_of_sums)
+
+
+def explore_listening_limit():
+    """
+    Recording the 25 winners for each simulation so we have records of top 10, 
+    top 15, top 20, etc.
+
+    Right now, this function overwrites the previous save each time it runs.
+    """
+    num_songs = 1000
+    # num_songs = 100
+    song_df = load_or_generate_objective_scores(num_songs)
+    filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs.pkl"
+
+    voter_counts = [500, 750, 1000, 1250, 1500]
+    sample_sizes = [50, 100, 150, 200, 250]    
+    # voter_counts = [int(x/10) for x in voter_counts]
+    # sample_sizes = [int(x/10) for x in sample_sizes]
+
+    results = defaultdict(dict)
+    for num_voters in voter_counts:
+        for listen_limit in sample_sizes:
+            # Starts off quick, gets slower
+            sim = RepeatedSimulations(song_df, num_voters, 
+                    listen_limit=listen_limit, 
+                    num_winners=25)
+
+            print(f"Simualting {num_voters} voters listening to {listen_limit} songs each.")
+            sim.simulate()
+            results[num_voters][listen_limit] = sim
+
+            with open(filepath, "wb") as pkl_file:
+                pickle.dump(results, pkl_file)
+
+
+if __name__ == "__main__":
+    # establish_a_baseline()
+    explore_listening_limit()

@@ -29,7 +29,7 @@ def initialize_session_state():
         "reset_visuals":        True,
         "num_voters":           1000,
         "num_songs":            1000,
-        "num_winners":          15,
+        "num_winners":          10,
         "listen_limit":         250,
         "ballot_limit":         50,
         "st_dev":               10,    #This will need to change

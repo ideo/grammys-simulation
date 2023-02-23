@@ -114,7 +114,7 @@ class Simulation:
             self.non_corrupt_ballots = self.ballots.copy()
             self.corrupt_ballots()
         self.winner = self.tally_votes()
-        self.record_outcome()
+        # self.record_outcome()
         self.complete = True
 
 
@@ -198,15 +198,9 @@ class Simulation:
         return winner
 
 
-    def record_outcome(self):
-        """This is here in case we need to expand it"""
-        # TODO: we need consistency in how we save the winner, name or ID
-        if isinstance(self.winner, str):
-            # winner is a name, convert to ID
-            ind = self.song_df[self.song_df["Entrant"] == self.winner].index[0]
-            self.winner = ind
-
-        self.success = self.winner == self.objective_winner
+    # def record_outcome(self):
+    #     """This is here in case we need to expand it"""
+    #     pass
 
 
 class RepeatedSimulations:
@@ -228,6 +222,7 @@ class RepeatedSimulations:
         
         num_songs = song_df.shape[0]
         self.sum_of_sums = np.zeros((num_songs, num_songs))
+        self.contest_winners = {}
         self.num_contests = 0
         
         
@@ -235,11 +230,13 @@ class RepeatedSimulations:
         for _ in tqdm(range(num_repetitions)):
             self.sim.simulate()
             self.sum_of_sums += self.sim.condorcet.pairwise_sums
+            self.contest_winners[self.num_contests] = self.sim.condorcet.top_nominee_ids
             self.num_contests += 1
 
-            if self.filepath is not None:
-                with open(self.filepath, "wb") as pkl_file:
-                    pickle.dump(self, pkl_file)
+
+        if self.filepath is not None:
+            with open(self.filepath, "wb") as pkl_file:
+                pickle.dump(self, pkl_file)
 
 
 # The previous simulation was set up to incorporate multiple tallying 

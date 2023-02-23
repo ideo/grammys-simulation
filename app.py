@@ -6,7 +6,7 @@ from src import load_or_generate_objective_scores
 
 # TODO: Include the num_winners as a user visible variable
 # TODO: Display how many times the right top 10 existed.
-# TODO: Add to the story "good but not great" B-
+# TODO: Add to the story "good but not great" B+
 # TODO: How many times did a crony get to contort their ballot
 
 
@@ -40,6 +40,7 @@ st.session_state["num_contests"] = num_contests
 lg.write_story("simulation_1_repeated")
 repeated_results = lg.display_results_of_repeated_contests(sim1)
 baseline_results = lg.establish_baseline(repeated_results)
+# st.write(sim1.condorcet.top_nominee_ids)
 
 
 # Random Samples
@@ -68,6 +69,7 @@ sim2, _ = lg.simulation_section(song_df, section_title,
     listen_limit=listen_limit,
     ballot_limit=ballot_limit,
     baseline_results=baseline_results)
+st.write(sim2.condorcet.top_nominee_ids)
 
 
 # Bloc Voting

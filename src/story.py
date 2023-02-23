@@ -58,7 +58,7 @@ INSTRUCTIONS = {
     ],
 
     "simulation_2": [
-        "In our second contest, voters are randomly assigned simulation_2_listen_limit songs from of the num_songs nominated. They then submit a ballot ranking their top simulation_2_ballot_limit choices from that sample."
+        "In our second contest, voters are randomly assigned a smaller subset of songs to listen to. They then submit a ballot ranking their top picks from that sample. Change the listening sample and ballot sizes to explore different outcomes."
     ],
 
      "simulation_3": [
