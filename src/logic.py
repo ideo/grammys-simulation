@@ -364,6 +364,10 @@ def establish_baseline(repeated_results):
 
 
 def explore_chaning_sample_size(sim, baseline):
+    """
+    This generates the spec for the heatmap. It saves it so the streamlit app
+    can just load the chart, not the raw data.
+    """
     num_songs = sim.song_df.shape[0]
     filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs.pkl"
     with open(filepath, "rb") as pkl_file:
@@ -405,7 +409,8 @@ def explore_chaning_sample_size(sim, baseline):
             )), 
         color=alt.Color(
             "z:Q", 
-            scale=alt.Scale(scheme="RedBlue")
+            scale=alt.Scale(scheme="RedBlue"),
+            title="Median",
         )
     ).properties(
         title={
