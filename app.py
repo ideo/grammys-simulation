@@ -27,6 +27,9 @@ lg.write_story("introduction")
 song_df = load_or_generate_objective_scores(num_songs)
 
 
+lg.select_num_winners()
+
+
 # Baseline
 section_title = "simulation_1"
 st.subheader("Establishing a Baseline")
@@ -54,15 +57,15 @@ listen_limit = col1.slider(label,
     value=st.session_state["listen_limit"], 
     min_value=50, 
     max_value=num_songs,
-    step=10,
+    step=50,
     key=section_title+"_listen_limit")
 label = "How many songs does each voter get to rank?"
 initial = st.session_state["ballot_limit"] 
 ballot_limit = col2.slider(label, 
     value=initial if initial < listen_limit else listen_limit,
-    min_value=10, 
+    min_value=50, 
     max_value=listen_limit,
-    step=10,
+    step=50,
     key=section_title+"_ballot_limit")
     
 sim2, _ = lg.simulation_section(song_df, section_title, 
@@ -70,7 +73,7 @@ sim2, _ = lg.simulation_section(song_df, section_title,
     ballot_limit=ballot_limit,
     baseline_results=baseline_titles)
 
-lg.load_or_generate_heatmap_chart(sim2, baseline_indices, regenerate=False)
+lg.load_or_generate_heatmap_chart(sim2, baseline_indices, regenerate=True)
 
 
 # Bloc Voting

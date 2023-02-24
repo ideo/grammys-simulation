@@ -53,6 +53,10 @@ STORY = {
 
 
 INSTRUCTIONS = {
+    "select_num_winners": [
+        "This contest will determine a small list of finalists from the larger pool of num_songs nominees. How many finalists should there be?"
+    ],
+
     "simulation_1": [
         "This first contest sets the baseline that we can compare against in subsequent contests. All num_voters voters listen and vote on all num_songs songs. "
     ],

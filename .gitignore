@@ -3,3 +3,4 @@ __pycache__/
 *.ipynb
 data/
 src/_*
+.DS_Store

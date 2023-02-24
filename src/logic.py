@@ -122,13 +122,13 @@ def sidebar():
         key="num_songs",
         on_change=reset_visuals)
 
-    label = "How many winning songs are declared?"
-    _ = st.sidebar.slider(label,
-        min_value=5, 
-        max_value=20,
-        step=1,
-        key="num_winners",
-        on_change=reset_visuals)
+    # label = "How many winning songs are declared?"
+    # _ = st.sidebar.slider(label,
+    #     min_value=5, 
+    #     max_value=20,
+    #     step=1,
+    #     key="num_winners",
+    #     on_change=reset_visuals)
 
     st.sidebar.subheader("Under the Hood Variables")
     label = "What is the st. dev. of voters randomly generated scores?"
@@ -138,6 +138,22 @@ def sidebar():
         step=1,
         key="st_dev",
         disabled=True)
+    
+
+def select_num_winners():
+    """
+    Let the reader determine how many 'winners' we determine. How long is the 
+    final list of nominees?
+    """
+    col1, _, col2 = st.columns([5,1,5])
+
+    write_instructions("select_num_winners", col1)
+
+    label = "Choose the number of contest finalists."
+    options = [10, 15, 20]
+    default = st.session_state["num_winners"]
+    num_winners = col2.radio(label, options, index=options.index(default))
+    st.session_state["num_winners"] = num_winners
 
 
 def load_chart_df(key):
@@ -363,13 +379,18 @@ def establish_baseline(repeated_results):
     return baseline_titles, baseline_indices
 
 
+def heatmapt_filepath(sim):
+    filepath = DATA_DIR / f"heatmap_{sim.num_winners}_winners_{sim.ballot_limit}_ballot_limit.json"
+    return filepath
+
+
 def explore_chaning_sample_size(sim, baseline):
     """
     This generates the spec for the heatmap. It saves it so the streamlit app
     can just load the chart, not the raw data.
     """
     num_songs = sim.song_df.shape[0]
-    filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs.pkl"
+    filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs_{sim.ballot_limit}_ballot_limit.pkl"
     with open(filepath, "rb") as pkl_file:
         exploration = pickle.load(pkl_file)
 
@@ -417,16 +438,16 @@ def explore_chaning_sample_size(sim, baseline):
             "text": "Contest Consistency",
             "subtitle": [
                 f"The median number of deserved winners within the top {num_winners}.",
-                f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of 50.",]
+                f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of {sim.ballot_limit}.",]
         }
     )
-    filepath = DATA_DIR / f"heatmap_{num_winners}.json"
+    filepath = heatmapt_filepath(sim)
     chart.save(filepath)
 
 
 
 def load_or_generate_heatmap_chart(sim, baseline, regenerate=False):
-    filepath = DATA_DIR / f"heatmap_{sim.num_winners}.json"
+    filepath = heatmapt_filepath(sim)
     
     if not os.path.exists(filepath) or regenerate:
         explore_chaning_sample_size(sim, baseline) 
