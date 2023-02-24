@@ -4,3 +4,4 @@ __pycache__/
 data/
 src/_*
 .DS_Store
+.streamlit/secrets.toml

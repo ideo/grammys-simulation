@@ -73,7 +73,8 @@ sim2, _ = lg.simulation_section(song_df, section_title,
     ballot_limit=ballot_limit,
     baseline_results=baseline_titles)
 
-lg.load_or_generate_heatmap_chart(sim2, baseline_indices, regenerate=True)
+regenerate = st.secrets["ENVIRONMENT"] == "local"
+lg.load_or_generate_heatmap_chart(sim2, baseline_indices, regenerate=regenerate)
 
 
 # Bloc Voting

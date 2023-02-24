@@ -416,16 +416,20 @@ def explore_chaning_sample_size(sim, baseline):
     voter_range = list(outcome_quality.keys())
     sample_range = list(outcome_quality[voter_range[0]].keys())
     x, y = np.meshgrid(sample_range, voter_range)
-    source = pd.DataFrame({"x": x.ravel(), "y": y.ravel()})
-    source["z"] = source.apply(lambda row: outcome_quality.get(row.y, np.nan).get(row.x, np.nan), axis=1)
+
+    x_label = "Sample Size"
+    y_label = "Voters"
+
+    source = pd.DataFrame({x_label: x.ravel(), y_label: y.ravel()})
+    source["z"] = source.apply(lambda row: outcome_quality.get(row[y_label], np.nan).get(row[x_label], np.nan), axis=1)
 
     # First time doing an actual altair chart instead of doing a vega-lite spec
     chart = alt.Chart(source).mark_rect().encode(
-        x=alt.X("x:O", axis=alt.Axis(
+        x=alt.X(f"{x_label}:O", axis=alt.Axis(
             title="Sample Size: How Many Songs Voters Listened To",
             labelAngle=0,
             )), 
-        y=alt.Y("y:O", sort='descending', axis=alt.Axis(
+        y=alt.Y(f"{y_label}:O", sort='descending', axis=alt.Axis(
             title="No. Voters"
             )), 
         color=alt.Color(
