@@ -42,6 +42,8 @@ num_contests=100
 st.session_state["num_contests"] = num_contests
 lg.write_story("simulation_1_repeated")
 repeated_results = lg.display_results_of_repeated_contests(sim1)
+
+# TODO: Regenerate this data
 baseline_titles, baseline_indices = lg.establish_baseline(repeated_results)
 # st.write(sim1.condorcet.top_nominee_ids)
 

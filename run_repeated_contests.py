@@ -42,33 +42,44 @@ def explore_listening_limit():
     num_songs = 1000
     song_df = load_or_generate_objective_scores(num_songs)
     
-    # with open(filepath, "rb") as pkl_file:
-    #     results = pickle.load(pkl_file)
-    
-    # ballot_lengths = [100, 150]
-    ballot_lengths = [200, 250]  
+    ballot_lengths = [50, 100, 150, 200, 250]  
     voter_counts = [500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000]
     sample_sizes = [50, 100, 150, 200, 250, 300, 350, 450, 500] 
 
     for ballot_limit in ballot_lengths:
         filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs_{ballot_limit}_ballot_limit.pkl"
-        results = defaultdict(dict)
+        with open(filepath, "rb") as pkl_file:
+            results = pickle.load(pkl_file)
+
         for num_voters in voter_counts:
             for listen_limit in sample_sizes:
                 # Starts off quick, gets slower
                 # When re-running, we'll have to load the previous sim
-                sim = RepeatedSimulations(song_df, num_voters, 
-                        listen_limit=listen_limit, 
-                        ballot_limit=ballot_limit,
-                        num_winners=25)
+                
+                try:
+                    sim = results[num_voters][listen_limit]
+                except KeyError:
+                    sim = RepeatedSimulations(song_df, num_voters, 
+                            listen_limit=listen_limit, 
+                            ballot_limit=ballot_limit,
+                            num_winners=25)
 
-                print(f"Simualting {num_voters} voters listening to {listen_limit} songs each. Ballot limit: {ballot_limit}")
-                sim.simulate()
-                results[num_voters][listen_limit] = sim
+                # Since this was added later. We're not using it, but maybe
+                if not hasattr(sim, "sum_of_rankings"):
+                    # These will be off by the first 10 contests though
+                    sim.sum_of_rankings = np.zeros((num_songs, num_songs))
 
-                print(filepath)
-                with open(filepath, "wb") as pkl_file:
-                    pickle.dump(results, pkl_file)
+                if sim.num_contests < 20:
+                    print(f"Simuation has already run {sim.num_contests} contests with a ballot limit of {sim.ballot_limit}.")
+                    print(f"Simualting {num_voters} voters listening to {listen_limit} songs each. Ballot limit: {ballot_limit}")
+                    sim.simulate()
+
+                    # This step shouldn't be necessary, but doing it to make myself feel good.
+                    results[num_voters][listen_limit] = sim
+
+                    print(filepath)
+                    with open(filepath, "wb") as pkl_file:
+                        pickle.dump(results, pkl_file)
 
 
 if __name__ == "__main__":

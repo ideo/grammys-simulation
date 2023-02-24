@@ -51,21 +51,23 @@ def reset_visuals():
             os.remove(DATA_DIR / filename)
 
 
-def insert_variables(paragraph, section_title):
+def insert_variables(paragraph, section_title, story=True):
     for key, value in st.session_state.items():
         if type(value) in [int, float]:
             key, value = str(key), value
-            if key in paragraph:
-                
-                if section_title == "introduction" and key == "num_voters":
-                    threshold = None
-                    value = p.number_to_words(value, threshold=threshold)
-                    value = value.capitalize()
-                else:
-                    threshold = 10
-                    value = p.number_to_words(value, threshold=threshold)
+            for _ in range(paragraph.count(key)):
+                if story:
+                    str_value = p.number_to_words(value)
 
-                paragraph = paragraph.replace(key, value)
+                    # If the word is at the start of a sentence, capitalize it
+                    # This only works for the first occurrence of a variable
+                    ii = paragraph.index(key)
+                    if paragraph[ii-2] == ".":
+                        str_value = str_value.capitalize()
+                else:
+                    str_value = str(value)
+
+                paragraph = paragraph.replace(key, str_value, 1)
     return paragraph
         
 
@@ -77,7 +79,7 @@ def write_story(section_title):
 
 def write_instructions(section_title, st_col=None):
     for paragraph in INSTRUCTIONS[section_title]:
-        paragraph = insert_variables(paragraph, section_title)
+        paragraph = insert_variables(paragraph, section_title, story=False)
         if st_col is not None:
             st_col.caption(paragraph)
         else:
@@ -280,7 +282,7 @@ def format_spec(chart_df):
     if chart_df["sum"].sum() == 0:
         subtitle = "Click 'Simulate' to see the results"
     else:
-        subtitle = "Vote tallies of the highest scoring songs."
+        subtitle = f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."
 
     spec = {
             # "height":   275,
@@ -326,13 +328,14 @@ def display_results_of_repeated_contests(sim):
     with open(filepath, "rb") as pkl_file:
         repeated_contests = pickle.load(pkl_file)
 
-    title = "Who Deserves to Win?"
-    subtitle = f"Vote tallies after running {repeated_contests.num_contests} simulated contests."
-    x_label = f"Vote Tallies"
-
+    # TODO: Re-run these 100 simulations so you can switch it to preferences.
     sums_per_song = repeated_contests.sum_of_sums.sum(axis=1)
     # sums_per_song = repeated_contests.preferences.sum(axis=1)
     chart_df = pd.DataFrame(sums_per_song)
+
+    title = "Who Deserves to Win?"
+    subtitle = f"Vote tallies of the {sim.num_winners} highest scoring songs after running {repeated_contests.num_contests} simulated contests."
+    x_label = f"Vote Tallies"
     chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
     chart_df["ID"] = sim.song_df["ID"]
     chart_df.rename(columns={0: x_label}, inplace=True)
@@ -398,7 +401,7 @@ def explore_chaning_sample_size(sim, baseline):
     # Tally, on average, how many of the top N were fair
     num_winners = len(baseline)
     outcome_quality = defaultdict(dict)
-    num_contests = exploration[500][50].num_contests
+    num_contests = exploration[3000][500].num_contests
     num_contests = p.number_to_words(num_contests)
     # num_songs = p.number_to_words(num_songs)
 
