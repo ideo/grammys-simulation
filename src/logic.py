@@ -35,14 +35,17 @@ def initialize_session_state():
         "listen_limit":         250,
         "ballot_limit":         50,
         "st_dev":               10,    #This will need to change
+        "total_time_str":       "",
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
+    # st.session_state["total_time_str"] = format_total_time()
+
     if st.session_state["reset_visuals"]:
         reset_visuals()
-        st.session_state["reset_visuals"] = False
+        st.session_state["reset_visuals"] = False    
 
 
 def reset_visuals():
@@ -382,7 +385,26 @@ def establish_baseline(repeated_results):
     return baseline_titles, baseline_indices
 
 
-def heatmapt_filepath(sim):
+# def format_total_time():
+#     num_songs = st.session_state["num_songs"]
+#     avg_song_length = 3.5   #minutes
+#     total_time = num_songs * avg_song_length
+#     # total_time /= 30
+
+#     # Format
+#     minutes_in_a_day = 60*24
+#     days = total_time // minutes_in_a_day
+#     leftover = total_time % minutes_in_a_day
+
+#     hours = leftover // 60
+#     minutes = leftover % 60
+
+#     days, hours, minutes = int(days), int(hours), int(minutes)
+#     total_time_str = f"{days} days, {hours} hours, and {minutes} minutes"
+#     return total_time_str
+
+
+def heatmap_filepath(sim):
     filepath = DATA_DIR / f"heatmap_{sim.num_winners}_winners_{sim.ballot_limit}_ballot_limit.json"
     return filepath
 
@@ -437,7 +459,7 @@ def explore_chaning_sample_size(sim, baseline):
             )), 
         color=alt.Color(
             "z:Q", 
-            scale=alt.Scale(scheme="RedBlue"),
+            scale=alt.Scale(scheme="RedBlue", domain=[0,num_winners]),
             title="Median",
         )
     ).properties(
@@ -448,13 +470,13 @@ def explore_chaning_sample_size(sim, baseline):
                 f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of {sim.ballot_limit}.",]
         }
     )
-    filepath = heatmapt_filepath(sim)
+    filepath = heatmap_filepath(sim)
     chart.save(filepath)
 
 
 
 def load_or_generate_heatmap_chart(sim, baseline, regenerate=False):
-    filepath = heatmapt_filepath(sim)
+    filepath = heatmap_filepath(sim)
     
     if not os.path.exists(filepath) or regenerate:
         explore_chaning_sample_size(sim, baseline) 

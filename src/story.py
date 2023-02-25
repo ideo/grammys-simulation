@@ -31,13 +31,13 @@ STORY = {
 
     "simulation_2": [
         """
-        Of course, fair voting this way would take a long time. The citizens of the Isle had albums to produce, sound edits to make– every citizen of the Isle couldn’t drop everything, listen and rate every single song without missing a lot of time off work and play. Plus by the time they got to 1,000 songs, they might be exhausted, and all the songs after that will end up sounding the same. Music lovers are superhuman, but not like that!      
+        Of course, voting this way would take a long time. Plus, the citizens of the Isle don’t actually want a month of work – their work is their passion.They have albums to produce, sound edits to make – they don’t want to drop everything to listen and rate every single song. Plus, even for music lovers, working through num_songs sounds exhausting. Would everything just start to sound the same after awhile? Music lovers are superhuman, but not like that!      
         """,
         """
-        Now, let’s say Mayor Melody parsed out the songs between the voters, so that voters listened to a random sample of songs and ranked those. Say each voter gets 100 songs and submits a ballot with their top fifty.
+        So Mayor Melody has a better plan that will still ensure a fair election, and it relies on the fact that there are so many dedicated voters. Instead of receiving all num_songs songs, citizens will be sent a randomly chosen subset. This will be much more practical anyway, since the latest technology takes awhile to make it out to the Isle. Mayor Melody was worried voters wouldn’t have room for all num_songs on their Zunes.
         """,
         """
-        One thing to remember is that every voter has subjective preferences. Even if a voter is a highly-trained music expert, it’s possible that they might rate one song slightly higher or lower than what it actually deserves. This could be for a variety of reasons: Shekka Sketcha might’ve loved the song she listened to right before she scored "You Beach Beach" by MK Timber, so “You Beach Beach” might have gotten a lower score than if it was the only song she listened to that day. 
+        One thing to remember is that every voter has subjective preference. While the citizens are musical experts and may generally agree on the overall quality of the song, when it comes to choosing between songs of similar quality, we should expect voters to have differing opinions. 
         """,
     ],
 
@@ -66,6 +66,10 @@ INSTRUCTIONS = {
 
     "simulation_2": [
         "In our second contest, voters are randomly assigned a smaller subset of songs to listen to. They then submit a ballot ranking their top picks from that sample. Change the listening sample and ballot sizes to explore different outcomes."
+    ],
+
+    "heatmap": [
+    "The sample size controls how many songs voters get to listen to. The ballot size controls how many songs receive vote tallies. Below are the results of running multiple contests at a variety of configurations. Play with the controls above to explore various outcomes. Use your cursor to inspect individual tiles of the heatmap."
     ],
 
      "simulation_3": [

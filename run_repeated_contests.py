@@ -80,6 +80,8 @@ def explore_listening_limit():
                     print(filepath)
                     with open(filepath, "wb") as pkl_file:
                         pickle.dump(results, pkl_file)
+                else:
+                    print(f"Skipping {num_voters} voters, {listen_limit} sample size, {ballot_limit} ballot limit.")
 
 
 if __name__ == "__main__":
