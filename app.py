@@ -75,10 +75,31 @@ sim2, _ = lg.simulation_section(song_df, section_title,
     ballot_limit=ballot_limit,
     baseline_results=baseline_titles)
 
-# heatmap
-lg.write_instructions("heatmap")
+
+# Heatmap
+st.markdown("##### Repeated Contests")
+col1, _, col2 = st.columns([5, 1, 4])
+lg.write_story("heatmap", st_col=col1)
+
+with col2:
+    label="No. Finalists"
+    options = [10, 15, 20]
+    index = options.index(st.session_state["num_winners"])
+    heatmap_num_winners = st.selectbox(label, options=options, index=index)
+
+    label="Ballot Size"
+    options = [50, 100, 150, 200, 250]
+    index = options.index(ballot_limit)
+    heatmap_ballot_limit = st.selectbox(label, options=options, index=index)
+
+st.write("")
 regenerate = st.secrets["ENVIRONMENT"] == "local"
-lg.load_or_generate_heatmap_chart(sim2, baseline_indices, regenerate=regenerate)
+lg.load_or_generate_heatmap_chart(
+    heatmap_num_winners, 
+    heatmap_ballot_limit, 
+    baseline_indices, 
+    regenerate=regenerate)
+lg.write_story("heatmap_conclusion")
 
 
 # Bloc Voting

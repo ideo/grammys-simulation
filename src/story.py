@@ -41,6 +41,25 @@ STORY = {
         """,
     ],
 
+    "heatmap": [
+        "The sample size controls how many songs voters get to listen to. The ballot size controls how many songs receive vote tallies. Below are the results of running multiple contests at a variety of configurations. Play with the controls below to explore various outcomes. Use your cursor to inspect individual tiles of the heatmap."
+    ],
+
+    "heatmap_conclusion": [
+        """
+        Exploring the outcomes of different configurations, you may notice it appears that the best we can do is just one shy of a perfect score. Nine out of ten of the finalists were correct (or 14 out of 15, or 19 out of 20).
+        """,
+        """
+        Since not every voter gets to listen to every song, not every voter will have heard each of the finalists. That means when we compile the rankings of rankings, we often end up with some ties, e.g. two songs tied for second place, three songs tied at fourth place, etc. By setting the cutoff right at ten or fifteen, we often slice right through a tie.
+        """,
+        """
+        How should we work with ties? There is some complex math to break ties within rankings of rankings voting systems. However since this first round the contest is not to find one ultimate winner but merely to produce a list of finalists, it may be simpler and more transparent to include all tying finalists.
+        """,
+        """
+        For the purposes of this simulation, one shy of a perfect score can still be considered a fair outcome. For the purposes of a real contest, this creates an opportunity to have an dynamic number of finalists – to let the voters and quality of nominees determine if this year should have nine or twelve finalists, for example.
+        """,
+    ],
+
     "simulation_3": [
         """
         While making her rounds in the town square, Mayor Melody got a whiff that individual loyalties between citizens might threaten to throw off the otherwise fair Song of the Year contest. After some investigation, the cronyism going on between the heads of certain neighborhoods became clear. For example, in Double Reed Village, Al Pacone was running a campaign to get people to vote for his buddy Kid Linkcoln's song, “Defenestration", by offering them a free session at his state-of-the-art studio. And Lucky Luke, over on de Sousa Cul de Sac, was telling his neighbors that if they voted for his song, “Entrepreneur,” that he’d do them a big musical favor at a later date. Mayor Melody had a feeling that this could possibly happen, so she began to think about how to mitigate this issue, to ensure that it didn’t overtake the voting enough to skew the final results. Use the sliders below to see how much (or how little) cronyism affects the final result of the contest.      
@@ -66,10 +85,6 @@ INSTRUCTIONS = {
 
     "simulation_2": [
         "In our second contest, voters are randomly assigned a smaller subset of songs to listen to. They then submit a ballot ranking their top picks from that sample. Change the listening sample and ballot sizes to explore different outcomes."
-    ],
-
-    "heatmap": [
-    "The sample size controls how many songs voters get to listen to. The ballot size controls how many songs receive vote tallies. Below are the results of running multiple contests at a variety of configurations. Play with the controls above to explore various outcomes. Use your cursor to inspect individual tiles of the heatmap."
     ],
 
      "simulation_3": [
