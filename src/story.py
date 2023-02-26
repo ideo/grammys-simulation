@@ -56,7 +56,7 @@ STORY = {
         How should we work with ties? There is some complex math to break ties within rankings of rankings voting systems. However since this first round the contest is not to find one ultimate winner but merely to produce a list of finalists, it may be simpler and more transparent to include all tying finalists.
         """,
         """
-        For the purposes of this simulation, one shy of a perfect score can still be considered a fair outcome. For the purposes of a real contest, this creates an opportunity to have an dynamic number of finalists – to let the voters and quality of nominees determine if this year should have nine or twelve finalists, for example.
+        For the purposes of this simulation, one shy of a perfect score can still be considered a fair outcome. For the purposes of a real contest, this creates an opportunity to have an dynamic number of finalists – to let the voters and the quality of nominees determine if this year should have nine or twelve finalists, for example.
         """,
     ],
 
