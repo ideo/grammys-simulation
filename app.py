@@ -143,7 +143,9 @@ sim3, _ = lg.simulation_section(song_df, section_title,
     baseline_results=baseline_titles,
     num_mafiosos=num_mafiosos, mafia_size=mafia_size)
 
+lg.write_story("simulation_3_conclusion")
+
 
 st.subheader("Conclusion")
 lg.write_story("conclusion")
-lg.print_params([sim1, sim2, sim3])
+# lg.print_params([sim1, sim2, sim3])

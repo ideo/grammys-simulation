@@ -70,7 +70,7 @@ class Simulation:
     def __init__(
             self, song_df, num_voters, st_dev=10.0, 
             listen_limit=None, ballot_limit=None, num_winners=10, 
-            num_mafiosos=None, mafia_size=None,
+            num_mafiosos=0, mafia_size=0,
             name=None,  
         ):
         self.song_df = song_df
@@ -160,6 +160,7 @@ class Simulation:
 
         # percentile = 66
         percentile = 88
+        step_down = 1
         percentile_ranks = self.song_df["Objective Ratings"].rank(pct=True)
         for ii_boss in range(self.num_mafiosos):
             # Which song
@@ -181,7 +182,7 @@ class Simulation:
             self.ballots.at[ii_song, voter_columns] = vote_cast * high_score
 
             # Set Next Song
-            percentile -= 2
+            percentile -= step_down
 
 
     def tally_votes(self):

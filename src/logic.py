@@ -167,7 +167,7 @@ def save_chart_df(chart_df, key):
 def simulation_section(song_df, section_title, 
         listen_limit=None, ballot_limit=None,
         baseline_results=None,
-        num_mafiosos=None, mafia_size=None,
+        num_mafiosos=0, mafia_size=0,
         disabled=False):
     """
     A high level container for running a simulation.
@@ -201,7 +201,8 @@ def simulation_section(song_df, section_title,
 
     with col2:
         chart_df = load_chart_df(section_title)
-        chart_df, spec = format_spec(chart_df)
+        num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
+        chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
     
     return sim, chart_df
@@ -255,7 +256,7 @@ def print_params(simulations):
             st.code(msg)
 
 
-def format_spec(chart_df):
+def format_spec(chart_df, num_corrupt_voters=0):
     """Format the chart to be shown in each frame of the animation"""
 
     red = COLORS["red"]
@@ -272,7 +273,13 @@ def format_spec(chart_df):
     if chart_df["sum"].sum() == 0:
         subtitle = "Click 'Simulate' to see the results"
     else:
-        subtitle = f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."
+        subtitle = [f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."]
+
+        if num_corrupt_voters:
+            num_voters = st.session_state["num_voters"]
+            percent = round(100 * num_corrupt_voters / num_voters)
+            subtitle += [f"{percent}% of the voters are corrupt."]
+        
 
     spec = {
             # "height":   275,

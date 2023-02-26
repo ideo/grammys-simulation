@@ -62,7 +62,16 @@ STORY = {
 
     "simulation_3": [
         """
-        While making her rounds in the town square, Mayor Melody got a whiff that individual loyalties between citizens might threaten to throw off the otherwise fair Song of the Year contest. After some investigation, the cronyism going on between the heads of certain neighborhoods became clear. For example, in Double Reed Village, Al Pacone was running a campaign to get people to vote for his buddy Kid Linkcoln's song, “Defenestration", by offering them a free session at his state-of-the-art studio. And Lucky Luke, over on de Sousa Cul de Sac, was telling his neighbors that if they voted for his song, “Entrepreneur,” that he’d do them a big musical favor at a later date. Mayor Melody had a feeling that this could possibly happen, so she began to think about how to mitigate this issue, to ensure that it didn’t overtake the voting enough to skew the final results. Use the sliders below to see how much (or how little) cronyism affects the final result of the contest.      
+        While making her rounds in the town square, Mayor Melody got a whiff that individual loyalties might threaten to throw off the otherwise fair Song of the Year contest. After some investigation, the cronyism going on between the heads of certain neighborhoods became clear. For example, in Double Reed Village, Al Pacone was running a campaign to get people to vote for his buddy Kid Lincoln's song, “Defenestration", by offering them a free session at his state-of-the-art studio. And Lucky Luke, over on de Sousa Cul de Sac, was telling his neighbors that if they voted for his song, “Entrepreneur,” that he’d do them a big musical favor at a later date.
+        """,
+        """
+        Mayor Melody had a feeling that this could possibly happen, so she began to think about how to mitigate this issue and ensure it didn’t highjack voting enough to skew the final results. Use the sliders below to see how much (or how little) cronyism affects the final result of the contest.
+        """,
+    ],
+
+    "simulation_3_conclusion": [
+        """
+        Even when every single voter is in cahoots with someone, the randomization of the contest prevents coordination – not enough of them get the chance to vote for their ring leader. At worst, by not voting for the deserved best song, rather than promote a corrupt song into the finalists, they open up a chance for a near-finalist to make into the list. This phenomen nullifies any attempts at collusion.
         """,
     ],
 
@@ -88,7 +97,7 @@ INSTRUCTIONS = {
     ],
 
      "simulation_3": [
-        "In our third contest, members of a corrupt voting bloc will rank their leader's song at the top of the ballot no matter what, contorting the results."
+        "In our third contest, members of a corrupt voting bloc will rank their leader's song at the top of the ballot no matter what, contorting the results. The corrupt songs are good but not great – about a B+. They're not bad, but shouldn't count among finalists."
     ],
 }
 
