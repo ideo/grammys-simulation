@@ -327,8 +327,8 @@ def display_results_of_repeated_contests(sim):
         repeated_contests = pickle.load(pkl_file)
 
     # TODO: Re-run these 100 simulations so you can switch it to preferences.
-    sums_per_song = repeated_contests.sum_of_sums.sum(axis=1)
-    # sums_per_song = repeated_contests.preferences.sum(axis=1)
+    # sums_per_song = repeated_contests.sum_of_sums.sum(axis=1)
+    sums_per_song = repeated_contests.sum_of_rankings.sum(axis=1)
     chart_df = pd.DataFrame(sums_per_song)
 
     title = "Who Deserves to Win?"

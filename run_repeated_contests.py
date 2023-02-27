@@ -86,5 +86,5 @@ def explore_listening_limit():
 
 if __name__ == "__main__":
     # pass
-    # establish_a_baseline()
-    explore_listening_limit()
+    establish_a_baseline()
+    # explore_listening_limit()
