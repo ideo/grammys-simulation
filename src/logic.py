@@ -31,7 +31,7 @@ def initialize_session_state():
         "reset_visuals":        True,
         "num_voters":           1000,
         "num_songs":            1000,
-        "num_winners":          15,
+        "num_winners":          10,
         "listen_limit":         250,
         "ballot_limit":         50,
         "st_dev":               10,    #This will need to change
@@ -144,7 +144,8 @@ def select_num_winners():
     label = "Choose the number of contest finalists."
     options = [10, 15, 20]
     default = st.session_state["num_winners"]
-    num_winners = col2.radio(label, options, index=options.index(default))
+    num_winners = col2.radio(label, options)
+        # index=options.index(default))
     st.session_state["num_winners"] = num_winners
 
 
