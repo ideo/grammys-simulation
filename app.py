@@ -146,6 +146,6 @@ sim3, _ = lg.simulation_section(song_df, section_title,
 lg.write_story("simulation_3_conclusion")
 
 
-st.subheader("Conclusion")
-lg.write_story("conclusion")
+# st.subheader("Conclusion")
+# lg.write_story("conclusion")
 # lg.print_params([sim1, sim2, sim3])

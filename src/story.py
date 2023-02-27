@@ -56,7 +56,7 @@ STORY = {
         How should we work with ties? There is some complex math to break ties within rankings of rankings voting systems. However since this first round the contest is not to find one ultimate winner but merely to produce a list of finalists, it may be simpler and more transparent to include all tying finalists.
         """,
         """
-        For the purposes of this simulation, one shy of a perfect score can still be considered a fair outcome. For the purposes of a real contest, this creates an opportunity to have an dynamic number of finalists – to let the voters and quality of nominees determine if this year should have nine or twelve finalists, for example.
+        For the purposes of this simulation, one shy of a perfect score can still be considered a fair outcome. For the purposes of a real contest, this creates an opportunity to have an dynamic number of finalists – to let the voters and the quality of nominees determine if this year should have nine or twelve finalists, for example.
         """,
     ],
 
@@ -71,7 +71,7 @@ STORY = {
 
     "simulation_3_conclusion": [
         """
-        Even when every single voter is in cahoots with someone, the randomization of the contest prevents coordination – not enough of them get the chance to vote for their ring leader. At worst, by not voting for the deserved best song, rather than promote a corrupt song into the finalists, they open up a chance for a near-finalist to make into the list. This phenomen nullifies any attempts at collusion.
+        The performance of the above contest is surprisingly similar to that of the one before it. Even when every single voter is in cahoots with someone, the randomization of the contest prevents coordination – not enough of them get the chance to vote for their ring leader. At worst, by not voting for the deserved best song, rather than promote a corrupt song into the finalists, they open up a chance for a near-finalist to make into the list. This phenomen nullifies any attempts at collusion.
         """,
     ],
 
@@ -100,62 +100,3 @@ INSTRUCTIONS = {
         "In our third contest, members of a corrupt voting bloc will rank their leader's song at the top of the ballot no matter what, contorting the results. The corrupt songs are good but not great – about a B+. They're not bad, but shouldn't count among finalists."
     ],
 }
-
-
-# SUCCESS_MESSAGES = {
-#     "simulation_1": {
-#         True:  [
-#             "Success! Even though people had so many guacs to try, and probably became quite full by the end, having everyone taste in random orders ensured the contest still had a fair result.",
-#             ],
-#         False:  [
-#             "Oh no! The contest didn't reach a fair conclusion. That's not supposed to happen!"
-#         ]
-#     },
-
-#     "simulation_2": {
-#         True:   [
-#             "Success! Even though the tasters missed out on trying MISSING_GUACS guacs each, we had enough participants that we still reached a fair result.",
-#             "Try again! Can we push that number even lower than GUAC_LIMIT still get a fair result?"
-#         ],
-#         False:  [
-#             "Oh no! Looks like missing out on trying MISSING_GUACS guacs each was too many to skip. Perhaps if we had more tasters we could've compensated."
-#         ]
-#     },
-
-#     "simulation_3": {
-#         True:  [
-#             "Success!",
-#             ],
-#         False:  [
-#             "Oh no!"
-#         ]
-#     },
-
-#     "100_times": {
-#         True:   [
-#             "Across 100 simulations, NAME still took home the trophy more than anyone else, winning PERCENT of the contents. Take a look at who else took home the trophy at times and whether or not their guacamole deserved the win.",
-#         ],
-#         False:  [
-#             "Across 100 simulations, NAME took home the trophy more than anyone else, but they did so less than half the time. In PERCENT of our contents, someone other than whom you decided had the best guacamole took home the win. Take a look at who they were and if they deserved it.",
-#         ],
-#     },
-
-#     "condorcet": {
-#         True:  [
-#             "Success!",
-#             ],
-#         False:  [
-#             "Oh no!"
-#         ]
-#     },
-
-#     "sandbox": {
-#         True:  [
-#             "Success!",
-#             ],
-#         False:  [
-#             "Oh no!"
-#         ]
-#     },
-    
-# }
