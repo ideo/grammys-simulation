@@ -47,7 +47,7 @@ STORY = {
 
     "heatmap_conclusion": [
         """
-        Exploring the outcomes of different configurations, you may notice it appears that the best we can do is just one shy of a perfect score. Nine out of ten of the finalists were correct (or 14 out of 15, or 19 out of 20).
+        Exploring the outcomes of different configurations, you may notice it appears that the best we can do is just one shy of a perfect score. Four out of five finalists (or nine out of ten) were correct, but not all.
         """,
         """
         Since not every voter gets to listen to every song, not every voter will have heard each of the finalists. That means when we compile the rankings of rankings, we often end up with some ties, e.g. two songs tied for second place, three songs tied at fourth place, etc. By setting the cutoff right at ten or fifteen, we often slice right through a tie.

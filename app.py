@@ -83,7 +83,7 @@ lg.write_story("heatmap", st_col=col1)
 
 with col2:
     label="No. Finalists"
-    options = [10, 15, 20]
+    options = st.session_state["finalist_options"]
     index = options.index(st.session_state["num_winners"])
     heatmap_num_winners = st.selectbox(label, options=options, index=index)
 
