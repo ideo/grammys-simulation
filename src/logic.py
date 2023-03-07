@@ -207,7 +207,9 @@ def simulation_section(song_df, section_title,
         chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
+    col1.markdown("##### Current Method Winners")
     col1.write(sim.current_method_winners)
+    col2.markdown("##### Condorcet Method Winners")
     col2.write(sim.condorcet_winners)
     
     return sim, chart_df
