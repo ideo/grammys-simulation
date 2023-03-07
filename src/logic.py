@@ -35,8 +35,8 @@ def initialize_session_state():
         "finalist_options":     [5, 10],
         "listen_limit":         250,
         "ballot_limit":         50,
-        "st_dev":               10,    #This will need to change
-        "total_time_str":       "",
+        "st_dev":               20,
+        # "total_time_str":       "",
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
@@ -130,7 +130,7 @@ def sidebar():
         max_value=20,
         step=1,
         key="st_dev",
-        disabled=True)
+        disabled=False)
     
 
 def select_num_winners():
@@ -178,6 +178,7 @@ def simulation_section(song_df, section_title,
     num_voters = st.session_state["num_voters"]
     num_winners = st.session_state["num_winners"]
     sim = Simulation(song_df, num_voters, 
+        st_dev=st.session_state["st_dev"],
         listen_limit=listen_limit,
         ballot_limit=ballot_limit,
         num_winners=num_winners,

@@ -3,15 +3,17 @@ A good chunk of this script is courtesy of
 Alex Fink and Russell McClellan,aka the original iZotope 
 guac voting system creators
 '''
-from unittest import runner
+# from unittest import runner
+import sys
+from collections import defaultdict
+
 import numpy as np
 import pandas as pd
-import sys
 from stqdm import stqdm
 
 
 class Condorcet:
-    def __init__(self, ballot_df, n_winners=10):
+    def __init__(self, ballot_df, n_winners=10, break_ties=True):
         """
         To move quickly, for the MVP, this method computes rankings but cannot
         distinguish between ties. More work is needed for that, and we are 
@@ -23,6 +25,9 @@ class Condorcet:
         self.pairwise_sums = self.compute_sum_of_ballot_pairwise_comparisons()
         self.preferences = CondorcetCounting.get_schwartz_relations_matrix(self.pairwise_sums)
         self.top_nominee_ids, self.top_vote_counts = self.top_nominees(self.preferences)
+        self.break_ties = break_ties
+        if break_ties:
+            self.look_for_and_break_ties()
 
 
     def clean_ballot_df(self, ballot_df):
@@ -80,14 +85,28 @@ class Condorcet:
         ii = ii[np.argsort(row_sums[ii])]
         ii = np.flip(ii)
         return ii, row_sums[ii]
-
     
-    # def get_top_songs(self, song_names):
-    #     preferences = CondorcetCounting.get_schwartz_relations_matrix(self.pairwise_sums)
-    #     smith_schwartz_set = CondorcetCounting.get_smith_or_schwartz_set_statuses(preferences, song_names)
-    #     return preferences, smith_schwartz_set
 
+    def look_for_and_break_ties(self):
+        # Detect Ties
+        scores = defaultdict(list)
+        for candidate, score in zip(self.top_nominee_ids, self.top_vote_counts):
+            scores[score].append(candidate)
 
+        # Correct Ties
+        for score in scores.keys():
+            if len(scores[score]) > 1:
+                # We got a tie!
+                tying_score = score
+                tying_candidates = scores[tying_score]
+                tying_ballots = self.ballot_df[self.ballot_df.index.isin(tying_candidates)].copy()
+
+                # Fix by comparing just those candidates against each other.
+                tie_breaker = Condorcet(tying_ballots, n_winners=tying_ballots.shape[0], break_ties=False)
+                tie_breaking_order = tying_ballots.iloc[tie_breaker.top_nominee_ids].index.values
+
+                # Correct the order
+                self.top_nominee_ids[self.top_vote_counts == tying_score] = tie_breaking_order
 
 
 class CondorcetCounting():

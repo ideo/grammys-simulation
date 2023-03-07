@@ -5,3 +5,4 @@ data/
 src/_*
 .DS_Store
 .streamlit/secrets.toml
+example_ballot.csv

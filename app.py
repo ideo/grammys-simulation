@@ -11,12 +11,12 @@ from src import load_or_generate_objective_scores
 
 
 st.set_page_config(
-    page_title="Grammys Simulation",
+    page_title="Isle of Musica",
     page_icon="img/grammys_logo.png",
     initial_sidebar_state="expanded")
 
 lg.initialize_session_state()
-# lg.sidebar()
+lg.sidebar()
 
 
 st.title("The Isle of Musica")
@@ -76,31 +76,31 @@ sim2, _ = lg.simulation_section(song_df, section_title,
     baseline_results=baseline_titles)
 
 
-# Heatmap
-st.markdown("##### Repeated Contests")
-col1, _, col2 = st.columns([5, 1, 4])
-lg.write_story("heatmap", st_col=col1)
+# # Heatmap
+# st.markdown("##### Repeated Contests")
+# col1, _, col2 = st.columns([5, 1, 4])
+# lg.write_story("heatmap", st_col=col1)
 
-with col2:
-    label="No. Finalists"
-    options = st.session_state["finalist_options"]
-    index = options.index(st.session_state["num_winners"])
-    heatmap_num_winners = st.selectbox(label, options=options, index=index)
+# with col2:
+#     label="No. Finalists"
+#     options = st.session_state["finalist_options"]
+#     index = options.index(st.session_state["num_winners"])
+#     heatmap_num_winners = st.selectbox(label, options=options, index=index)
 
-    label="Ballot Size"
-    options = [50, 100, 150, 200, 250]
-    initial_value = ballot_limit if ballot_limit in options else 50
-    index = options.index(initial_value)
-    heatmap_ballot_limit = st.selectbox(label, options=options, index=index)
+#     label="Ballot Size"
+#     options = [50, 100, 150, 200, 250]
+#     initial_value = ballot_limit if ballot_limit in options else 50
+#     index = options.index(initial_value)
+#     heatmap_ballot_limit = st.selectbox(label, options=options, index=index)
 
-st.write("")
-regenerate = st.secrets["ENVIRONMENT"] == "local"
-lg.load_or_generate_heatmap_chart(
-    heatmap_num_winners, 
-    heatmap_ballot_limit, 
-    baseline_indices, 
-    regenerate=regenerate)
-lg.write_story("heatmap_conclusion")
+# st.write("")
+# regenerate = st.secrets["ENVIRONMENT"] == "local"
+# lg.load_or_generate_heatmap_chart(
+#     heatmap_num_winners, 
+#     heatmap_ballot_limit, 
+#     baseline_indices, 
+#     regenerate=regenerate)
+# lg.write_story("heatmap_conclusion")
 
 
 # Bloc Voting
