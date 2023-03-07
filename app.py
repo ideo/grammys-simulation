@@ -65,9 +65,9 @@ label = "How many songs does each voter get to rank?"
 initial = st.session_state["ballot_limit"] 
 ballot_limit = col2.slider(label, 
     value=initial if initial < listen_limit else listen_limit,
-    min_value=50, 
+    min_value=25, 
     max_value=listen_limit,
-    step=50,
+    step=25,
     key=section_title+"_ballot_limit")
     
 sim2, _ = lg.simulation_section(song_df, section_title, 
@@ -89,7 +89,8 @@ with col2:
 
     label="Ballot Size"
     options = [50, 100, 150, 200, 250]
-    index = options.index(ballot_limit)
+    initial_value = ballot_limit if ballot_limit in options else 50
+    index = options.index(initial_value)
     heatmap_ballot_limit = st.selectbox(label, options=options, index=index)
 
 st.write("")

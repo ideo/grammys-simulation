@@ -9,6 +9,7 @@ from tqdm import tqdm
 from stqdm import stqdm
 
 from .condorcet_counting import Condorcet
+from .current_method import OneVotePerFinalist
 
 
 # Move this!
@@ -89,10 +90,12 @@ class Simulation:
         self.name = name
 
         # Initalizing
-        self.objective_winner = self.song_df["Objective Ratings"].idxmax()
+        # self.objective_winner = self.song_df["Objective Ratings"].idxmax()
         self.success = False
         self.rankings = None
         self.complete = False
+        self.condorcet_winners = []
+        self.current_method_winners = []
 
 
     @property
@@ -113,7 +116,7 @@ class Simulation:
         if self.num_mafiosos:
             self.non_corrupt_ballots = self.ballots.copy()
             self.corrupt_ballots()
-        self.winner = self.tally_votes()
+        self.tally_votes()
         # self.record_outcome()
         self.complete = True
 
@@ -186,8 +189,8 @@ class Simulation:
 
 
     def tally_votes(self):
-        winner = self.tally_by_condorcet_method()
-        return winner
+        self.condorcet_winners = self.tally_by_condorcet_method()
+        self.current_method_winners = self.tally_by_current_method()
 
 
     def tally_by_condorcet_method(self):
@@ -195,14 +198,17 @@ class Simulation:
         Simplified Condorcet method that simply returns the top 10 nominees.
         """
         self.condorcet = Condorcet(self.ballots, self.num_winners)
-        winner = self.condorcet.top_nominee_ids[0]
-        return winner
+        winners = self.condorcet.top_nominee_ids
+        return winners
+    
+
+    def tally_by_current_method(self):
+        self.current_method = OneVotePerFinalist(self.ballots, self.num_winners)
+        winners = self.current_method.winners
+        return winners
 
 
-    # def record_outcome(self):
-    #     """This is here in case we need to expand it"""
-    #     pass
-
+#############################################################################
 
 class RepeatedSimulations:
     def __init__(self, song_df, num_voters, 
