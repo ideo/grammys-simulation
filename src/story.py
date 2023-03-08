@@ -92,6 +92,10 @@ INSTRUCTIONS = {
         "This first contest sets the baseline that we can compare against in subsequent contests. All num_voters voters listen and vote on all num_songs songs. "
     ],
 
+    "alphabetical": [
+        "Hi there"
+    ],
+
     "simulation_2": [
         "In our second contest, voters are randomly assigned a smaller subset of songs to listen to. They then submit a ballot ranking their top picks from that sample. Change the listening sample and ballot sizes to explore different outcomes."
     ],

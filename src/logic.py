@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import pickle
 from collections import defaultdict
 
@@ -170,7 +171,8 @@ def simulation_section(song_df, section_title,
         listen_limit=None, ballot_limit=None,
         baseline_results=None,
         num_mafiosos=0, mafia_size=0,
-        disabled=False):
+        disabled=False,
+        alphabetical=False):
     """
     A high level container for running a simulation.
     """
@@ -184,7 +186,8 @@ def simulation_section(song_df, section_title,
         num_winners=num_winners,
         name=section_title,
         num_mafiosos=num_mafiosos, 
-        mafia_size=mafia_size)
+        mafia_size=mafia_size,
+        alphabetical=alphabetical)
 
     col1, col2 = st.columns([2, 5])
 
@@ -208,10 +211,10 @@ def simulation_section(song_df, section_title,
         chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
-    col1.markdown("##### Current Method Winners")
-    col1.write(sim.current_method_winners)
-    col2.markdown("##### Condorcet Method Winners")
-    col2.write(sim.condorcet_winners)
+    # col1.markdown("##### Current Method Winners")
+    # col1.write(sim.current_method_winners)
+    # col2.markdown("##### Condorcet Method Winners")
+    # col2.write(sim.condorcet_winners)
     
     return sim, chart_df
 
@@ -287,11 +290,19 @@ def format_spec(chart_df, num_corrupt_voters=0):
             num_voters = st.session_state["num_voters"]
             percent = round(100 * num_corrupt_voters / num_voters)
             subtitle += [f"{percent}% of the voters are corrupt."]
-        
+    
+    round_to = 10
+    upper_lim = chart_df["sum"].max()
+    upper_lim = int(math.ceil(upper_lim / round_to)) * round_to
+    lower_lim = chart_df["sum"].max() * 0.8
+    lower_lim = int(math.floor(lower_lim / round_to)) * round_to
 
     spec = {
             # "height":   275,
-            "mark": {"type": "bar"},
+            "mark": {
+                "type": "bar",
+                "clip": True,
+                },
             "encoding": {
                 "y":    {
                     "field": "Entrant", 
@@ -303,7 +314,8 @@ def format_spec(chart_df, num_corrupt_voters=0):
                 "x":    {
                     "field": "sum", 
                     "type": "quantitative", 
-                    "title": "Vote Tallies"
+                    "title": "Vote Tallies",
+                    "scale": {"domain": [lower_lim, upper_lim]},
                     },
                 "color": {
                     "field":    "Color",
@@ -377,14 +389,22 @@ def display_results_of_repeated_contests(sim):
     return chart_df
 
 
-def establish_baseline(repeated_results):
-    x_label = f"Vote Tallies"
-    repeated_results = repeated_results.sort_values(x_label, ascending=False)
-
+def establish_baseline(song_df):
     num_winners = st.session_state["num_winners"]
-    baseline_titles = repeated_results.head(num_winners)["ID"].tolist()
-    baseline_indices = repeated_results.head(num_winners).index.tolist()
+    top_songs = song_df.sort_values("Objective Ratings", ascending=False).head(num_winners)
+    baseline_titles = top_songs["ID"].tolist()
+    baseline_indices = top_songs.index.tolist()
     return baseline_titles, baseline_indices
+
+
+# def establish_baseline(repeated_results):
+#     x_label = f"Vote Tallies"
+#     repeated_results = repeated_results.sort_values(x_label, ascending=False)
+
+#     num_winners = st.session_state["num_winners"]
+    # baseline_titles = repeated_results.head(num_winners)["ID"].tolist()
+    # baseline_indices = repeated_results.head(num_winners).index.tolist()
+    # return baseline_titles, baseline_indices
 
 
 # def format_total_time():
@@ -407,7 +427,7 @@ def establish_baseline(repeated_results):
 
 
 def heatmap_filepath(num_winners, ballot_limit):
-    filepath = DATA_DIR / f"heatmap_{num_winners}_winners_{ballot_limit}_ballot_limit.json"
+    filepath = DATA_DIR / f"heatmap/heatmap_{num_winners}_winners_{ballot_limit}_ballot_limit.json"
     return filepath
 
 

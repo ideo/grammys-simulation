@@ -46,33 +46,45 @@ def generate_objective_scores(num_songs):
 
     objective_scores = np.random.normal(loc=_mean, scale=_std, size=num_songs)
     song_df = pd.DataFrame(objective_scores, columns=["Objective Ratings"])
-    
-    # Bring in fun names for top songs.
-    song_df = song_df.sort_values(by="Objective Ratings", ascending=False).reset_index()
-    song_df["ID"] = song_df.index
-    song_df.drop(columns="index", inplace=True)
 
-    filename = "Grammys-Simuation_Song-Names - Top Scoring Songs.csv"
-    fictional_names = pd.read_csv(DATA_DIR / filename)
+    song_df["ID"] = song_df.index
+    song_df["index"] = song_df.index
+    song_df = apply_song_names(song_df)
+    song_df = song_df.sort_values(by="index", ascending=True)
+    song_df.drop(columns=["index"], inplace=True)
+    return song_df
+
+
+def apply_song_names(df):
+    filepath = DATA_DIR / "song_names/Songs to Appear First.csv"
+    first_names = pd.read_csv(filepath)
+    df = change_values(df, first_names)
+
+    filepath = DATA_DIR / "song_names/Top Scoring Songs.csv"
+    top_scoring_names = pd.read_csv(filepath)
+    df = df.sort_values(by="Objective Ratings", ascending=False)
+    df = change_values(df, top_scoring_names)
+    return df
+
+
+def change_values(df, fictional_names):
     fictional_names = fictional_names["Song Name by Artist"].values
-    # shuffle(fictional_names)
     for ii, song_name in enumerate(fictional_names):
         try:
-            song_df["ID"].iloc[ii] = song_name
+            df["ID"].iloc[ii] = song_name
         except IndexError:
             # Fictional Names is longer than song_df. This occurs when testing
             # with small numbers
             pass
-
-    return song_df
+    return df
 
 
 class Simulation:
     def __init__(
-            self, song_df, num_voters, st_dev=10.0, 
+            self, song_df, num_voters, st_dev=10.0,
             listen_limit=None, ballot_limit=None, num_winners=10, 
             num_mafiosos=0, mafia_size=0,
-            name=None,  
+            name=None, alphabetical=False,
         ):
         self.song_df = song_df
         self.num_voters = num_voters
@@ -88,6 +100,7 @@ class Simulation:
         self.num_mafiosos = num_mafiosos
         self.mafia_size = mafia_size
         self.name = name
+        self.alphabetical = alphabetical
 
         # Initalizing
         # self.objective_winner = self.song_df["Objective Ratings"].idxmax()
@@ -144,7 +157,14 @@ class Simulation:
         listen_and_vote = lambda score: np.random.normal(score, self.st_dev)
 
         for ii in stqdm(range(self.num_voters), desc="Voting"):
-            song_sample = self.song_df.sample(n=self.listen_limit, replace=False)
+
+            if self.alphabetical:
+                listen_limit = np.random.normal(loc=100, scale=15)
+                listen_limit = int(listen_limit)
+                song_sample = self.song_df.head(listen_limit).copy()
+            else:
+                song_sample = self.song_df.sample(n=self.listen_limit, replace=False)
+                
             bllt = song_sample["Objective Ratings"].apply(listen_and_vote)
             # if recording the number of listens each song gets, we need to
             # to that here.
