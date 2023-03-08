@@ -31,6 +31,12 @@ baseline_titles, baseline_indices = lg.establish_baseline(song_df)
 lg.select_num_winners()
 
 
+# Demo Contest
+st.subheader("Interactive Demo")
+st.write("TKTKT this is how the simulation works")
+lg.interactive_demo(song_df)
+
+
 # Baseline
 section_title = "simulation_1"
 st.subheader("Establishing a Baseline")
@@ -44,8 +50,6 @@ st.subheader(section_title.title())
 sim_alpha, _ = lg.simulation_section(song_df, section_title, 
                                      alphabetical=True,
                                      baseline_results=baseline_titles)
-
-
 
 
 # st.markdown("##### Repeated Contests")

@@ -140,7 +140,6 @@ def select_num_winners():
     final list of nominees?
     """
     col1, _, col2 = st.columns([5,1,5])
-
     write_instructions("select_num_winners", col1)
 
     label = "Choose the number of contest finalists."
@@ -149,6 +148,92 @@ def select_num_winners():
     num_winners = col2.radio(label, options)
         # index=options.index(default))
     st.session_state["num_winners"] = num_winners
+
+
+def interactive_demo(song_df):
+    """The interactive portion of the simulation explanation"""
+    col1, col2 = st.columns([6,4])
+
+    with col1:
+        indices = [36, 13, 4, 0, 18]
+        candidates = song_df.iloc[indices]
+        label = "Select a Candidate Song"
+        options = candidates["ID"].values
+        selection = st.radio(label, options)
+
+    with col2:
+        st.caption("Instructions")
+        column = "Objective Ratings"
+        score = candidates[candidates["ID"] == selection][column].iloc[0]
+        score = round(score/10, 1)
+        st.metric("Objective Score", score)
+
+    _, cntr, _ = st.columns([2,2,2])
+    clicked = cntr.button('Simulate "Subjective" Scores')
+
+    subj_scores = []
+    if clicked:
+        num_example_voters = 7
+        columns = st.columns(num_example_voters)
+        subj_scores = []
+        for ii, col in enumerate(columns):
+            st_dev = st.session_state["st_dev"]/10
+            subjective_score = np.random.normal(loc=score, scale=st_dev)
+            subjective_score = round(subjective_score, 1)
+            col.metric(f"Voter #{ii+1}", subjective_score)
+            subj_scores.append(subjective_score)
+    
+    # st.write("")
+    # st.markdown("---")
+    visualize_example_votes(score, subj_scores)
+
+
+def visualize_example_votes(obj_score, subj_scores):
+    chart_df = pd.DataFrame(subj_scores, columns=["Votes"])
+    chart_df["Objective Score"] = [obj_score]*chart_df.shape[0]
+
+    objective_spec = {
+        "mark": {
+            "type":  "rule",
+            "clip": True,
+            },
+        "encoding": {
+            "x":    {
+                "field":    "Objective Score",
+                "type":     "quantitative",
+                "scale":    {"domain": [0, 10]},
+                "title":    ["Songs' Goodness Values", "Scored out of 10"],
+            },
+            "size": {"value": 4},
+            "color": {"value": COLORS["green"]},
+        },
+    }
+
+    subjective_spec = {
+        "mark": {
+            "type":  "rule",
+            "clip": True,
+            },
+        "encoding": {
+            "x":    {
+                "field":    "Votes",
+                "type":     "quantitative",
+                "scale":    {"domain": [0, 10]},
+                "axis": {"tickMinStep": 1},
+                "title":    "",
+            },
+            "size": {"value": 2},
+            "color": {"value": COLORS["blue"]},   
+        },
+    }
+
+    spec = {
+        "height":   300,
+        "title":    "Example Votes",
+        "layer":    [objective_spec, subjective_spec],
+    }
+    st.vega_lite_chart(chart_df, spec, use_container_width=True)
+
 
 
 def load_chart_df(key):

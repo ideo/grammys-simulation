@@ -47,35 +47,40 @@ def generate_objective_scores(num_songs):
     objective_scores = np.random.normal(loc=_mean, scale=_std, size=num_songs)
     song_df = pd.DataFrame(objective_scores, columns=["Objective Ratings"])
 
-    song_df["ID"] = song_df.index
-    song_df["index"] = song_df.index
+    
     song_df = apply_song_names(song_df)
-    song_df = song_df.sort_values(by="index", ascending=True)
-    song_df.drop(columns=["index"], inplace=True)
+    
     return song_df
 
 
 def apply_song_names(df):
-    filepath = DATA_DIR / "song_names/Songs to Appear First.csv"
-    first_names = pd.read_csv(filepath)
-    df = change_values(df, first_names)
+    df["ID"] = df.index
+    df["index"] = df.index
 
     filepath = DATA_DIR / "song_names/Top Scoring Songs.csv"
     top_scoring_names = pd.read_csv(filepath)
     df = df.sort_values(by="Objective Ratings", ascending=False)
     df = change_values(df, top_scoring_names)
+
+    df = df.sort_values(by="index", ascending=True)
+    df.drop(columns=["index"], inplace=True)
+
+    filepath = DATA_DIR / "song_names/All Song Names.csv"
+    first_names = pd.read_csv(filepath)
+    df = change_values(df, first_names)
     return df
 
 
 def change_values(df, fictional_names):
     fictional_names = fictional_names["Song Name by Artist"].values
     for ii, song_name in enumerate(fictional_names):
-        try:
-            df["ID"].iloc[ii] = song_name
-        except IndexError:
-            # Fictional Names is longer than song_df. This occurs when testing
-            # with small numbers
-            pass
+        if song_name not in df["ID"].values:
+            try:
+                df["ID"].iloc[ii] = song_name
+            except IndexError:
+                # Fictional Names is longer than song_df. This occurs when testing
+                # with small numbers
+                pass
     return df
 
 
