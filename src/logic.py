@@ -11,8 +11,8 @@ import numpy as np
 import inflect
 
 from .config import COLORS
-from .story import STORY, INSTRUCTIONS
 from .simulation import Simulation, DATA_DIR
+import src.utils as utils
 
 
 import warnings
@@ -37,13 +37,11 @@ def initialize_session_state():
         "listen_limit":         250,
         "ballot_limit":         50,
         "st_dev":               20,
-        # "total_time_str":       "",
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
-    # st.session_state["total_time_str"] = format_total_time()
 
     if st.session_state["reset_visuals"]:
         reset_visuals()
@@ -76,14 +74,23 @@ def insert_variables(paragraph, section_title, story=True):
     return paragraph
         
 
-def write_story(section_title, st_col=st):
-    for paragraph in STORY[section_title]:
+def write_story(section_title, st_col=st, header_level=3):
+    st.write("")
+    header = "#"*header_level
+    st.markdown(f"{header} {section_title}")
+    story = utils.load_text()["story"]
+    for paragraph in story[section_title]:
         paragraph = insert_variables(paragraph, section_title)
         st_col.write(paragraph)
 
 
-def write_instructions(section_title, st_col=st):
-    for paragraph in INSTRUCTIONS[section_title]:
+def write_instructions(section_title, st_col=st, header_level=3):
+    # header = "#"*header_level
+    # st.markdown(f"{header} {section_title}")
+    # st.caption(f"**{section_title}**")
+    st.write("")
+    instructions = utils.load_text()["instructions"]
+    for paragraph in instructions[section_title]:
         paragraph = insert_variables(paragraph, section_title, story=False)
         st_col.caption(paragraph)
 
@@ -141,17 +148,21 @@ def select_num_winners():
     """
     col1, _, col2 = st.columns([5,1,5])
     write_instructions("select_num_winners", col1)
+    # write_instructions("select_num_winners")
 
     label = "Choose the number of contest finalists."
+    # label = "This contest will determine a small list of finalists from the larger pool of nominees. How many finalists should there be?"
     options = st.session_state["finalist_options"]
-    default = st.session_state["num_winners"]
+    # default = st.session_state["num_winners"]
     num_winners = col2.radio(label, options)
+    # num_winners = st.radio(label, options)
         # index=options.index(default))
     st.session_state["num_winners"] = num_winners
 
 
 def interactive_demo(song_df):
     """The interactive portion of the simulation explanation"""
+    write_story("Imaginary Songs", header_level=5)
     col1, col2 = st.columns([6,4])
 
     with col1:
@@ -162,20 +173,22 @@ def interactive_demo(song_df):
         selection = st.radio(label, options)
 
     with col2:
-        st.caption("Instructions")
         column = "Objective Ratings"
         score = candidates[candidates["ID"] == selection][column].iloc[0]
         score = round(score/10, 1)
         st.metric("Objective Score", score)
 
+    write_story("Imaginary Voters", header_level=5)
     _, cntr, _ = st.columns([2,2,2])
     clicked = cntr.button('Simulate "Subjective" Scores')
 
-    subj_scores = []
+    # Define negative values and we can show the vega-lite chart but the 
+    # scores will be below the visible limit.
+    num_example_voters = 7
+    subj_scores = [-1]*num_example_voters
     if clicked:
-        num_example_voters = 7
         columns = st.columns(num_example_voters)
-        subj_scores = []
+
         for ii, col in enumerate(columns):
             st_dev = st.session_state["st_dev"]/10
             subjective_score = np.random.normal(loc=score, scale=st_dev)
@@ -183,8 +196,6 @@ def interactive_demo(song_df):
             col.metric(f"Voter #{ii+1}", subjective_score)
             subj_scores.append(subjective_score)
     
-    # st.write("")
-    # st.markdown("---")
     visualize_example_votes(score, subj_scores)
 
 
@@ -202,7 +213,7 @@ def visualize_example_votes(obj_score, subj_scores):
                 "field":    "Objective Score",
                 "type":     "quantitative",
                 "scale":    {"domain": [0, 10]},
-                "title":    ["Songs' Goodness Values", "Scored out of 10"],
+                "title":    ["Songs' Objective and 'Subjective' Scores", "Scored out of 10"],
             },
             "size": {"value": 4},
             "color": {"value": COLORS["green"]},
@@ -227,9 +238,11 @@ def visualize_example_votes(obj_score, subj_scores):
         },
     }
 
+    layer = [objective_spec, subjective_spec]
+
     spec = {
         "height":   300,
-        "title":    "Example Votes",
+        "title":    "Simulating Votes",
         "layer":    [objective_spec, subjective_spec],
     }
     st.vega_lite_chart(chart_df, spec, use_container_width=True)

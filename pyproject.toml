@@ -14,6 +14,7 @@ inflect = "^6.0.2"
 tqdm = "^4.64.1"
 stqdm = "^0.0.5"
 altair = "^4.2.2"
+pyyaml = "^6.0"
 
 
 [tool.poetry.group.dev.dependencies]

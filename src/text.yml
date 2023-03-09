@@ -1,0 +1,21 @@
+story:
+  The Isle of Musica:
+    - "Welcome to the Isle of Musica — an idyllic locale where every citizen lives, breathes, even eats to make music. The Isle of Musica is inhabited by talented professional musicians, engineers, songwriters, and producers — all with different expertises and genre focuses. They all live on the Isle of Musica because of the one value they have in common: their reverence, respect, and passion for music."
+    - "That is the one thing everyone can agree on here on the Isle: music is something to be studied and taken seriously. No one can agree, however, on which artists, albums, or songs are the “best,” — and if asked, they'd probably nominate themselves, or a close collaborator. So in the spirit of wanting to give her citizens their well-deserved props, Mayor Melody suggests the town hold a first annual contest to decide which of this year’s songs was SONG OF THE YEAR."
+    - "Anyone who believes a song they wrote this year is particularly special can nominate it for the contest. num_voters people live on the Isle, and when Mayor Melody sees the lists of nominees, surprise surprise, num_voters songs have been nominated. Everyone must have picked their personal best."
+    - "Running a contest with this many entrants is going to be tricky, but the mayor has a plan. First step, instead of trying to declare one winner in one go, Mayor Melody decides the first round of the contest should be to determine a short list of finalists."
+  Agent Based Simulations:
+    - "How might we test different voting systems before deciding whether to use them in the real world? Welcome to our voting simulation. Before we start, let's talk about what we mean by simulation and why it's a good idea to start with that."
+    - "Voting is complex. Just like many other phenomena in our world, trying out a “better” voting system might be too expensive or impractical. To solve such issues, scientists often use Agent Based Simulation. The idea behind it is simple: you create basic rules for imaginary actors to follow in an imaginary world, then let the agents interact based on those rules. You then observe what happens in the imaginary world to learn what might happen in the real world. One of the most famous examples of agent based simulations, the [Schellings Segregation Model](https://www.youtube.com/watch?v=JjfihtGefxk&ab_channel=RandomEconomist), won the Nobel Prize."
+  Imaginary Songs:
+  - "For the simulation to test whether various voting systems lead to fair outcomes, we need to know who should be winning these contests. To do that, we define objective scores for each song. Select various songs below to see the “objective” scores used in this simulation."
+  Imaginary Voters:
+  - "Voters, however, do not vote objectively. Even musical experts have differences in opinion. To simulate subjectivity among voters, we set each objective score to be the average score in this simulation. (Statistically speaking, we sample from a normal distribution, setting the objective score as the mean.)"
+  - "The intent is to approximate nuanced differences in opinion among musical experts. If we assign two songs scores of eight and nine, respectively, our simulated voters will often disagree on which is better. But if we assign two songs scores of two and then, there should be no disagreement which is better."
+  - "We then use these scores to determine which song a voter “likes” the best, and therefore which song they will cast a vote for."
+  Establishing a Baseline:
+    - "Mayor Melody wants to make sure her citizens have time to judge each song fairly, so she's given everyone the month off to ensure they can take the time to listen and assess each one. Her and her staff have also printed off massive ballots. She knows her citizens want to know who their competition is, so it's important the voters submit an ordered ranking of all num_songs songs."
+
+instructions:
+  select_num_winners:
+    - "This contest will determine a small list of finalists from the larger pool of nominees. How many finalists should there be?"
