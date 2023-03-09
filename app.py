@@ -23,13 +23,13 @@ num_voters = st.session_state["num_voters"]
 num_songs = st.session_state["num_songs"]
 num_winners = st.session_state["num_winners"]
 song_df = load_or_generate_objective_scores(num_songs)
-baseline_titles, baseline_indices = lg.establish_baseline(song_df)
 
 
 # Simulation Explanation and Interactive Demo
 lg.write_story("Voting Simulations", header_level=1)
 lg.interactive_demo(song_df)
-lg.write_story("Establishing a Baseline", header_level=5)
+section_title = "Establish a Baseline"
+baseline_titles, _ = lg.establish_baseline(song_df)
 
 
 section_title = "The Isle of Musica"
@@ -39,14 +39,14 @@ lg.select_num_winners()
 
 # Baseline
 # section_title = "simulation_1"
-section_title = "Establishing a Baseline"
-st.subheader(section_title)
-lg.write_story(section_title)
-sim1, sim1_chart_df = lg.simulation_section(song_df, section_title)
+# section_title = "Establishing a Baseline"
+# st.subheader(section_title)
+# lg.write_story(section_title)
+# sim1, sim1_chart_df = lg.simulation_section(song_df, section_title)
 
 
 # Alphabetical
-section_title = "alphabetical"
+section_title = "First Contest"
 st.subheader(section_title.title())
 sim_alpha, _ = lg.simulation_section(song_df, section_title, 
                                      alphabetical=True,
@@ -65,8 +65,7 @@ sim_alpha, _ = lg.simulation_section(song_df, section_title,
 
 
 # Random Samples
-section_title = "simulation_2"
-st.subheader("The Power of Randomness")
+section_title = "The Power of Randomness"
 lg.write_story(section_title)
 
 col1, col2 = st.columns(2)
@@ -120,8 +119,7 @@ sim2, _ = lg.simulation_section(song_df, section_title,
 
 
 # Bloc Voting
-section_title = "simulation_3"
-st.subheader("Nullifying Bloc Voting")
+section_title = "Nullifying Bloc Voting"
 lg.write_story(section_title)
 
 col1, col2 = st.columns(2)
@@ -160,9 +158,4 @@ sim3, _ = lg.simulation_section(song_df, section_title,
     baseline_results=baseline_titles,
     num_mafiosos=num_mafiosos, mafia_size=mafia_size)
 
-lg.write_story("simulation_3_conclusion")
-
-
-# st.subheader("Conclusion")
-# lg.write_story("conclusion")
-# lg.print_params([sim1, sim2, sim3])
+lg.write_story("bloc_voting_conclusion", header_level=None)

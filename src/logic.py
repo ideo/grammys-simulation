@@ -78,7 +78,7 @@ def write_story(section_title, st_col=st, header_level=3):
     st.write("")
     if header_level is not None:
         header = "#"*header_level
-        st.markdown(f"{header} {section_title}")
+        st_col.markdown(f"{header} {section_title}")
     story = utils.load_text()["story"]
     for paragraph in story[section_title]:
         paragraph = insert_variables(paragraph, section_title)
@@ -149,15 +149,10 @@ def select_num_winners():
     """
     col1, _, col2 = st.columns([5,1,5])
     write_instructions("select_num_winners", col1)
-    # write_instructions("select_num_winners")
 
     label = "Choose the number of contest finalists."
-    # label = "This contest will determine a small list of finalists from the larger pool of nominees. How many finalists should there be?"
     options = st.session_state["finalist_options"]
-    # default = st.session_state["num_winners"]
     num_winners = col2.radio(label, options)
-    # num_winners = st.radio(label, options)
-        # index=options.index(default))
     st.session_state["num_winners"] = num_winners
 
 
@@ -243,11 +238,13 @@ def visualize_example_votes(obj_score, subj_scores):
 
     spec = {
         "height":   300,
-        "title":    "Simulated` Votes",
+        "title":    {
+            "text":     "Simulated Votes",
+            "subtitle": "A song's objective score in green and each simulated voter's subjective score in blue."
+            },
         "layer":    [objective_spec, subjective_spec],
     }
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
-
 
 
 def load_chart_df(key):
@@ -290,13 +287,13 @@ def simulation_section(song_df, section_title,
 
     col1, col2 = st.columns([2, 5])
 
-    with col1:
-        write_instructions(section_title)
-        _, cntr, _ = st.columns([1,5,1])
-        with cntr:
-            start_btn = st.button("Simulate", 
-                key=section_title, 
-                disabled=disabled)
+    # with col1:
+    write_instructions(section_title)
+    _, cntr, _ = st.columns([3,1,3])
+    with cntr:
+        start_btn = st.button("Simulate", 
+            key=section_title, 
+            disabled=disabled)
 
     if start_btn:
         # delete_chart_df(section_title)
@@ -304,11 +301,11 @@ def simulation_section(song_df, section_title,
         chart_df = format_condorcet_results_chart_df(sim, baseline_results)
         save_chart_df(chart_df, section_title)
 
-    with col2:
-        chart_df = load_chart_df(section_title)
-        num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
-        chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters)
-        st.vega_lite_chart(chart_df, spec, use_container_width=True)
+    # with col2:
+    chart_df = load_chart_df(section_title)
+    num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
+    chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters)
+    st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
     # col1.markdown("##### Current Method Winners")
     # col1.write(sim.current_method_winners)
@@ -375,6 +372,8 @@ def format_spec(chart_df, num_corrupt_voters=0):
     if "Success" in chart_df.columns:
         chart_df["Color"] = chart_df["Success"].apply(
             lambda x: green if x else red)
+        chart_df["Deserved Winner?"] = chart_df["Success"].apply(
+            lambda x: "Yes" if x else "No")
 
     else:
         chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
@@ -390,8 +389,9 @@ def format_spec(chart_df, num_corrupt_voters=0):
             percent = round(100 * num_corrupt_voters / num_voters)
             subtitle += [f"{percent}% of the voters are corrupt."]
     
-    round_to = 10
+
     upper_lim = chart_df["sum"].max()
+    round_to = 100 if upper_lim > 500 else 10
     upper_lim = int(math.ceil(upper_lim / round_to)) * round_to
     lower_lim = chart_df["sum"].max() * 0.8
     lower_lim = int(math.floor(lower_lim / round_to)) * round_to
@@ -404,28 +404,41 @@ def format_spec(chart_df, num_corrupt_voters=0):
                 },
             "encoding": {
                 "y":    {
-                    "field": "Entrant", 
-                    "type": "nominal", 
-                    "sort": "-x",
-                    "axis": {"labelAngle": 0, "labelLimit": 0},
+                    "field":    "Entrant", 
+                    "type":     "nominal", 
+                    "sort":     "-x",
+                    "axis":     {"labelAngle": 0, "labelLimit": 0},
                     "title":    None,
                     },
                 "x":    {
-                    "field": "sum", 
-                    "type": "quantitative", 
-                    "title": "Vote Tallies",
-                    "scale": {"domain": [lower_lim, upper_lim]},
+                    "field":    "sum", 
+                    "type":     "quantitative", 
+                    "title":    "Vote Tallies",
+                    "scale":    {"domain": [lower_lim, upper_lim]},
                     },
                 "color": {
-                    "field":    "Color",
+                    # "field":    "Color",
+                    # "scale":    None,
+                    "field":    "Deserved Winner?",
                     "type":     "nominal",
-                    "scale":    None,
+                    "scale":    {
+                        "domain":   ["No", "Yes"],
+                        "range":   [COLORS["red"], COLORS["green"]],
+                        }
                     },
             },
             "title":    {
                 "text": f"Simulation Results",
                 "subtitle": subtitle, 
-            }  
+            },
+            "config": {
+                "legend": {
+                    "orient": "bottom", 
+                    "direction":    "horizontal",
+                    "titleOrient": "left",
+                    "layout": {"bottom": {"anchor": "end"}},
+                    }
+            }
         }
     return chart_df, spec
 
@@ -444,8 +457,6 @@ def display_results_of_repeated_contests(sim):
     with open(filepath, "rb") as pkl_file:
         repeated_contests = pickle.load(pkl_file)
 
-    # TODO: Re-run these 100 simulations so you can switch it to preferences.
-    # sums_per_song = repeated_contests.sum_of_sums.sum(axis=1)
     sums_per_song = repeated_contests.sum_of_rankings.sum(axis=1)
     chart_df = pd.DataFrame(sums_per_song)
 
@@ -493,36 +504,19 @@ def establish_baseline(song_df):
     top_songs = song_df.sort_values("Objective Ratings", ascending=False).head(num_winners)
     baseline_titles = top_songs["ID"].tolist()
     baseline_indices = top_songs.index.tolist()
+
+    st.write("")
+    col1, col2 = st.columns(2)
+    write_story("Establishing a Baseline", header_level=5, st_col=col1)
+
+    with col2:
+        df = pd.DataFrame(baseline_titles, 
+                          columns=["Deserved Winners"],
+                          index=[ii+1 for ii, _ in enumerate(baseline_titles)])
+        st.table(df)
+
+
     return baseline_titles, baseline_indices
-
-
-# def establish_baseline(repeated_results):
-#     x_label = f"Vote Tallies"
-#     repeated_results = repeated_results.sort_values(x_label, ascending=False)
-
-#     num_winners = st.session_state["num_winners"]
-    # baseline_titles = repeated_results.head(num_winners)["ID"].tolist()
-    # baseline_indices = repeated_results.head(num_winners).index.tolist()
-    # return baseline_titles, baseline_indices
-
-
-# def format_total_time():
-#     num_songs = st.session_state["num_songs"]
-#     avg_song_length = 3.5   #minutes
-#     total_time = num_songs * avg_song_length
-#     # total_time /= 30
-
-#     # Format
-#     minutes_in_a_day = 60*24
-#     days = total_time // minutes_in_a_day
-#     leftover = total_time % minutes_in_a_day
-
-#     hours = leftover // 60
-#     minutes = leftover % 60
-
-#     days, hours, minutes = int(days), int(hours), int(minutes)
-#     total_time_str = f"{days} days, {hours} hours, and {minutes} minutes"
-#     return total_time_str
 
 
 def heatmap_filepath(num_winners, ballot_limit):
