@@ -73,10 +73,12 @@ def apply_song_names(df):
 
 def change_values(df, fictional_names):
     fictional_names = fictional_names["Song Name by Artist"].values
-    for ii, song_name in enumerate(fictional_names):
+    ii = 0
+    for song_name in fictional_names:
         if song_name not in df["ID"].values:
             try:
                 df["ID"].iloc[ii] = song_name
+                ii += 1
             except IndexError:
                 # Fictional Names is longer than song_df. This occurs when testing
                 # with small numbers
@@ -164,7 +166,7 @@ class Simulation:
         for ii in stqdm(range(self.num_voters), desc="Voting"):
 
             if self.alphabetical:
-                listen_limit = np.random.normal(loc=100, scale=15)
+                listen_limit = np.random.normal(loc=85, scale=15)
                 listen_limit = int(listen_limit)
                 song_sample = self.song_df.head(listen_limit).copy()
             else:

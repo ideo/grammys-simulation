@@ -161,9 +161,20 @@ def interactive_demo(song_df):
     write_story("Imaginary Songs", header_level=5)
     col1, col2 = st.columns([6,4])
 
+    # print(song_df.sort_values("Objective Ratings").head(50))
+
+    demo_songs = [
+        "“It’s Unbelievable” by The Mischa Bartons",
+        '"Clique Claque" by Bored Teens',
+        '"Deathlehem" by Pluton Monolith',
+        '"Kiddie Pool" by Glitterfreckle',
+        '"Natural Causes" by Knuckles Johnson',
+    ]
+
     with col1:
-        indices = [36, 13, 4, 0, 18]
-        candidates = song_df.iloc[indices]
+        # candidates = song_df.iloc[indices]
+        candidates = song_df[song_df["ID"].isin(demo_songs)]
+        candidates = candidates.sort_values("Objective Ratings", ascending=False)
         label = "Select a Candidate Song"
         options = candidates["ID"].values
         selection = st.radio(label, options)
