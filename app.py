@@ -29,7 +29,7 @@ baseline_titles, baseline_indices = lg.establish_baseline(song_df)
 # Simulation Explanation and Interactive Demo
 lg.write_story("Voting Simulations", header_level=1)
 lg.interactive_demo(song_df)
-lg.write_story("Introduction Conclusion", header_level=None)
+lg.write_story("Establishing a Baseline", header_level=5)
 
 
 section_title = "The Isle of Musica"

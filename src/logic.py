@@ -243,7 +243,7 @@ def visualize_example_votes(obj_score, subj_scores):
 
     spec = {
         "height":   300,
-        "title":    "Simulating Votes",
+        "title":    "Simulated` Votes",
         "layer":    [objective_spec, subjective_spec],
     }
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
