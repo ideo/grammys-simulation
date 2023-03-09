@@ -37,11 +37,14 @@ def initialize_session_state():
         "listen_limit":         250,
         "ballot_limit":         50,
         "st_dev":               20,
+        "total_time_str":       None,
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
             st.session_state[key] = value
 
+    if st.session_state["total_time_str"] is None:
+        st.session_state["total_time_str"] = format_total_time()
 
     if st.session_state["reset_visuals"]:
         reset_visuals()
@@ -56,7 +59,7 @@ def reset_visuals():
 
 def insert_variables(paragraph, section_title, story=True):
     for key, value in st.session_state.items():
-        if type(value) in [int, float]:
+        if type(value) in [int, float, str]:
             key, value = str(key), value
             for _ in range(paragraph.count(key)):
                 if story:
@@ -605,3 +608,22 @@ def load_or_generate_heatmap_chart(num_winners, ballot_limit, baseline, regenera
     # Original chart specified as an Altair oject. When loaded as a dictionary
     # we display it as a vega-lite object.
     st.vega_lite_chart(chart_dict, use_container_width=True)
+
+
+def format_total_time():
+    num_songs = st.session_state["num_songs"]
+    avg_song_length = 3.5   #minutes
+    total_time = num_songs * avg_song_length
+    # total_time /= 30
+
+    # Format
+    minutes_in_a_day = 60*24
+    days = total_time // minutes_in_a_day
+    leftover = total_time % minutes_in_a_day
+
+    hours = leftover // 60
+    minutes = leftover % 60
+
+    days, hours, minutes = int(days), int(hours), int(minutes)
+    total_time_str = f"{days} days, {hours} hours, and {minutes} minutes"
+    return total_time_str

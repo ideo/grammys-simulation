@@ -43,7 +43,7 @@ instructions:
   Keep it Simple:
     - In this first contest, voters start listening to songs in the order they appear on the Mayor’s playlist. No voter has time to listen to every song. Each voters votes for their favorite num_winners songs they hear.
   Ensuring Fairness:
-    - tktk
+    - In order to ensure a fair outcome, in this contest, all num_voters voters listen and vote on all num_songs songs. If every song were three and half minutes long, it would take total_time_str to listen to all of them continuously.
   The Power of Randomness:
     - "In our second contest, voters are randomly assigned a smaller subset of songs to listen to. They then submit a ballot ranking their top picks from that sample. Change the listening sample and ballot sizes to explore different outcomes."
   Nullifying Bloc Voting:
