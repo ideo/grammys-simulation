@@ -76,8 +76,9 @@ def insert_variables(paragraph, section_title, story=True):
 
 def write_story(section_title, st_col=st, header_level=3):
     st.write("")
-    header = "#"*header_level
-    st.markdown(f"{header} {section_title}")
+    if header_level is not None:
+        header = "#"*header_level
+        st.markdown(f"{header} {section_title}")
     story = utils.load_text()["story"]
     for paragraph in story[section_title]:
         paragraph = insert_variables(paragraph, section_title)

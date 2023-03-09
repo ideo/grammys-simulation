@@ -19,8 +19,6 @@ lg.initialize_session_state()
 # lg.sidebar()
 
 
-section_title = "The Isle of Musica"
-lg.write_story(section_title, header_level=1)
 num_voters = st.session_state["num_voters"]
 num_songs = st.session_state["num_songs"]
 num_winners = st.session_state["num_winners"]
@@ -29,10 +27,13 @@ baseline_titles, baseline_indices = lg.establish_baseline(song_df)
 
 
 # Simulation Explanation and Interactive Demo
-lg.write_story("Agent Based Simulations")
+lg.write_story("Voting Simulations", header_level=1)
 lg.interactive_demo(song_df)
+lg.write_story("Introduction Conclusion", header_level=None)
 
 
+section_title = "The Isle of Musica"
+lg.write_story(section_title, header_level=1)
 lg.select_num_winners()
 
 
