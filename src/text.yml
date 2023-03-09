@@ -19,8 +19,12 @@ story:
     - "Anyone who believes a song they wrote this year is particularly special can nominate it for the contest. num_voters people live on the Isle, and when Mayor Melody sees the lists of nominees, surprise surprise, num_voters songs have been nominated. Everyone must have picked their personal best."
     - "Running a contest with this many entrants is going to be tricky, but the mayor has a plan. First step, instead of trying to declare one winner in one go, Mayor Melody decides the first round of the contest should be to determine a short list of finalists."
   
-  First Contest:
-    - first contest
+  Keep it Simple:
+    - Mayor Melody wants to make this process as easy as possible. The easiest method she can think of is for each voter to simply vote for which songs they think should proceed to the next round. With num_winners finalists, each voter can vote for num_winners.
+    - The mayor is a little concerned about how many songs have been nominated, but she knows her citizens are dedicated and thoughtful. So she adds all the songs to the playlist on her MySpace page and tells the island to start listening!
+  
+  Ensuring Fairness:
+    - Mayor Melody wants to make sure her citizens have time to judge each song fairly, so she’s given everyone the month off to ensure they can take the time to listen and assess each one. Her and her staff have also printed off massive ballots. She knows her citizens want to know who their competition is, so it’s important the voters submit an ordered ranking of all num_songs songs.
 
   The Power of Randomness:
     - "Of course, voting this way would take a long time. Plus, the citizens of the Isle don’t actually want a month off work – their work is their passion.They have albums to produce, sound edits to make – they don’t want to drop everything to listen and rate every single song. Plus, even for music lovers, working through num_songs sounds exhausting. Would everything just start to sound the same after awhile? Music lovers are superhuman, but not like that!"
@@ -36,10 +40,10 @@ story:
 instructions:
   select_num_winners:
     - "This contest will determine a small list of finalists from the larger pool of nominees. How many finalists should there be?"
-  simulation_1:
-    - "This first contest sets the baseline that we can compare against in subsequent contests. All num_voters voters listen and vote on all num_songs songs."
-  First Contest:
-    - "Hi there"
+  Keep it Simple:
+    - In this first contest, voters start listening to songs in the order they appear on the Mayor’s playlist. No voter has time to listen to every song. Each voters votes for their favorite num_winners songs they hear.
+  Ensuring Fairness:
+    - tktk
   The Power of Randomness:
     - "In our second contest, voters are randomly assigned a smaller subset of songs to listen to. They then submit a ballot ranking their top picks from that sample. Change the listening sample and ballot sizes to explore different outcomes."
   Nullifying Bloc Voting:

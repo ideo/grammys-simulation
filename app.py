@@ -28,6 +28,7 @@ song_df = load_or_generate_objective_scores(num_songs)
 # Simulation Explanation and Interactive Demo
 lg.write_story("Voting Simulations", header_level=1)
 lg.interactive_demo(song_df)
+
 section_title = "Establish a Baseline"
 baseline_titles, _ = lg.establish_baseline(song_df)
 
@@ -37,31 +38,22 @@ lg.write_story(section_title, header_level=1)
 lg.select_num_winners()
 
 
-# Baseline
-# section_title = "simulation_1"
-# section_title = "Establishing a Baseline"
-# st.subheader(section_title)
-# lg.write_story(section_title)
-# sim1, sim1_chart_df = lg.simulation_section(song_df, section_title)
-
-
 # Alphabetical
-section_title = "First Contest"
-st.subheader(section_title.title())
+section_title = "Keep it Simple"
+lg.write_story(section_title)
+subtitle = f"Each voter casts {num_winners} votes, but no voter has time to listen to every song."
 sim_alpha, _ = lg.simulation_section(song_df, section_title, 
                                      alphabetical=True,
-                                     baseline_results=baseline_titles)
+                                     baseline_results=baseline_titles,
+                                     subtitle=subtitle)
 
-
-# st.markdown("##### Repeated Contests")
-# num_contests=100
-# st.session_state["num_contests"] = num_contests
-# lg.write_story("simulation_1_repeated")
-# repeated_results = lg.display_results_of_repeated_contests(sim1)
-
-# # TODO: Regenerate this data
-# baseline_titles, baseline_indices = lg.establish_baseline(repeated_results)
-# # st.write(sim1.condorcet.top_nominee_ids)
+# Impractical
+section_title = "Ensuring Fairness"
+lg.write_story(section_title)
+subtitle = f"All voters take the time to listen and rank all {num_songs} songs."
+sim1, sim1_chart_df = lg.simulation_section(song_df, section_title,
+                                            baseline_results=baseline_titles,
+                                            subtitle=subtitle)
 
 
 # Random Samples
@@ -89,33 +81,6 @@ sim2, _ = lg.simulation_section(song_df, section_title,
     listen_limit=listen_limit,
     ballot_limit=ballot_limit,
     baseline_results=baseline_titles)
-
-
-# # Heatmap
-# st.markdown("##### Repeated Contests")
-# col1, _, col2 = st.columns([5, 1, 4])
-# lg.write_story("heatmap", st_col=col1)
-
-# with col2:
-#     label="No. Finalists"
-#     options = st.session_state["finalist_options"]
-#     index = options.index(st.session_state["num_winners"])
-#     heatmap_num_winners = st.selectbox(label, options=options, index=index)
-
-#     label="Ballot Size"
-#     options = [50, 100, 150, 200, 250]
-#     initial_value = ballot_limit if ballot_limit in options else 50
-#     index = options.index(initial_value)
-#     heatmap_ballot_limit = st.selectbox(label, options=options, index=index)
-
-# st.write("")
-# regenerate = st.secrets["ENVIRONMENT"] == "local"
-# lg.load_or_generate_heatmap_chart(
-#     heatmap_num_winners, 
-#     heatmap_ballot_limit, 
-#     baseline_indices, 
-#     regenerate=regenerate)
-# lg.write_story("heatmap_conclusion")
 
 
 # Bloc Voting

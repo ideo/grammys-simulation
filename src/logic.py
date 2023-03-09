@@ -75,7 +75,6 @@ def insert_variables(paragraph, section_title, story=True):
         
 
 def write_story(section_title, st_col=st, header_level=3):
-    st.write("")
     if header_level is not None:
         header = "#"*header_level
         st_col.markdown(f"{header} {section_title}")
@@ -86,14 +85,11 @@ def write_story(section_title, st_col=st, header_level=3):
 
 
 def write_instructions(section_title, st_col=st, header_level=3):
-    # header = "#"*header_level
-    # st.markdown(f"{header} {section_title}")
-    # st.caption(f"**{section_title}**")
-    st.write("")
     instructions = utils.load_text()["instructions"]
-    for paragraph in instructions[section_title]:
-        paragraph = insert_variables(paragraph, section_title, story=False)
-        st_col.caption(paragraph)
+    if section_title in instructions:
+        for paragraph in instructions[section_title]:
+            paragraph = insert_variables(paragraph, section_title, story=False)
+            st_col.caption(paragraph)
 
 
 def sidebar():
@@ -158,6 +154,7 @@ def select_num_winners():
 
 def interactive_demo(song_df):
     """The interactive portion of the simulation explanation"""
+    st.write("")
     write_story("Imaginary Songs", header_level=5)
     col1, col2 = st.columns([6,4])
 
@@ -174,7 +171,9 @@ def interactive_demo(song_df):
         score = round(score/10, 1)
         st.metric("Objective Score", score)
 
+    st.write("")
     write_story("Imaginary Voters", header_level=5)
+    st.write("")
     _, cntr, _ = st.columns([2,2,2])
     clicked = cntr.button('Simulate "Subjective" Scores')
 
@@ -268,7 +267,8 @@ def simulation_section(song_df, section_title,
         baseline_results=None,
         num_mafiosos=0, mafia_size=0,
         disabled=False,
-        alphabetical=False):
+        alphabetical=False,
+        subtitle=None):
     """
     A high level container for running a simulation.
     """
@@ -304,7 +304,7 @@ def simulation_section(song_df, section_title,
     # with col2:
     chart_df = load_chart_df(section_title)
     num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
-    chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters)
+    chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters, subtitle=subtitle)
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
     # col1.markdown("##### Current Method Winners")
@@ -363,7 +363,7 @@ def print_params(simulations):
             st.code(msg)
 
 
-def format_spec(chart_df, num_corrupt_voters=0):
+def format_spec(chart_df, num_corrupt_voters=0, subtitle=None):
     """Format the chart to be shown in each frame of the animation"""
 
     red = COLORS["red"]
@@ -380,14 +380,16 @@ def format_spec(chart_df, num_corrupt_voters=0):
 
     # TODO: Subtitle could display simulation settings.
     if chart_df["sum"].sum() == 0:
-        subtitle = "Click 'Simulate' to see the results"
+        subtitle_text = "Click 'Simulate' to see the results"
     else:
-        subtitle = [f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."]
+        subtitle_text = [f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."]
+        if subtitle is not None:
+            subtitle_text[0] += f" {subtitle}"
 
         if num_corrupt_voters:
             num_voters = st.session_state["num_voters"]
             percent = round(100 * num_corrupt_voters / num_voters)
-            subtitle += [f"{percent}% of the voters are corrupt."]
+            subtitle_text += [f"{percent}% of the voters are corrupt."]
     
 
     upper_lim = chart_df["sum"].max()
@@ -429,7 +431,7 @@ def format_spec(chart_df, num_corrupt_voters=0):
             },
             "title":    {
                 "text": f"Simulation Results",
-                "subtitle": subtitle, 
+                "subtitle": subtitle_text, 
             },
             "config": {
                 "legend": {
