@@ -505,75 +505,83 @@ def format_filepath(sim):
     return filepath
 
 
-def display_results_of_repeated_contests(sim):
-    """This establishes the baseline for Simulation One"""
-    filepath = format_filepath(sim)
-    with open(filepath, "rb") as pkl_file:
-        repeated_contests = pickle.load(pkl_file)
+# def display_results_of_repeated_contests(sim):
+#     """This establishes the baseline for Simulation One"""
+#     filepath = format_filepath(sim)
+#     with open(filepath, "rb") as pkl_file:
+#         repeated_contests = pickle.load(pkl_file)
 
-    sums_per_song = repeated_contests.sum_of_rankings.sum(axis=1)
-    chart_df = pd.DataFrame(sums_per_song)
+#     sums_per_song = repeated_contests.sum_of_rankings.sum(axis=1)
+#     chart_df = pd.DataFrame(sums_per_song)
 
-    title = "Who Deserves to Win?"
-    subtitle = f"Vote tallies of the {sim.num_winners} highest scoring songs after running {repeated_contests.num_contests} simulated contests."
-    x_label = f"Vote Tallies"
-    chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
-    chart_df["ID"] = sim.song_df["ID"]
-    chart_df.rename(columns={0: x_label}, inplace=True)
-    chart_df = chart_df.head(sim.num_winners)
+#     title = "Who Deserves to Win?"
+#     subtitle = f"Vote tallies of the {sim.num_winners} highest scoring songs after running {repeated_contests.num_contests} simulated contests."
+#     x_label = f"Vote Tallies"
+#     chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
+#     chart_df["ID"] = sim.song_df["ID"]
+#     chart_df.rename(columns={0: x_label}, inplace=True)
+#     chart_df = chart_df.head(sim.num_winners)
     
-    spec = {
-            "mark": {"type": "bar"},
-            "encoding": {
-                "y":    {
-                    "field": "ID", 
-                    "type": "nominal", 
-                    "sort": "-x",
-                    "axis": {"labelAngle": 0, "labelLimit": 0},
-                    "title":    None,
-                    },
-                "x":    {
-                    "field": x_label, 
-                    "type": "quantitative", 
-                    # "title": "Vote Tallies"
-                    },
-                "color": {
-                    "field":    "Color",
-                    "type":     "nominal",
-                    "scale":    None,
-                    },
-            },
-            "title":    {
-                "text": title,
-                "subtitle": subtitle, 
-            }  
-        }
-    st.write("")
-    st.vega_lite_chart(chart_df, spec, use_container_width=True)
-    return chart_df
+#     spec = {
+#             "mark": {"type": "bar"},
+#             "encoding": {
+#                 "y":    {
+#                     "field": "ID", 
+#                     "type": "nominal", 
+#                     "sort": "-x",
+#                     "axis": {"labelAngle": 0, "labelLimit": 0},
+#                     "title":    None,
+#                     },
+#                 "x":    {
+#                     "field": x_label, 
+#                     "type": "quantitative", 
+#                     # "title": "Vote Tallies"
+#                     },
+#                 "color": {
+#                     "field":    "Color",
+#                     "type":     "nominal",
+#                     "scale":    None,
+#                     },
+#             },
+#             "title":    {
+#                 "text": title,
+#                 "subtitle": subtitle, 
+#             }  
+#         }
+#     st.write("")
+#     st.vega_lite_chart(chart_df, spec, use_container_width=True)
+#     return chart_df
 
 
 def establish_baseline(song_df):
     st.write("")
-    write_story("Establishing a Baseline", header_level=5)
+    st.markdown("##### Establishing a Baseline")
 
     col1, col2 = st.columns(2)
     with col1:
         # Top 5 Songs
         top_songs = song_df.sort_values("Objective Ratings", ascending=False).iloc[:5].copy()
         titles = top_songs["ID"].tolist()
-        df = pd.DataFrame(titles, columns=["Top Songs"],
-                          index=[ii+1 for ii, _ in enumerate(titles)])
-        st.table(df)
+        # df = pd.DataFrame(titles, columns=["Top Songs"],
+        #                   index=[ii+1 for ii, _ in enumerate(titles)])
+        df = top_songs[["Objective Ratings", "ID"]].copy()
+        df.rename(columns={"ID": "Song & Artist"}, inplace=True)
+        df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
+        st.dataframe(df.set_index("Objective Ratings"))
     
     with col2:
         # Top 6 - 10 Songs
         top_songs = song_df.sort_values("Objective Ratings", ascending=False).iloc[6:11].copy()
         titles = top_songs["ID"].tolist()
-        df = pd.DataFrame(titles, columns=["Top Songs"],
-                          index=[ii+6 for ii, _ in enumerate(titles)])
-        st.table(df)
+        # df = pd.DataFrame(titles, columns=["Top Songs"],
+        #                   index=[ii+6 for ii, _ in enumerate(titles)])
+        # st.table(df)
+        df = top_songs[["Objective Ratings", "ID"]].copy()
+        df.rename(columns={"ID": "Song & Artist"}, inplace=True)
+        df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
+        st.dataframe(df.set_index("Objective Ratings"))
 
+    write_story("Establishing a Baseline", header_level=None)
     num_winners = st.session_state["num_winners"]
     top_songs = song_df.sort_values("Objective Ratings", ascending=False).head(num_winners)
     baseline_titles = top_songs["ID"].tolist()
@@ -581,90 +589,90 @@ def establish_baseline(song_df):
     return baseline_titles, baseline_indices
 
 
-def heatmap_filepath(num_winners, ballot_limit):
-    filepath = DATA_DIR / f"heatmap/heatmap_{num_winners}_winners_{ballot_limit}_ballot_limit.json"
-    return filepath
+# def heatmap_filepath(num_winners, ballot_limit):
+#     filepath = DATA_DIR / f"heatmap/heatmap_{num_winners}_winners_{ballot_limit}_ballot_limit.json"
+#     return filepath
 
 
-def explore_changing_sample_size(ballot_limit, baseline):
-    """
-    This generates the spec for the heatmap. It saves it so the streamlit app
-    can just load the chart, not the raw data.
-    """
-    # num_songs = sim.song_df.shape[0]
-    num_songs = st.session_state["num_songs"]
-    filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs_{ballot_limit}_ballot_limit.pkl"
-    with open(filepath, "rb") as pkl_file:
-        exploration = pickle.load(pkl_file)
+# def explore_changing_sample_size(ballot_limit, baseline):
+#     """
+#     This generates the spec for the heatmap. It saves it so the streamlit app
+#     can just load the chart, not the raw data.
+#     """
+#     # num_songs = sim.song_df.shape[0]
+#     num_songs = st.session_state["num_songs"]
+#     filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs_{ballot_limit}_ballot_limit.pkl"
+#     with open(filepath, "rb") as pkl_file:
+#         exploration = pickle.load(pkl_file)
 
-    # This can all be done ahead of time. Only the chart_df needs to be saved
-    # Tally, on average, how many of the top N were fair
-    num_winners = len(baseline)
-    outcome_quality = defaultdict(dict)
-    num_contests = exploration[3000][500].num_contests
-    num_contests = p.number_to_words(num_contests)
-    # num_songs = p.number_to_words(num_songs)
+#     # This can all be done ahead of time. Only the chart_df needs to be saved
+#     # Tally, on average, how many of the top N were fair
+#     num_winners = len(baseline)
+#     outcome_quality = defaultdict(dict)
+#     num_contests = exploration[3000][500].num_contests
+#     num_contests = p.number_to_words(num_contests)
+#     # num_songs = p.number_to_words(num_songs)
 
-    for num_voters, contests in exploration.items():
-        for listen_limit, outcomes in contests.items():
-            num_fair_winners = []
-            for _, results in outcomes.contest_winners.items():
-                winners = results[:num_winners]
-                num_fair_winners.append(len(set(winners).intersection(set(baseline))))
+#     for num_voters, contests in exploration.items():
+#         for listen_limit, outcomes in contests.items():
+#             num_fair_winners = []
+#             for _, results in outcomes.contest_winners.items():
+#                 winners = results[:num_winners]
+#                 num_fair_winners.append(len(set(winners).intersection(set(baseline))))
             
-            # outcome_quality[num_voters][listen_limit] = np.mean(num_fair_winners)
-            outcome_quality[num_voters][listen_limit] = np.median(num_fair_winners)
+#             # outcome_quality[num_voters][listen_limit] = np.mean(num_fair_winners)
+#             outcome_quality[num_voters][listen_limit] = np.median(num_fair_winners)
 
-    # Format Heatmap
-    voter_range = list(outcome_quality.keys())
-    sample_range = list(outcome_quality[voter_range[0]].keys())
-    x, y = np.meshgrid(sample_range, voter_range)
+#     # Format Heatmap
+#     voter_range = list(outcome_quality.keys())
+#     sample_range = list(outcome_quality[voter_range[0]].keys())
+#     x, y = np.meshgrid(sample_range, voter_range)
 
-    x_label = "Sample Size"
-    y_label = "Voters"
+#     x_label = "Sample Size"
+#     y_label = "Voters"
 
-    source = pd.DataFrame({x_label: x.ravel(), y_label: y.ravel()})
-    source["z"] = source.apply(lambda row: outcome_quality.get(row[y_label], np.nan).get(row[x_label], np.nan), axis=1)
+#     source = pd.DataFrame({x_label: x.ravel(), y_label: y.ravel()})
+#     source["z"] = source.apply(lambda row: outcome_quality.get(row[y_label], np.nan).get(row[x_label], np.nan), axis=1)
 
-    # First time doing an actual altair chart instead of doing a vega-lite spec
-    chart = alt.Chart(source).mark_rect().encode(
-        x=alt.X(f"{x_label}:O", axis=alt.Axis(
-            title="Sample Size: How Many Songs Voters Listened To",
-            labelAngle=0,
-            )), 
-        y=alt.Y(f"{y_label}:O", sort='descending', axis=alt.Axis(
-            title="No. Voters"
-            )), 
-        color=alt.Color(
-            "z:Q", 
-            scale=alt.Scale(scheme="RedBlue", domain=[0,num_winners]),
-            title="Median",
-        )
-    ).properties(
-        title={
-            "text": "Contest Consistency",
-            "subtitle": [
-                f"The median number of deserved winners within the top {num_winners}.",
-                f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of {ballot_limit}.",]
-        }
-    )
-    filepath = heatmap_filepath(num_winners, ballot_limit)
-    chart.save(filepath)
+#     # First time doing an actual altair chart instead of doing a vega-lite spec
+#     chart = alt.Chart(source).mark_rect().encode(
+#         x=alt.X(f"{x_label}:O", axis=alt.Axis(
+#             title="Sample Size: How Many Songs Voters Listened To",
+#             labelAngle=0,
+#             )), 
+#         y=alt.Y(f"{y_label}:O", sort='descending', axis=alt.Axis(
+#             title="No. Voters"
+#             )), 
+#         color=alt.Color(
+#             "z:Q", 
+#             scale=alt.Scale(scheme="RedBlue", domain=[0,num_winners]),
+#             title="Median",
+#         )
+#     ).properties(
+#         title={
+#             "text": "Contest Consistency",
+#             "subtitle": [
+#                 f"The median number of deserved winners within the top {num_winners}.",
+#                 f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of {ballot_limit}.",]
+#         }
+#     )
+#     filepath = heatmap_filepath(num_winners, ballot_limit)
+#     chart.save(filepath)
 
 
 
-def load_or_generate_heatmap_chart(num_winners, ballot_limit, baseline, regenerate=False):
-    filepath = heatmap_filepath(num_winners, ballot_limit)
+# def load_or_generate_heatmap_chart(num_winners, ballot_limit, baseline, regenerate=False):
+#     filepath = heatmap_filepath(num_winners, ballot_limit)
     
-    if not os.path.exists(filepath) or regenerate:
-        explore_changing_sample_size(ballot_limit, baseline) 
+#     if not os.path.exists(filepath) or regenerate:
+#         explore_changing_sample_size(ballot_limit, baseline) 
     
-    with open(filepath, "r") as json_object:
-        chart_dict = json.load(json_object)
+#     with open(filepath, "r") as json_object:
+#         chart_dict = json.load(json_object)
 
-    # Original chart specified as an Altair oject. When loaded as a dictionary
-    # we display it as a vega-lite object.
-    st.vega_lite_chart(chart_dict, use_container_width=True)
+#     # Original chart specified as an Altair oject. When loaded as a dictionary
+#     # we display it as a vega-lite object.
+#     st.vega_lite_chart(chart_dict, use_container_width=True)
 
 
 def format_total_time():

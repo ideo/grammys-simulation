@@ -36,7 +36,7 @@ Keep it Simple:
   instructions:
     - In this first contest, voters start listening to songs in the order they appear on the Mayor’s playlist. No voter has time to listen to every song. Each voters votes for their favorite num_winners songs they hear.
   takeaway:
-    - In this simulation, we see that when voters are shown songs in alphabetical order, the rightful songs often do not receive the most votes! Does that sound simillar to a concern in the real world?
+    - In this simulation, we see that when voters are shown songs on a ballot in alphabetical order, the rightful songs often do not receive the most votes due to fatigue of listening all the way to the end. The songs on the top of the ballot get more votes.
 
 Ensuring Fairness:
   story:
