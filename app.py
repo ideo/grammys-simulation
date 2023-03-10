@@ -25,29 +25,27 @@ section_title = "Establish a Baseline"
 baseline_titles, _ = lg.establish_baseline(song_df)
 
 # Impractical
+show_state = 0
 st.markdown("---")
-_, cen, _ = st.columns([3,2,2])
-def start_story_state():
-    st.session_state['show_state'] = 1
+_, center, _ = st.columns([3,2,2])
+label = "Let's Go"
+lg.proceed_button(center, label, show_state+1)
 
-start_story = cen.button("Let's go",key=0,on_click=start_story_state)
 
-    
-
-if st.session_state['show_state'] >= 1:
-    # Alphabetical
+show_state = 1
+if st.session_state['show_state'] >= show_state:
     section_title = "The Isle of Musica"
     lg.write_story(section_title, header_level=1)
     lg.select_num_winners(section_title)
 
     st.markdown("---")
-    _, cen, _ = st.columns([2,2,2])
-    def alphabetical():
-        st.session_state['show_state'] = 2
-    
-    start_story = cen.button("Let's simulate the first contest!",key=1,on_click=alphabetical)
+    _, center, _ = st.columns([2,2,2])
+    label = "Let's simulate the first contest!"
+    lg.proceed_button(center, label, show_state+1)
 
-if st.session_state["show_state"] >= 2:
+
+show_state = 2
+if st.session_state["show_state"] >= show_state:
     section_title = "Keep it Simple"
     lg.write_story(section_title)
     subtitle = f"Each voter casts {num_winners} votes, but no voter has time to listen to every song."
@@ -57,13 +55,13 @@ if st.session_state["show_state"] >= 2:
                                         subtitle=subtitle)
     
     st.markdown("---")
-    _, cen, _ = st.columns([2,2,2])
-    def fairness():
-        st.session_state['show_state'] = 3
+    _, center, _ = st.columns([2,2,2])
+    label = "Let's simulate how they can solve this issue?"
+    show_state = lg.proceed_button(center, label, show_state)
 
-    start_story = cen.button("Let's simulate how they can solve this issue?",key=2,on_click=fairness)
 
-if st.session_state["show_state"] >= 3:
+show_state = 3
+if st.session_state["show_state"] >= show_state:
     section_title = "Ensuring Fairness"
     lg.write_story(section_title)
     subtitle = f"All voters take the time to listen and rank all {num_songs} songs."
@@ -74,14 +72,14 @@ if st.session_state["show_state"] >= 3:
                                                 baseline_results=baseline_titles,
                                                 subtitle=subtitle) 
     st.markdown("---")  
-    _, cen, _ = st.columns([2,2,2])
-    def randomness():
-        st.session_state['show_state'] = 4
+    _, center, _ = st.columns([2,2,2])
+    label = "Is there a way that's more feasible?"
+    lg.proceed_button(center, label, show_state+1)
 
-    start_story = cen.button("Is there a way that's more feasible?",key=3,on_click=randomness)
 
 # Random Samples
-if st.session_state["show_state"] >= 4:
+show_state = 4
+if st.session_state["show_state"] >= show_state:
     section_title = "The Power of Randomness"
     lg.write_story(section_title)
 
@@ -108,16 +106,15 @@ if st.session_state["show_state"] >= 4:
         baseline_results=baseline_titles)
 
     st.markdown("---")
-    def bloc():
-        st.session_state['show_state'] = 5        
-    _, cen, _ = st.columns([2,2,2])
+    _, center, _ = st.columns([2,2,2])
     st.text("")
-    start_story = cen.button("Can this help if voters are really biased?",key=4,on_click=bloc)
+    label = "Can this help if voters are really biased?"
+    lg.proceed_button(center, label, show_state+1)
 
-# Random Samples
+
+# Bloc 
+show_state = 5
 if st.session_state["show_state"] >= 5:
-
-# Bloc Voting
     section_title = "Nullifying Bloc Voting"
     lg.write_story(section_title)
 

@@ -29,17 +29,17 @@ def initialize_session_state():
     refresh.
     """
     initial_values = {
-        "reset_visuals":        True,
-        "num_voters":           1000,
-        "num_songs":            1000,
-        "num_winners":          5,
-        "finalist_options":     [5, 10],
-        "listen_limit":         250,
-        "ballot_limit":         50,
-        "st_dev":               20,
-        "total_time_str":       None,
-        "show_state" : 0,
-        "persist_demo_takeaway": 0
+        "reset_visuals":            True,
+        "num_voters":               1000,
+        "num_songs":                1000,
+        "num_winners":              5,
+        "finalist_options":         [5, 10],
+        "listen_limit":             250,
+        "ballot_limit":             50,
+        "st_dev":                   20,
+        "total_time_str":           None,
+        "show_state" :              0,
+        "persist_demo_takeaway":    0
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
@@ -57,6 +57,18 @@ def reset_visuals():
     for filename in os.listdir(DATA_DIR):
         if "chart_df" in filename:
             os.remove(DATA_DIR / filename)
+
+
+def update_show_state(section_number):
+    print("Viewable up to section: ", section_number)
+    if st.session_state["show_state"] < section_number:
+        st.session_state["show_state"] = section_number
+
+
+def proceed_button(col, label, next_show_state):
+    label = "Let's simulate the first contest!"
+    on_click = lambda: update_show_state(next_show_state)
+    _ = col.button(label, on_click=on_click, key=f"Show State {next_show_state}")
 
 
 def insert_variables(paragraph, section_title, story=True):
@@ -93,7 +105,7 @@ def write_story(section_title, st_col=st, header_level=3, key="story"):
         st_col.write(paragraph)
 
 
-def write_instructions(section_title, st_col=st, header_level=3):
+def write_instructions(section_title, st_col=st):
     instructions = utils.load_text()[section_title]["instructions"]
     if section_title in instructions:
         for paragraph in instructions:
@@ -397,22 +409,22 @@ def format_condorcet_results_chart_df(sim, theoretical_results=None):
     return chart_df
 
 
-def print_params(simulations):
-    """
-    TKTK
-    """
-    # st.text("Parameter Summary:")
-    with st.expander("Parameter Summaries", expanded=False):
-        for sim in simulations:
-            tab_width = 8
-            msg = "{\n"
-            for key, value in sim.params.items():
-                value = f"'{value}'" if isinstance(value, str) else value
-                num_tabs = 3 - (len(key)+1)//tab_width
-                tabs = "\t"*num_tabs
-                msg += f"\t'{key}':{tabs}{value},\n"
-            msg += "}"
-            st.code(msg)
+# def print_params(simulations):
+#     """
+#     TKTK
+#     """
+#     # st.text("Parameter Summary:")
+#     with st.expander("Parameter Summaries", expanded=False):
+#         for sim in simulations:
+#             tab_width = 8
+#             msg = "{\n"
+#             for key, value in sim.params.items():
+#                 value = f"'{value}'" if isinstance(value, str) else value
+#                 num_tabs = 3 - (len(key)+1)//tab_width
+#                 tabs = "\t"*num_tabs
+#                 msg += f"\t'{key}':{tabs}{value},\n"
+#             msg += "}"
+#             st.code(msg)
 
 
 def format_spec(chart_df, num_corrupt_voters=0, subtitle=None):
@@ -553,32 +565,23 @@ def format_filepath(sim):
 #     return chart_df
 
 
+def top_songs_chart(song_df, start_loc, end_loc):
+    df = song_df.sort_values("Objective Ratings", ascending=False).copy()
+    df = df.iloc[start_loc:end_loc][["Objective Ratings", "ID"]]
+    df.rename(columns={"ID": "Song & Artist"}, inplace=True)
+    df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
+    st.dataframe(df.set_index("Objective Ratings"))
+
+
 def establish_baseline(song_df):
     st.write("")
     st.markdown("##### Establishing a Baseline")
-
     col1, col2 = st.columns(2)
     with col1:
-        # Top 5 Songs
-        top_songs = song_df.sort_values("Objective Ratings", ascending=False).iloc[:5].copy()
-        titles = top_songs["ID"].tolist()
-        # df = pd.DataFrame(titles, columns=["Top Songs"],
-        #                   index=[ii+1 for ii, _ in enumerate(titles)])
-        df = top_songs[["Objective Ratings", "ID"]].copy()
-        df.rename(columns={"ID": "Song & Artist"}, inplace=True)
-        df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
-        st.dataframe(df.set_index("Objective Ratings"))
+        top_songs_chart(song_df, 0, 5)
     
     with col2:
-        # Top 6 - 10 Songs
-        top_songs = song_df.sort_values("Objective Ratings", ascending=False).iloc[6:11].copy()
-        titles = top_songs["ID"].tolist()
-        # df = pd.DataFrame(titles, columns=["Top Songs"],
-        #                   index=[ii+6 for ii, _ in enumerate(titles)])
-        df = top_songs[["Objective Ratings", "ID"]].copy()
-        df.rename(columns={"ID": "Song & Artist"}, inplace=True)
-        df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
-        st.dataframe(df.set_index("Objective Ratings"))
+        top_songs_chart(song_df, 6, 11)
 
     write_story("Establishing a Baseline", header_level=None)
     num_winners = st.session_state["num_winners"]
