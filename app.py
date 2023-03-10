@@ -4,12 +4,6 @@ from src import logic as lg
 from src import load_or_generate_objective_scores
 
 
-# TODO: Include the num_winners as a user visible variable
-# TODO: Display how many times the right top 10 existed.
-# TODO: Add to the story "good but not great" B+
-# TODO: How many times did a crony get to contort their ballot
-
-
 st.set_page_config(
     page_title="Isle of Musica",
     page_icon="img/grammys_logo.png",
@@ -44,7 +38,7 @@ if st.session_state['show_state'] >= 1:
     # Alphabetical
     section_title = "The Isle of Musica"
     lg.write_story(section_title, header_level=1)
-    lg.select_num_winners()
+    lg.select_num_winners(section_title)
 
     st.markdown("---")
     _, cen, _ = st.columns([2,2,2])
@@ -57,14 +51,10 @@ if st.session_state["show_state"] >= 2:
     section_title = "Keep it Simple"
     lg.write_story(section_title)
     subtitle = f"Each voter casts {num_winners} votes, but no voter has time to listen to every song."
-
-    takeaway = "**TAKEAWAY**: In this simulation, we see that when voters are shown songs in alphabetical order, the rightful songs often do not receive the most votes! Does that sound simillar to a concern in the real world?"
-
-
     sim_alpha, _ = lg.simulation_section(song_df, section_title, 
                                         alphabetical=True,
                                         baseline_results=baseline_titles,
-                                        subtitle=subtitle,takeaway=takeaway)
+                                        subtitle=subtitle)
     
     st.markdown("---")
     _, cen, _ = st.columns([2,2,2])
@@ -78,11 +68,11 @@ if st.session_state["show_state"] >= 3:
     lg.write_story(section_title)
     subtitle = f"All voters take the time to listen and rank all {num_songs} songs."
 
-    takeaway = "**TAKEAWAY**: In this simulation, Even when voters are pretty subjective, when they all listen to every song, their collective wisdom almost always picks the best songs. But this is not feasible in real life!"
+    takeaway = "**TAKEAWAY**: "
 
     sim1, sim1_chart_df = lg.simulation_section(song_df, section_title,
                                                 baseline_results=baseline_titles,
-                                                subtitle=subtitle, takeaway=takeaway) 
+                                                subtitle=subtitle) 
     st.markdown("---")  
     _, cen, _ = st.columns([2,2,2])
     def randomness():
@@ -112,12 +102,10 @@ if st.session_state["show_state"] >= 4:
         step=25,
         key=section_title+"_ballot_limit")
 
-    takeaway = "**TAKEAWAY**: In this simulation, we see that even if voters vote for a small subset of songs, the votes (mostly) reflect the best songs!."
-
     sim2, _ = lg.simulation_section(song_df, section_title, 
         listen_limit=listen_limit,
         ballot_limit=ballot_limit,
-        baseline_results=baseline_titles, takeaway=takeaway)
+        baseline_results=baseline_titles)
 
     st.markdown("---")
     def bloc():
@@ -164,10 +152,7 @@ if st.session_state["show_state"] >= 5:
         max_value=max_mafia_size,
         step=5)
     
-    takeaway = "**TAKEAWAY**: The performance of the above contest is surprisingly similar to that of the one before it. Even when every single voter is in cahoots with someone, the randomization of the contest prevents coordination – not enough of them get the chance to vote for their ring leader. At worst, by not voting for the deserved best song, rather than promote a corrupt song into the finalists, they open up a chance for a near-finalist to make into the list. This phenomen nullifies any attempts at collusion."
     sim3, _ = lg.simulation_section(song_df, section_title, 
         listen_limit=listen_limit, ballot_limit=ballot_limit,
         baseline_results=baseline_titles,
-        num_mafiosos=num_mafiosos, mafia_size=mafia_size, takeaway=takeaway)
-
-    # lg.write_story("bloc_voting_conclusion", header_level=None)
+        num_mafiosos=num_mafiosos, mafia_size=mafia_size)

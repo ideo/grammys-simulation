@@ -79,20 +79,24 @@ def insert_variables(paragraph, section_title, story=True):
     return paragraph
         
 
-def write_story(section_title, st_col=st, header_level=3):
+def write_story(section_title, st_col=st, header_level=3, key="story"):
     if header_level is not None:
         header = "#"*header_level
-        st_col.markdown(f"{header} {section_title}")
-    story = utils.load_text()["story"]
-    for paragraph in story[section_title]:
+        if key == "takeaway":
+            st_col.markdown(f"{header} Takeaway")
+        else:
+            st_col.markdown(f"{header} {section_title}")
+
+    story = utils.load_text()[section_title][key]
+    for paragraph in story:
         paragraph = insert_variables(paragraph, section_title)
         st_col.write(paragraph)
 
 
 def write_instructions(section_title, st_col=st, header_level=3):
-    instructions = utils.load_text()["instructions"]
+    instructions = utils.load_text()[section_title]["instructions"]
     if section_title in instructions:
-        for paragraph in instructions[section_title]:
+        for paragraph in instructions:
             paragraph = insert_variables(paragraph, section_title, story=False)
             # st_col.caption(paragraph)
             st_col.markdown(f"**{paragraph}**")
@@ -144,13 +148,13 @@ def sidebar():
         disabled=False)
     
 
-def select_num_winners():
+def select_num_winners(section_title):
     """
     Let the reader determine how many 'winners' we determine. How long is the 
     final list of nominees?
     """
     col1, _, col2 = st.columns([5,1,5])
-    write_instructions("select_num_winners", col1)
+    write_instructions(section_title, col1)
 
     label = "Choose the number of contest finalists."
     options = st.session_state["finalist_options"]
@@ -175,12 +179,11 @@ def interactive_demo(song_df):
     ]
 
     with col1:
-        # candidates = song_df.iloc[indices]
         candidates = song_df[song_df["ID"].isin(demo_songs)]
         candidates = candidates.sort_values("Objective Ratings", ascending=False)
-        label = ""
+        label = "Example Songs"
         options = candidates["ID"].values
-        selection = st.radio(label, options)
+        selection = st.radio(label, options, label_visibility="hidden")
 
     with col2:
         st.text("")
@@ -203,13 +206,12 @@ def interactive_demo(song_df):
                 explanation = "This song is **pretty average**"
             else:
                 explanation = "This song is **not great**"
-            
             st.markdown(f"##### {explanation}")
         
-
     st.write("")
     st.write("")
-    write_story("Imaginary Voters", header_level=5)
+    section_title = "Imaginary Voters"
+    write_story(section_title, header_level=5)
     st.write("")
     _, cntr, _ = st.columns([2,2,2])
     clicked = cntr.button('Simulate "Subjective" Scores')
@@ -250,8 +252,7 @@ def interactive_demo(song_df):
     visualize_example_votes(score, subj_scores)
 
     if st.session_state["persist_demo_takeaway"]:
-        takeaway = "**TAKEAWAY**: In the simulation, You can see that voters all have differences. Many of them rate the song close to what it's worth, and some people are a bit off. Now what happens if thousands of these voters vote for songs with different voting methods?"
-        st.markdown(takeaway)
+        write_story(section_title, header_level=5, key="takeaway")
 
 
 def visualize_example_votes(obj_score, subj_scores):
@@ -293,8 +294,6 @@ def visualize_example_votes(obj_score, subj_scores):
         },
     }
 
-    layer = [objective_spec, subjective_spec]
-
     spec = {
         "height":   300,
         "title":    {
@@ -328,7 +327,7 @@ def simulation_section(song_df, section_title,
         num_mafiosos=0, mafia_size=0,
         disabled=False,
         alphabetical=False,
-        subtitle=None,takeaway=None):
+        subtitle=None):
     """
     A high level container for running a simulation.
     """
@@ -345,9 +344,6 @@ def simulation_section(song_df, section_title,
         mafia_size=mafia_size,
         alphabetical=alphabetical)
 
-    col1, col2 = st.columns([2, 5])
-
-    # with col1:
     write_instructions(section_title)
     _, cntr, _ = st.columns([3,1,3])
     with cntr:
@@ -356,22 +352,17 @@ def simulation_section(song_df, section_title,
             disabled=disabled)
 
     if start_btn:
-        # delete_chart_df(section_title)
         sim.simulate()
         chart_df = format_condorcet_results_chart_df(sim, baseline_results)
         save_chart_df(chart_df, section_title)
 
-    # with col2:
     chart_df = load_chart_df(section_title)
     num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
     chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters, subtitle=subtitle)
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
-    if chart_df["sum"].sum() > 0 and takeaway:
-        st.markdown(takeaway)
-    # col1.markdown("##### Current Method Winners")
-    # col1.write(sim.current_method_winners)
-    # col2.markdown("##### Condorcet Method Winners")
-    # col2.write(sim.condorcet_winners)
+
+    if chart_df["sum"].sum() > 0:
+        write_story(section_title, header_level=5, key="takeaway")
     
     return sim, chart_df
 
