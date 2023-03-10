@@ -38,7 +38,8 @@ def initialize_session_state():
         "ballot_limit":         50,
         "st_dev":               20,
         "total_time_str":       None,
-        "show_state" : 0
+        "show_state" : 0,
+        "persist_demo_takeaway": 0
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
@@ -220,6 +221,7 @@ def interactive_demo(song_df):
     num_example_voters = 7
     subj_scores = [-1]*num_example_voters
     if clicked:
+        st.session_state["persist_demo_takeaway"] = 1
         columns = st.columns(num_example_voters)
         
         for ii, col in enumerate(columns):
@@ -241,7 +243,8 @@ def interactive_demo(song_df):
             subj_scores.append(subjective_score)
     
     visualize_example_votes(score, subj_scores)
-    if clicked:
+
+    if st.session_state["persist_demo_takeaway"]:
         takeaway = "**TAKEAWAY**: In the simulation, You can see that voters all have differences. Many of them rate the song close to what it's worth, and some people are a bit off. Now what happens if thousands of these voters vote for songs with different voting methods?"
         st.markdown(takeaway)
 
@@ -358,7 +361,7 @@ def simulation_section(song_df, section_title,
     num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
     chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters, subtitle=subtitle)
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
-    if start_btn and takeaway:
+    if chart_df["sum"].sum() > 0 and takeaway:
         st.markdown(takeaway)
     # col1.markdown("##### Current Method Winners")
     # col1.write(sim.current_method_winners)
