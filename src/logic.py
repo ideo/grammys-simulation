@@ -13,7 +13,7 @@ import inflect
 from .config import COLORS
 from .simulation import Simulation, DATA_DIR
 import src.utils as utils
-
+import emoji
 
 import warnings
 # warnings.simplefilter(action='ignore', category=UserWarning)
@@ -38,6 +38,7 @@ def initialize_session_state():
         "ballot_limit":         50,
         "st_dev":               20,
         "total_time_str":       None,
+        "show_state" : 0
     }
     for key, value in initial_values.items():
         if key not in st.session_state:
@@ -92,7 +93,8 @@ def write_instructions(section_title, st_col=st, header_level=3):
     if section_title in instructions:
         for paragraph in instructions[section_title]:
             paragraph = insert_variables(paragraph, section_title, story=False)
-            st_col.caption(paragraph)
+            # st_col.caption(paragraph)
+            st_col.markdown(f"**{paragraph}**")
 
 
 def sidebar():
@@ -175,16 +177,37 @@ def interactive_demo(song_df):
         # candidates = song_df.iloc[indices]
         candidates = song_df[song_df["ID"].isin(demo_songs)]
         candidates = candidates.sort_values("Objective Ratings", ascending=False)
-        label = "Select a Candidate Song"
+        label = ""
         options = candidates["ID"].values
         selection = st.radio(label, options)
 
     with col2:
-        column = "Objective Ratings"
-        score = candidates[candidates["ID"] == selection][column].iloc[0]
-        score = round(score/10, 1)
-        st.metric("Objective Score", score)
+        st.text("")
+        st.text("")
+        st.text("")
+        st.text("")
+        sCol1 , sCol2 = st.columns(2)
+        with sCol1:
+            column = "Objective Ratings"
+            score = candidates[candidates["ID"] == selection][column].iloc[0]
+            score = round(score/10, 1)
+            st.metric("Objective Score", score)
+        with sCol2:
+            st.text("")
+            if score > 8:
+                explanation = "This song is **amazing**!"
+            elif score > 6:
+                explanation = "This song is **pretty good**"
+            elif score > 4:
+                explanation = "This song is **pretty average**"
+            else:
+                explanation = "This song is **not great**"
+            
+            
+            st.markdown(f"##### {explanation}")
+        
 
+    st.write("")
     st.write("")
     write_story("Imaginary Voters", header_level=5)
     st.write("")
@@ -193,19 +216,34 @@ def interactive_demo(song_df):
 
     # Define negative values and we can show the vega-lite chart but the 
     # scores will be below the visible limit.
+    LOVE, SMILE, NEUTRAL, MEH, POOP = [":heart_eyes:",":smirk:",":expressionless:",":unamused:",":hankey:"]
     num_example_voters = 7
     subj_scores = [-1]*num_example_voters
     if clicked:
         columns = st.columns(num_example_voters)
-
+        
         for ii, col in enumerate(columns):
             st_dev = st.session_state["st_dev"]/10
             subjective_score = np.random.normal(loc=score, scale=st_dev)
             subjective_score = round(subjective_score, 1)
+            if subjective_score > 8:
+                emoj = LOVE
+            elif subjective_score > 6:
+                emoj = SMILE
+            elif subjective_score > 4:
+                emoj = NEUTRAL
+            elif subjective_score > 2: 
+                emoj = MEH
+            else:
+                emoj = POOP
+            col.markdown(emoji.emojize(emoj))
             col.metric(f"Voter #{ii+1}", subjective_score)
             subj_scores.append(subjective_score)
     
     visualize_example_votes(score, subj_scores)
+    if clicked:
+        takeaway = "**TAKEAWAY**: In the simulation, You can see that voters all have differences. Many of them rate the song close to what it's worth, and some people are a bit off. Now what happens if thousands of these voters vote for songs with different voting methods?"
+        st.markdown(takeaway)
 
 
 def visualize_example_votes(obj_score, subj_scores):
@@ -282,7 +320,7 @@ def simulation_section(song_df, section_title,
         num_mafiosos=0, mafia_size=0,
         disabled=False,
         alphabetical=False,
-        subtitle=None):
+        subtitle=None,takeaway=None):
     """
     A high level container for running a simulation.
     """
@@ -320,7 +358,8 @@ def simulation_section(song_df, section_title,
     num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
     chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters, subtitle=subtitle)
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
-
+    if start_btn and takeaway:
+        st.markdown(takeaway)
     # col1.markdown("##### Current Method Winners")
     # col1.write(sim.current_method_winners)
     # col2.markdown("##### Condorcet Method Winners")
