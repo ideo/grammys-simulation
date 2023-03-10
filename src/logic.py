@@ -575,7 +575,6 @@ def establish_baseline(song_df):
         titles = top_songs["ID"].tolist()
         # df = pd.DataFrame(titles, columns=["Top Songs"],
         #                   index=[ii+6 for ii, _ in enumerate(titles)])
-        # st.table(df)
         df = top_songs[["Objective Ratings", "ID"]].copy()
         df.rename(columns={"ID": "Song & Artist"}, inplace=True)
         df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
