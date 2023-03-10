@@ -60,7 +60,7 @@ if st.session_state["show_state"] >= 2:
     lg.write_story(section_title)
     subtitle = f"Each voter casts {num_winners} votes, but no voter has time to listen to every song."
 
-    takeaway = "**TAKEAWAY**: In our simulation, if voters are shown songs in alphabetical order, with the current method (voters pick their top favorite songs), the most of the time, the rightful songs are not chosen! Does that sound a concern in the real world?"
+    takeaway = "**TAKEAWAY**: In this simulation, we see that when voters are shown songs in alphabetical order, the rightful songs often do not receive the most votes! Does that sound simillar to a concern in the real world?"
 
 
     sim_alpha, _ = lg.simulation_section(song_df, section_title, 
@@ -114,7 +114,7 @@ if st.session_state["show_state"] >= 4:
         step=25,
         key=section_title+"_ballot_limit")
 
-    takeaway = "**TAKEAWAY**: Even if voters vote for a small subset of songs, with this new condorcet voting method, the votes (mostly) reflect the best songs!."
+    takeaway = "**TAKEAWAY**: In this simulation, we see that even if voters vote for a small subset of songs, the votes (mostly) reflect the best songs!."
 
     sim2, _ = lg.simulation_section(song_df, section_title, 
         listen_limit=listen_limit,
