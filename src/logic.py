@@ -204,7 +204,6 @@ def interactive_demo(song_df):
             else:
                 explanation = "This song is **not great**"
             
-            
             st.markdown(f"##### {explanation}")
         
 
@@ -228,6 +227,12 @@ def interactive_demo(song_df):
             st_dev = st.session_state["st_dev"]/10
             subjective_score = np.random.normal(loc=score, scale=st_dev)
             subjective_score = round(subjective_score, 1)
+
+            if subjective_score <= 0.0:
+                subjective_score = 0.0
+            if subjective_score >= 10.0:
+                subjective_score = 10.0
+
             if subjective_score > 8:
                 emoj = LOVE
             elif subjective_score > 6:
