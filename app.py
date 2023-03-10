@@ -25,11 +25,11 @@ section_title = "Establish a Baseline"
 baseline_titles, _ = lg.establish_baseline(song_df)
 
 # Impractical
-show_state = 0
+show_state=0
 st.markdown("---")
 _, center, _ = st.columns([3,2,2])
 label = "Let's Go"
-lg.proceed_button(center, label, show_state+1)
+lg.proceed_button(center, label, show_state)
 
 
 show_state = 1
@@ -41,7 +41,7 @@ if st.session_state['show_state'] >= show_state:
     st.markdown("---")
     _, center, _ = st.columns([2,2,2])
     label = "Let's simulate the first contest!"
-    lg.proceed_button(center, label, show_state+1)
+    lg.proceed_button(center, label, show_state)
 
 
 show_state = 2
@@ -74,7 +74,7 @@ if st.session_state["show_state"] >= show_state:
     st.markdown("---")  
     _, center, _ = st.columns([2,2,2])
     label = "Is there a way that's more feasible?"
-    lg.proceed_button(center, label, show_state+1)
+    lg.proceed_button(center, label, show_state)
 
 
 # Random Samples
@@ -109,7 +109,7 @@ if st.session_state["show_state"] >= show_state:
     _, center, _ = st.columns([2,2,2])
     st.text("")
     label = "Can this help if voters are really biased?"
-    lg.proceed_button(center, label, show_state+1)
+    lg.proceed_button(center, label, show_state)
 
 
 # Bloc 

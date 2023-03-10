@@ -60,15 +60,14 @@ def reset_visuals():
 
 
 def update_show_state(section_number):
-    print("Viewable up to section: ", section_number)
     if st.session_state["show_state"] < section_number:
         st.session_state["show_state"] = section_number
 
 
-def proceed_button(col, label, next_show_state):
-    label = "Let's simulate the first contest!"
+def proceed_button(col, label, show_state):
+    next_show_state = show_state + 1
     on_click = lambda: update_show_state(next_show_state)
-    _ = col.button(label, on_click=on_click, key=f"Show State {next_show_state}")
+    _ = col.button(label, on_click=on_click)
 
 
 def insert_variables(paragraph, section_title, story=True):
