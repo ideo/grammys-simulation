@@ -563,22 +563,30 @@ def display_results_of_repeated_contests(sim):
 
 
 def establish_baseline(song_df):
+    st.write("")
+    write_story("Establishing a Baseline", header_level=5)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        # Top 5 Songs
+        top_songs = song_df.sort_values("Objective Ratings", ascending=False).iloc[:5].copy()
+        titles = top_songs["ID"].tolist()
+        df = pd.DataFrame(titles, columns=["Top Songs"],
+                          index=[ii+1 for ii, _ in enumerate(titles)])
+        st.table(df)
+    
+    with col2:
+        # Top 6 - 10 Songs
+        top_songs = song_df.sort_values("Objective Ratings", ascending=False).iloc[6:11].copy()
+        titles = top_songs["ID"].tolist()
+        df = pd.DataFrame(titles, columns=["Top Songs"],
+                          index=[ii+6 for ii, _ in enumerate(titles)])
+        st.table(df)
+
     num_winners = st.session_state["num_winners"]
     top_songs = song_df.sort_values("Objective Ratings", ascending=False).head(num_winners)
     baseline_titles = top_songs["ID"].tolist()
     baseline_indices = top_songs.index.tolist()
-
-    st.write("")
-    col1, col2 = st.columns(2)
-    write_story("Establishing a Baseline", header_level=5, st_col=col1)
-
-    with col2:
-        df = pd.DataFrame(baseline_titles, 
-                          columns=["Deserved Winners"],
-                          index=[ii+1 for ii, _ in enumerate(baseline_titles)])
-        st.table(df)
-
-
     return baseline_titles, baseline_indices
 
 

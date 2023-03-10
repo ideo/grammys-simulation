@@ -31,12 +31,10 @@ section_title = "Establish a Baseline"
 baseline_titles, _ = lg.establish_baseline(song_df)
 
 # Impractical
-
 st.markdown("---")
 _, cen, _ = st.columns([3,2,2])
 def start_story_state():
     st.session_state['show_state'] = 1
-
 
 start_story = cen.button("Let's go",key=0,on_click=start_story_state)
 
