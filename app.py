@@ -11,18 +11,17 @@ st.set_page_config(
 
 lg.initialize_session_state()
 # lg.sidebar()
-
 num_voters = st.session_state["num_voters"]
 num_songs = st.session_state["num_songs"]
 num_winners = st.session_state["num_winners"]
 song_df = load_or_generate_objective_scores(num_songs)
 
+
 # Simulation Explanation and Interactive Demo
 lg.write_story("Voting Simulations", header_level=1)
 lg.interactive_demo(song_df)
-
-section_title = "Establish a Baseline"
 baseline_titles, _ = lg.establish_baseline(song_df)
+
 
 # Impractical
 show_state=0
@@ -37,7 +36,6 @@ if st.session_state['show_state'] >= show_state:
     section_title = "The Isle of Musica"
     lg.write_story(section_title, header_level=1)
     lg.select_num_winners(section_title)
-
     st.markdown("---")
     _, center, _ = st.columns([2,2,2])
     label = "Let's simulate the first contest!"
@@ -48,12 +46,12 @@ show_state = 2
 if st.session_state["show_state"] >= show_state:
     section_title = "Keep it Simple"
     lg.write_story(section_title)
-    subtitle = f"Each voter casts {num_winners} votes, but no voter has time to listen to every song."
+    subtitle = f"Voter cast one vote each for their favorite {num_winners} songs, but no voter has time to listen to every song."
+    subtitles = {"current": subtitle}
     sim_alpha, _ = lg.simulation_section(song_df, section_title, 
                                         alphabetical=True,
                                         baseline_results=baseline_titles,
-                                        subtitle=subtitle)
-    
+                                        subtitles=subtitles)
     st.markdown("---")
     _, center, _ = st.columns([2,2,2])
     label = "Let's simulate how they can solve this issue?"
@@ -65,12 +63,10 @@ if st.session_state["show_state"] >= show_state:
     section_title = "Ensuring Fairness"
     lg.write_story(section_title)
     subtitle = f"All voters take the time to listen and rank all {num_songs} songs."
-
-    takeaway = "**TAKEAWAY**: "
-
+    subtitles = {"condorcet": subtitle}
     sim1, sim1_chart_df = lg.simulation_section(song_df, section_title,
                                                 baseline_results=baseline_titles,
-                                                subtitle=subtitle) 
+                                                subtitles=subtitles) 
     st.markdown("---")  
     _, center, _ = st.columns([2,2,2])
     label = "Is there a way that's more feasible?"
@@ -99,11 +95,19 @@ if st.session_state["show_state"] >= show_state:
         max_value=listen_limit,
         step=25,
         key=section_title+"_ballot_limit")
+    
+    subtitles = {
+        "condorcet":    f"Voters listen to {listen_limit} songs and rank their top {ballot_limit}.",
+        "current":      f"Voters listen to {listen_limit} songs and case one vote each for their favorite {num_winners}."
+    }
 
     sim2, _ = lg.simulation_section(song_df, section_title, 
         listen_limit=listen_limit,
         ballot_limit=ballot_limit,
-        baseline_results=baseline_titles)
+        baseline_results=baseline_titles,
+        subtitles=subtitles,
+        # methods=["condorcet", "current"]
+        )
 
     st.markdown("---")
     _, center, _ = st.columns([2,2,2])
@@ -149,7 +153,15 @@ if st.session_state["show_state"] >= 5:
         max_value=max_mafia_size,
         step=5)
     
+    subtitles = {
+        "condorcet":    f"Voters listen to {listen_limit} songs and rank their top {ballot_limit}.",
+        "current":      f"Voters listen to {listen_limit} songs and case one vote each for their favorite {num_winners}."
+    }
+    
     sim3, _ = lg.simulation_section(song_df, section_title, 
         listen_limit=listen_limit, ballot_limit=ballot_limit,
         baseline_results=baseline_titles,
-        num_mafiosos=num_mafiosos, mafia_size=mafia_size)
+        num_mafiosos=num_mafiosos, mafia_size=mafia_size,
+        subtitles=subtitles,
+        # methods=["condorcet", "current"]
+        )

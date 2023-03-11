@@ -20,6 +20,7 @@ class OneVotePerFinalist:
     
 
     def declare_winners(self, tallies):
-        winners = tallies.sum(axis=1).sort_values(ascending=False) \
-            .head(self.num_winners).index.to_list()
+        vote_totals = tallies.sum(axis=1).sort_values(ascending=False)
+        self.winner_vote_totals = vote_totals.head(self.num_winners)
+        winners = self.winner_vote_totals.index.to_list()
         return winners

@@ -316,8 +316,8 @@ def visualize_example_votes(obj_score, subj_scores):
     st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
 
-def load_chart_df(key):
-    filename = f"chart_df_{key}.pkl"
+def load_chart_df(key, method):
+    filename = f"chart_df_{key}_{method}.pkl"
     filepath = DATA_DIR / filename
     if os.path.exists(filepath):
         chart_df = pd.read_pickle(filepath)
@@ -326,8 +326,8 @@ def load_chart_df(key):
     return chart_df
 
 
-def save_chart_df(chart_df, key):
-    filename = f"chart_df_{key}.pkl"
+def save_chart_df(chart_df, key, method):
+    filename = f"chart_df_{key}_{method}.pkl"
     filepath = DATA_DIR / filename
     chart_df.to_pickle(filepath)
     
@@ -337,8 +337,9 @@ def simulation_section(song_df, section_title,
         baseline_results=None,
         num_mafiosos=0, mafia_size=0,
         disabled=False,
-        alphabetical=False,
-        subtitle=None):
+        alphabetical=False, 
+        # methods=["condorcet"],
+        subtitles={}):
     """
     A high level container for running a simulation.
     """
@@ -362,15 +363,22 @@ def simulation_section(song_df, section_title,
             key=section_title, 
             disabled=disabled)
 
+    methods = subtitles.keys()
+
     if start_btn:
         sim.simulate()
-        chart_df = format_condorcet_results_chart_df(sim, baseline_results)
-        save_chart_df(chart_df, section_title)
+        for method in methods:
+            chart_df = format_chart_df(sim, baseline_results, method=method)
+            save_chart_df(chart_df, section_title, method)
 
-    chart_df = load_chart_df(section_title)
-    num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
-    chart_df, spec = format_spec(chart_df, num_corrupt_voters=num_corrupt_voters, subtitle=subtitle)
-    st.vega_lite_chart(chart_df, spec, use_container_width=True)
+    for method in methods:
+        chart_df = load_chart_df(section_title, method)
+        num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
+        subtitle = subtitles[method]
+        chart_df, spec = format_spec(chart_df, 
+                                    num_corrupt_voters=num_corrupt_voters, 
+                                    subtitle=subtitle, method=method)
+        st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
     if chart_df["sum"].sum() > 0:
         write_story(section_title, header_level=5, key="takeaway")
@@ -389,22 +397,28 @@ def initialize_empty_chart_df():
     return chart_df
 
 
-def format_condorcet_results_chart_df(sim, theoretical_results=None):
+def format_chart_df(sim, baseline=None, method="condorcet"):
     """
     Take the pariwise sums from the condorcet results and return a dataframe
     that matches the input that we had previously fed the tally by sums chart
     animation
     """
-    # _sums = sim.condorcet.pairwise_sums
-    _sums = sim.condorcet.preferences
-    ii = sim.condorcet.top_nominee_ids
+    if method == "condorcet":
+        _sums = sim.condorcet.preferences
+        ii = sim.condorcet.top_nominee_ids
+    
+    if method == "current":
+        _sums = sim.current_method.tallies
+        ii = sim.current_method.winners
+
     chart_df = pd.DataFrame(_sums).iloc[ii]
 
     # Assign names to top nominees
     chart_df["sum"] = chart_df.sum(axis=1)
     chart_df["Entrant"] = sim.song_df["ID"].astype(str)
-    if theoretical_results:
-        chart_df["Success"] = chart_df["Entrant"].isin(theoretical_results)
+
+    if baseline:
+        chart_df["Success"] = chart_df["Entrant"].isin(baseline)
     return chart_df
 
 
@@ -426,7 +440,7 @@ def format_condorcet_results_chart_df(sim, theoretical_results=None):
 #             st.code(msg)
 
 
-def format_spec(chart_df, num_corrupt_voters=0, subtitle=None):
+def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet"):
     """Format the chart to be shown in each frame of the animation"""
 
     red = COLORS["red"]
@@ -443,11 +457,18 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None):
 
     # TODO: Subtitle could display simulation settings.
     if chart_df["sum"].sum() == 0:
+        title = "Simulation Results"
         subtitle_text = "Click 'Simulate' to see the results"
     else:
+        if method == "condorcet":
+            title = "Results with Ranked Ballots"
+        else:
+            title = "Results with Simple Vote Ballots"
+
         subtitle_text = [f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."]
         if subtitle is not None:
-            subtitle_text[0] += f" {subtitle}"
+            # subtitle_text[0] += [f" {subtitle}"]
+            subtitle_text.append(subtitle)
 
         if num_corrupt_voters:
             num_voters = st.session_state["num_voters"]
@@ -458,7 +479,9 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None):
     upper_lim = chart_df["sum"].max()
     round_to = 100 if upper_lim > 500 else 10
     upper_lim = int(math.ceil(upper_lim / round_to)) * round_to
-    lower_lim = chart_df["sum"].max() * 0.8
+    
+    # Lower limit needs to be set to at least the second place winner
+    lower_lim = chart_df["sum"].iloc[4] * 0.92
     lower_lim = int(math.floor(lower_lim / round_to)) * round_to
 
     spec = {
@@ -493,7 +516,7 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None):
                     },
             },
             "title":    {
-                "text": f"Simulation Results",
+                "text":     title,
                 "subtitle": subtitle_text, 
             },
             "config": {
