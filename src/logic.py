@@ -36,7 +36,7 @@ def initialize_session_state():
         "finalist_options":         [5, 10],
         "listen_limit":             250,
         "ballot_limit":             50,
-        "st_dev":                   20,
+        "st_dev":                   10,
         "total_time_str":           None,
         "show_state" :              0,
         "persist_demo_takeaway":    0
@@ -380,7 +380,7 @@ def simulation_section(song_df, section_title,
                                     subtitle=subtitle, method=method)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
-    if chart_df["sum"].sum() > 0:
+    if chart_df["Vote Tallies"].sum() > 0:
         write_story(section_title, header_level=5, key="takeaway")
     
     return sim, chart_df
@@ -392,7 +392,7 @@ def initialize_empty_chart_df():
     """
     num_winners = st.session_state["num_winners"]
     data = [0]*num_winners
-    chart_df = pd.DataFrame(data, columns=["sum"])
+    chart_df = pd.DataFrame(data, columns=["Vote Tallies"])
     chart_df["Entrant"] = chart_df.index
     return chart_df
 
@@ -414,8 +414,16 @@ def format_chart_df(sim, baseline=None, method="condorcet"):
     chart_df = pd.DataFrame(_sums).iloc[ii]
 
     # Assign names to top nominees
-    chart_df["sum"] = chart_df.sum(axis=1)
+    chart_df["Vote Tallies"] = chart_df.sum(axis=1)
     chart_df["Entrant"] = sim.song_df["ID"].astype(str)
+    # print(chart_df)
+
+    objective_rankings = sim.song_df.sort_values("Objective Ratings", ascending=False).copy()
+    objective_rankings["Objective Rank"] = np.arange(0, objective_rankings.shape[0])
+    objective_rankings["Objective Rank"] += 1
+    # print(objective_rankings.head(10))
+
+    chart_df["Objective Rank"] = objective_rankings["Objective Rank"]
 
     if baseline:
         chart_df["Success"] = chart_df["Entrant"].isin(baseline)
@@ -456,7 +464,7 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
         chart_df["Color"] = [COLORS["blue"]]*chart_df.shape[0]
 
     # TODO: Subtitle could display simulation settings.
-    if chart_df["sum"].sum() == 0:
+    if chart_df["Vote Tallies"].sum() == 0:
         title = "Simulation Results"
         subtitle_text = "Click 'Simulate' to see the results"
     else:
@@ -476,12 +484,12 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
             subtitle_text += [f"{percent}% of the voters are corrupt."]
     
 
-    upper_lim = chart_df["sum"].max()
+    upper_lim = chart_df["Vote Tallies"].max()
     round_to = 100 if upper_lim > 500 else 10
     upper_lim = int(math.ceil(upper_lim / round_to)) * round_to
     
     # Lower limit needs to be set to at least the second place winner
-    lower_lim = chart_df["sum"].iloc[4] * 0.92
+    lower_lim = chart_df["Vote Tallies"].iloc[4] * 0.92
     lower_lim = int(math.floor(lower_lim / round_to)) * round_to
 
     spec = {
@@ -499,7 +507,7 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
                     "title":    None,
                     },
                 "x":    {
-                    "field":    "sum", 
+                    "field":    "Vote Tallies", 
                     "type":     "quantitative", 
                     "title":    "Vote Tallies",
                     "scale":    {"domain": [lower_lim, upper_lim]},
@@ -514,6 +522,12 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
                         "range":   [COLORS["red"], COLORS["green"]],
                         }
                     },
+                "tooltip": [
+                    {"field": "Entrant", "type": "nominal"},
+                    {"field": "Vote Tallies", "type": "quantitative"},
+                    {"field": "Objective Rank", "type": "quantitative"},
+                    {"field": "Deserved Winner?", "type": "nominal"},
+                ]
             },
             "title":    {
                 "text":     title,
@@ -603,7 +617,7 @@ def establish_baseline(song_df):
         top_songs_chart(song_df, 0, 5)
     
     with col2:
-        top_songs_chart(song_df, 6, 11)
+        top_songs_chart(song_df, 5, 10)
 
     write_story("Establishing a Baseline", header_level=None)
     num_winners = st.session_state["num_winners"]
