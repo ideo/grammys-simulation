@@ -63,3 +63,7 @@ Nullifying Bloc Voting:
     - In our third contest, members of a corrupt voting bloc will rank their leader's song at the top of the ballot no matter what, contorting the results. The corrupt songs are good but not great – about a B+. They're not bad, but shouldn't count among finalists.
   takeaway:
     - The performance of the above contest is surprisingly similar to that of the one before it. Even when every single voter is in cahoots with someone, the randomization of the contest prevents coordination – not enough of them get the chance to vote for their ring leader. At worst, by not voting for the deserved best song, rather than promote a corrupt song into the finalists, they open up a chance for a near-finalist to make into the list. This phenomen nullifies any attempts at collusion.
+
+Sandbox:
+  story:
+    - Below are all the controls for these simulations. In addition, you can crank up the number of voters to greater than the num_voters featured in the story.

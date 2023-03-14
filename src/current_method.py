@@ -1,4 +1,5 @@
 import pandas as pd
+from stqdm import stqdm
 
 
 class OneVotePerFinalist:
@@ -12,7 +13,7 @@ class OneVotePerFinalist:
     def tally(self, ballots, num_winners):
         tallies = pd.DataFrame(index=ballots.index)
 
-        for col in ballots:
+        for col in stqdm(ballots.columns, desc="Tallying Simple Ballots"):
             tallies[col] = ballots[col].nlargest(num_winners) \
                 .notnull().astype(int).reindex(ballots.index)
             

@@ -31,7 +31,7 @@ def initialize_session_state():
     initial_values = {
         "reset_visuals":            True,
         "num_voters":               1000,
-        "num_songs":                1000,
+        "num_songs":                500,
         "num_winners":              5,
         "finalist_options":         [5, 10],
         "listen_limit":             250,
@@ -68,6 +68,10 @@ def proceed_button(col, label, show_state):
     next_show_state = show_state + 1
     on_click = lambda: update_show_state(next_show_state)
     _ = col.button(label, on_click=on_click)
+
+
+def this_section_is_viewable(show_state):
+    return st.session_state["show_state"] >= show_state
 
 
 def insert_variables(paragraph, section_title, story=True):
@@ -332,7 +336,8 @@ def save_chart_df(chart_df, key, method):
     chart_df.to_pickle(filepath)
     
 
-def simulation_section(song_df, section_title, 
+def simulation_section(song_df, section_title,
+        num_voters=None, num_winners=None,
         listen_limit=None, ballot_limit=None,
         baseline_results=None,
         num_mafiosos=0, mafia_size=0,
@@ -344,8 +349,10 @@ def simulation_section(song_df, section_title,
     A high level container for running a simulation.
     """
     st.write("")
-    num_voters = st.session_state["num_voters"]
-    num_winners = st.session_state["num_winners"]
+    if num_voters is None:
+        num_voters = st.session_state["num_voters"]
+    if num_winners is None:
+        num_winners = st.session_state["num_winners"]
     sim = Simulation(song_df, num_voters, 
         st_dev=st.session_state["st_dev"],
         listen_limit=listen_limit,
@@ -356,7 +363,9 @@ def simulation_section(song_df, section_title,
         mafia_size=mafia_size,
         alphabetical=alphabetical)
 
-    write_instructions(section_title)
+    if section_title != "Sandbox":
+        write_instructions(section_title)
+        
     _, cntr, _ = st.columns([3,1,3])
     with cntr:
         start_btn = st.button("Simulate", 
@@ -380,7 +389,7 @@ def simulation_section(song_df, section_title,
                                     subtitle=subtitle, method=method)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
 
-    if chart_df["Vote Tallies"].sum() > 0:
+    if chart_df["Vote Tallies"].sum() > 0 and section_title != "Sandbox":
         write_story(section_title, header_level=5, key="takeaway")
     
     return sim, chart_df
@@ -488,8 +497,7 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
     round_to = 100 if upper_lim > 500 else 10
     upper_lim = int(math.ceil(upper_lim / round_to)) * round_to
     
-    # Lower limit needs to be set to at least the second place winner
-    lower_lim = chart_df["Vote Tallies"].iloc[4] * 0.92
+    lower_lim = chart_df["Vote Tallies"].min()
     lower_lim = int(math.floor(lower_lim / round_to)) * round_to
 
     spec = {
@@ -609,18 +617,21 @@ def top_songs_chart(song_df, start_loc, end_loc):
     st.dataframe(df.set_index("Objective Ratings"))
 
 
-def establish_baseline(song_df):
-    st.write("")
-    st.markdown("##### Establishing a Baseline")
-    col1, col2 = st.columns(2)
-    with col1:
-        top_songs_chart(song_df, 0, 5)
-    
-    with col2:
-        top_songs_chart(song_df, 5, 10)
+def establish_baseline(song_df, num_winners=None, no_story=False):
+    if not no_story:
+        st.write("")
+        st.markdown("##### Establishing a Baseline")
+        col1, col2 = st.columns(2)
+        with col1:
+            top_songs_chart(song_df, 0, 5)
+        
+        with col2:
+            top_songs_chart(song_df, 5, 10)
 
-    write_story("Establishing a Baseline", header_level=None)
-    num_winners = st.session_state["num_winners"]
+        write_story("Establishing a Baseline", header_level=None)
+    
+    if num_winners is None:
+        num_winners = st.session_state["num_winners"]
     top_songs = song_df.sort_values("Objective Ratings", ascending=False).head(num_winners)
     baseline_titles = top_songs["ID"].tolist()
     baseline_indices = top_songs.index.tolist()

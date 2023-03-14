@@ -47,7 +47,7 @@ class Condorcet:
         """
         n_nominees = self.ballot_df.shape[0]
         pairwise_sums = np.zeros((n_nominees, n_nominees))
-        for col in stqdm(self.ballot_df.columns, desc="Tallying votes"):
+        for col in stqdm(self.ballot_df.columns, desc="Tallying Ranked Ballots"):
             ballot = self.ballot_df[col]
             pairwise_sums += self.pairwise_comparison(ballot)
         return pairwise_sums
