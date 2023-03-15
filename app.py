@@ -97,7 +97,7 @@ if lg.this_section_is_viewable(show_state):
     
     subtitles = {
         "condorcet":    f"Voters listen to {listen_limit} songs and rank their top {ballot_limit}.",
-        "current":      f"Voters listen to {listen_limit} songs and case one vote each for their favorite {num_winners}."
+        "current":      f"Voters listen to {listen_limit} songs and cast one vote each for their favorite {num_winners}."
     }
 
     sim2, _ = lg.simulation_section(song_df, section_title, 

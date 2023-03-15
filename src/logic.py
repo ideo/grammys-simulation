@@ -368,10 +368,20 @@ def simulation_section(song_df, section_title,
         chart_df = load_chart_df(section_title, method)
         num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
         subtitle = subtitles[method]
+        if sim.listen_limit is not None:
+            if hasattr(sim, "listen_counts"):
+                average_listen_count = sim.listen_counts.mean()
+            else:
+                average_listen_count = None
+
         chart_df, spec = format_spec(chart_df, num_voters=num_voters,
                                     num_corrupt_voters=num_corrupt_voters, 
-                                    subtitle=subtitle, method=method)
+                                    subtitle=subtitle, method=method,
+                                    average_listen_count=average_listen_count)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
+
+    # if listen_limit is not None:
+    #     listen_count_histogram(sim)
 
     if chart_df["Vote Tallies"].sum() > 0 and section_title != "Sandbox":
         write_story(section_title, header_level=5, key="takeaway")
@@ -419,7 +429,7 @@ def format_chart_df(sim, baseline=None, method="condorcet"):
     return chart_df
 
 
-def format_spec(chart_df, num_voters=None, num_corrupt_voters=0, subtitle=None, method="condorcet"):
+def format_spec(chart_df, num_voters=None, num_corrupt_voters=0, subtitle=None, method="condorcet", average_listen_count=None):
     """Format the chart to be shown in each frame of the animation"""
 
     red = COLORS["red"]
@@ -445,8 +455,10 @@ def format_spec(chart_df, num_voters=None, num_corrupt_voters=0, subtitle=None, 
             title = "Results with Simple Vote Ballots"
 
         subtitle_text = [f"Vote tallies of the {chart_df.shape[0]} highest scoring songs."]
-        if subtitle is not None:
-            # subtitle_text[0] += [f" {subtitle}"]
+        if subtitle is not None:         
+            if average_listen_count is not None:
+                listen_count_note = f" On average, each song was assigned to {int(average_listen_count)} voters."
+                subtitle += listen_count_note
             subtitle_text.append(subtitle)
 
         if num_corrupt_voters:
@@ -524,6 +536,31 @@ def format_filepath(sim):
     filename = f"Repeated-Simulations_Sums_{n_songs}-Songs_{n_voters}-Voters.pkl"
     filepath = DATA_DIR / filename
     return filepath
+
+
+def listen_count_histogram(sim):
+    if hasattr(sim, "listen_counts"):
+        spec = {
+            "height":   300,
+            "title":    {
+                "text": "How Many Voters Vote on Each Song?",
+                "subtitle": ""
+                },
+            "mark": "bar",
+            "encoding": {
+                "x": {
+                    "bin":  True,
+                    "binned":  {"step": 10},
+                    "field": "Listen Count",
+                    "title": ["How many times a song was assigned to a voter", "(Binned)"],
+                    },
+                "y": {
+                    "aggregate": "count",
+                    "title":    "No. of times"
+                    }
+            }
+        }
+        st.vega_lite_chart(sim.listen_counts, spec, use_container_width=True)
 
 
 # def display_results_of_repeated_contests(sim):

@@ -111,12 +111,12 @@ class Simulation:
         self.methods = methods
 
         # Initalizing
-        # self.objective_winner = self.song_df["Objective Ratings"].idxmax()
         self.success = False
         self.rankings = None
         self.complete = False
         self.condorcet_winners = []
         self.current_method_winners = []
+        # self.reset_ballots()
 
 
     @property
@@ -138,12 +138,14 @@ class Simulation:
             self.non_corrupt_ballots = self.ballots.copy()
             self.corrupt_ballots()
         self.tally_votes()
-        # self.record_outcome()
         self.complete = True
 
 
     def reset_ballots(self):
-        self.ballots = pd.DataFrame(list(self.song_df.index), columns = ["ID"])
+        song_indices = list(self.song_df.index)
+        self.ballots = pd.DataFrame(song_indices, columns=["ID"])
+        self.listen_counts = pd.DataFrame(index=self.ballots.index, columns=["Listen Count"])
+        self.listen_counts.fillna(value=0, inplace=True)
 
 
     def cast_ballots(self):
@@ -173,16 +175,16 @@ class Simulation:
             else:
                 song_sample = self.song_df.sample(n=self.listen_limit, replace=False)
                 
+            # Individual Ballot
             bllt = song_sample["Objective Ratings"].apply(listen_and_vote)
-            # if recording the number of listens each song gets, we need to
-            # to that here.
+
+            # Record how many times each song was listened to.
+            self.listen_counts.loc[bllt.index, "Listen Count"] = \
+                self.listen_counts.loc[bllt.index, "Listen Count"] + 1
+           
             if self.ballot_limit is not None:
                 bllt = bllt.sort_values(ascending=False).head(self.ballot_limit)
-            # self.ballots[f"Scores {ii}"] = bllt
             self.ballots[ii] = bllt
-            # self.ballots is initialized in __init__
-
-        # return self.ballots
 
 
     def corrupt_ballots(self):
