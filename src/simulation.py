@@ -91,7 +91,7 @@ class Simulation:
             self, song_df, num_voters, st_dev=10.0,
             listen_limit=None, ballot_limit=None, num_winners=10, 
             num_mafiosos=0, mafia_size=0,
-            name=None, alphabetical=False,
+            name=None, alphabetical=False, methods=["condorcet"],
         ):
         self.song_df = song_df
         self.num_voters = num_voters
@@ -108,6 +108,7 @@ class Simulation:
         self.mafia_size = mafia_size
         self.name = name
         self.alphabetical = alphabetical
+        self.methods = methods
 
         # Initalizing
         # self.objective_winner = self.song_df["Objective Ratings"].idxmax()
@@ -166,7 +167,7 @@ class Simulation:
         for ii in stqdm(range(self.num_voters), desc="Voting"):
 
             if self.alphabetical:
-                listen_limit = np.random.normal(loc=85, scale=15)
+                listen_limit = np.random.normal(loc=100, scale=15)
                 listen_limit = int(listen_limit)
                 song_sample = self.song_df.head(listen_limit).copy()
             else:
@@ -216,8 +217,11 @@ class Simulation:
 
 
     def tally_votes(self):
-        self.condorcet_winners = self.tally_by_condorcet_method()
-        self.current_method_winners = self.tally_by_current_method()
+        if "condorcet" in self.methods:
+            self.condorcet_winners = self.tally_by_condorcet_method()
+
+        if "current" in self.methods:
+            self.current_method_winners = self.tally_by_current_method()
 
 
     def tally_by_condorcet_method(self):

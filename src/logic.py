@@ -80,18 +80,7 @@ def insert_variables(paragraph, section_title, story=True):
         if type(value) in [int, float, str]:
             key, value = str(key), str(value)
             for _ in range(paragraph.count(key)):
-                paragraph = paragraph.replace(key, value, 1)
-            #     if story:
-            #         # str_value = GRAMMAR.number_to_words(value)
-
-            #         # If the word is at the start of a sentence, capitalize it
-            #         # This only works for the first occurrence of a variable
-            #         ii = paragraph.index(key)
-            #         if paragraph[ii-2] == ".":
-            #             str_value = str_value.capitalize()
-            #     else:
-            # str_value = str(value)
-                
+                paragraph = paragraph.replace(key, value, 1)                
     return paragraph
         
 
@@ -346,6 +335,9 @@ def simulation_section(song_df, section_title,
         num_voters = st.session_state["num_voters"]
     if num_winners is None:
         num_winners = st.session_state["num_winners"]
+
+    methods = subtitles.keys()
+
     sim = Simulation(song_df, num_voters, 
         st_dev=st.session_state["st_dev"],
         listen_limit=listen_limit,
@@ -354,7 +346,8 @@ def simulation_section(song_df, section_title,
         name=section_title,
         num_mafiosos=num_mafiosos, 
         mafia_size=mafia_size,
-        alphabetical=alphabetical)
+        alphabetical=alphabetical,
+        methods=methods)
 
     if section_title != "Sandbox":
         write_instructions(section_title)
@@ -364,8 +357,6 @@ def simulation_section(song_df, section_title,
         start_btn = st.button("Simulate", 
             key=section_title, 
             disabled=disabled)
-
-    methods = subtitles.keys()
 
     if start_btn:
         sim.simulate()
@@ -377,7 +368,7 @@ def simulation_section(song_df, section_title,
         chart_df = load_chart_df(section_title, method)
         num_corrupt_voters = sim.num_mafiosos * sim.mafia_size
         subtitle = subtitles[method]
-        chart_df, spec = format_spec(chart_df, 
+        chart_df, spec = format_spec(chart_df, num_voters=num_voters,
                                     num_corrupt_voters=num_corrupt_voters, 
                                     subtitle=subtitle, method=method)
         st.vega_lite_chart(chart_df, spec, use_container_width=True)
@@ -428,7 +419,7 @@ def format_chart_df(sim, baseline=None, method="condorcet"):
     return chart_df
 
 
-def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet"):
+def format_spec(chart_df, num_voters=None, num_corrupt_voters=0, subtitle=None, method="condorcet"):
     """Format the chart to be shown in each frame of the animation"""
 
     red = COLORS["red"]
@@ -459,7 +450,8 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
             subtitle_text.append(subtitle)
 
         if num_corrupt_voters:
-            num_voters = st.session_state["num_voters"]
+            if num_voters is None:
+                num_voters = st.session_state["num_voters"]
             percent = round(100 * num_corrupt_voters / num_voters)
             subtitle_text += [f"{percent}% of the voters are corrupt."]
     
