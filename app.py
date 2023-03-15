@@ -23,8 +23,7 @@ lg.interactive_demo(song_df)
 baseline_titles, _ = lg.establish_baseline(song_df)
 
 
-# Impractical
-show_state=0
+show_state = 0
 st.markdown("---")
 _, center, _ = st.columns([3,2,2])
 label = "Let's Go"

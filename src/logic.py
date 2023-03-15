@@ -1,11 +1,11 @@
 import os
-import json
+# import json
 import math
-import pickle
-from collections import defaultdict
+# import pickle
+# from collections import defaultdict
 
 import streamlit as st
-import altair as alt
+# import altair as alt
 import pandas as pd
 import numpy as np
 import inflect
@@ -19,7 +19,7 @@ import warnings
 # warnings.simplefilter(action='ignore', category=UserWarning)
 warnings.filterwarnings('ignore')
 
-p = inflect.engine()
+GRAMMAR = inflect.engine()
 
 
 def initialize_session_state():
@@ -65,9 +65,10 @@ def update_show_state(section_number):
 
 
 def proceed_button(col, label, show_state):
-    next_show_state = show_state + 1
-    on_click = lambda: update_show_state(next_show_state)
-    _ = col.button(label, on_click=on_click)
+    if st.session_state["show_state"] <= show_state:
+        next_show_state = show_state + 1
+        on_click = lambda: update_show_state(next_show_state)
+        _ = col.button(label, on_click=on_click)
 
 
 def this_section_is_viewable(show_state):
@@ -77,20 +78,20 @@ def this_section_is_viewable(show_state):
 def insert_variables(paragraph, section_title, story=True):
     for key, value in st.session_state.items():
         if type(value) in [int, float, str]:
-            key, value = str(key), value
+            key, value = str(key), str(value)
             for _ in range(paragraph.count(key)):
-                if story:
-                    str_value = p.number_to_words(value)
+                paragraph = paragraph.replace(key, value, 1)
+            #     if story:
+            #         # str_value = GRAMMAR.number_to_words(value)
 
-                    # If the word is at the start of a sentence, capitalize it
-                    # This only works for the first occurrence of a variable
-                    ii = paragraph.index(key)
-                    if paragraph[ii-2] == ".":
-                        str_value = str_value.capitalize()
-                else:
-                    str_value = str(value)
-
-                paragraph = paragraph.replace(key, str_value, 1)
+            #         # If the word is at the start of a sentence, capitalize it
+            #         # This only works for the first occurrence of a variable
+            #         ii = paragraph.index(key)
+            #         if paragraph[ii-2] == ".":
+            #             str_value = str_value.capitalize()
+            #     else:
+            # str_value = str(value)
+                
     return paragraph
         
 
@@ -144,14 +145,6 @@ def sidebar():
         step=50,
         key="num_songs",
         on_change=reset_visuals)
-
-    # label = "How many winning songs are declared?"
-    # _ = st.sidebar.slider(label,
-    #     min_value=5, 
-    #     max_value=20,
-    #     step=1,
-    #     key="num_winners",
-    #     on_change=reset_visuals)
 
     st.sidebar.subheader("Under the Hood Variables")
     label = "What is the st. dev. of voters randomly generated scores?"
@@ -264,13 +257,13 @@ def interactive_demo(song_df):
             col.metric(f"Voter #{ii+1}", subjective_score)
             subj_scores.append(subjective_score)
     
-    visualize_example_votes(score, subj_scores)
+    visualize_example_votes(score, subj_scores, selection)
 
     if st.session_state["persist_demo_takeaway"]:
         write_story(section_title, header_level=5, key="takeaway")
 
 
-def visualize_example_votes(obj_score, subj_scores):
+def visualize_example_votes(obj_score, subj_scores, song_name):
     chart_df = pd.DataFrame(subj_scores, columns=["Votes"])
     chart_df["Objective Score"] = [obj_score]*chart_df.shape[0]
 
@@ -312,8 +305,8 @@ def visualize_example_votes(obj_score, subj_scores):
     spec = {
         "height":   300,
         "title":    {
-            "text":     "Simulated Votes",
-            "subtitle": "A song's objective score in green and each simulated voter's subjective score in blue."
+            "text":     song_name,
+            "subtitle": "This song's objective score in green and each simulated voter's subjective score in blue."
             },
         "layer":    [objective_spec, subjective_spec],
     }
@@ -422,39 +415,17 @@ def format_chart_df(sim, baseline=None, method="condorcet"):
 
     chart_df = pd.DataFrame(_sums).iloc[ii]
 
-    # Assign names to top nominees
     chart_df["Vote Tallies"] = chart_df.sum(axis=1)
     chart_df["Entrant"] = sim.song_df["ID"].astype(str)
-    # print(chart_df)
-
     objective_rankings = sim.song_df.sort_values("Objective Ratings", ascending=False).copy()
-    objective_rankings["Objective Rank"] = np.arange(0, objective_rankings.shape[0])
-    objective_rankings["Objective Rank"] += 1
-    # print(objective_rankings.head(10))
-
-    chart_df["Objective Rank"] = objective_rankings["Objective Rank"]
+    objective_rankings["Rank"] = np.arange(0, objective_rankings.shape[0])
+    objective_rankings["Rank"] += 1
+    chart_df["Rank"] = objective_rankings["Rank"].apply(lambda x: f"{GRAMMAR.ordinal(x)} Place")
+    chart_df["Score"] = objective_rankings["Objective Ratings"].apply(lambda x: round(x/10, 2))
 
     if baseline:
         chart_df["Success"] = chart_df["Entrant"].isin(baseline)
     return chart_df
-
-
-# def print_params(simulations):
-#     """
-#     TKTK
-#     """
-#     # st.text("Parameter Summary:")
-#     with st.expander("Parameter Summaries", expanded=False):
-#         for sim in simulations:
-#             tab_width = 8
-#             msg = "{\n"
-#             for key, value in sim.params.items():
-#                 value = f"'{value}'" if isinstance(value, str) else value
-#                 num_tabs = 3 - (len(key)+1)//tab_width
-#                 tabs = "\t"*num_tabs
-#                 msg += f"\t'{key}':{tabs}{value},\n"
-#             msg += "}"
-#             st.code(msg)
 
 
 def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet"):
@@ -497,7 +468,7 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
     round_to = 100 if upper_lim > 500 else 10
     upper_lim = int(math.ceil(upper_lim / round_to)) * round_to
     
-    lower_lim = chart_df["Vote Tallies"].min()
+    lower_lim = chart_df["Vote Tallies"].min() - 25
     lower_lim = int(math.floor(lower_lim / round_to)) * round_to
 
     spec = {
@@ -533,8 +504,10 @@ def format_spec(chart_df, num_corrupt_voters=0, subtitle=None, method="condorcet
                 "tooltip": [
                     {"field": "Entrant", "type": "nominal"},
                     {"field": "Vote Tallies", "type": "quantitative"},
-                    {"field": "Objective Rank", "type": "quantitative"},
+                    {"field": "Score", "type": "quantitative"},
+                    {"field": "Rank", "type": "nominal"},
                     {"field": "Deserved Winner?", "type": "nominal"},
+                    # {"field": "Objective Score":}
                 ]
             },
             "title":    {
@@ -614,7 +587,8 @@ def top_songs_chart(song_df, start_loc, end_loc):
     df = df.iloc[start_loc:end_loc][["Objective Ratings", "ID"]]
     df.rename(columns={"ID": "Song & Artist"}, inplace=True)
     df["Objective Ratings"] = df["Objective Ratings"].apply(lambda x: round(x/10, 2))
-    st.dataframe(df.set_index("Objective Ratings"))
+    df = df.rename(columns={"Objective Ratings": "Score"}).set_index("Score")
+    st.dataframe(df)
 
 
 def establish_baseline(song_df, num_winners=None, no_story=False):
@@ -636,6 +610,24 @@ def establish_baseline(song_df, num_winners=None, no_story=False):
     baseline_titles = top_songs["ID"].tolist()
     baseline_indices = top_songs.index.tolist()
     return baseline_titles, baseline_indices
+
+
+# def print_params(simulations):
+#     """
+#     TKTK
+#     """
+#     # st.text("Parameter Summary:")
+#     with st.expander("Parameter Summaries", expanded=False):
+#         for sim in simulations:
+#             tab_width = 8
+#             msg = "{\n"
+#             for key, value in sim.params.items():
+#                 value = f"'{value}'" if isinstance(value, str) else value
+#                 num_tabs = 3 - (len(key)+1)//tab_width
+#                 tabs = "\t"*num_tabs
+#                 msg += f"\t'{key}':{tabs}{value},\n"
+#             msg += "}"
+#             st.code(msg)
 
 
 # def heatmap_filepath(num_winners, ballot_limit):
