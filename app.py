@@ -10,9 +10,6 @@ st.set_page_config(
     initial_sidebar_state="expanded")
 
 
-lg.write_story("Conclusion")
-
-
 lg.initialize_session_state()
 # lg.sidebar()
 num_voters = st.session_state["num_voters"]
