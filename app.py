@@ -9,6 +9,10 @@ st.set_page_config(
     page_icon="img/grammys_logo.png",
     initial_sidebar_state="expanded")
 
+
+lg.write_story("Conclusion")
+
+
 lg.initialize_session_state()
 # lg.sidebar()
 num_voters = st.session_state["num_voters"]
@@ -18,7 +22,8 @@ song_df = load_or_generate_objective_scores(num_songs)
 
 
 # Simulation Explanation and Interactive Demo
-lg.write_story("Voting Simulations", header_level=1)
+section_title = "Simulation Swarm on the Isle of Musica"
+lg.write_story(section_title, header_level=1)
 lg.interactive_demo(song_df)
 baseline_titles, _ = lg.establish_baseline(song_df)
 
@@ -166,83 +171,85 @@ if lg.this_section_is_viewable(show_state):
     st.markdown("---")
     _, center, _ = st.columns([2,1,2])
     st.text("")
-    label = "Play in the Sandbox"
-    lg.proceed_button(center, label, show_state)
+    # label = "Play in the Sandbox"
+    # lg.proceed_button(center, label, show_state)
 
 
-show_state = 6
-if lg.this_section_is_viewable(show_state):
-    section_title = "Sandbox"
-    lg.write_story(section_title, header_level=2)
+if "sim3" in globals():
+    if sim3.complete:
+        lg.write_story("Conclusion", header_level=2)
 
-    col1, col2 = st.columns(2)
+        section_title = "Sandbox"
+        lg.write_story(section_title, header_level=5)
 
-    with col1:
-        label = "Choose the number of contest finalists."
-        options = st.session_state["finalist_options"]
-        num_winners = st.selectbox(label, options)
+        col1, col2 = st.columns(2)
 
-    with col2:
-        label = "How many voters particiapte in the contest?"
-        num_voters = st.slider(label,
-                               value=st.session_state["num_voters"],
-                               min_value=250,
-                               max_value=5000,
-                               step=50)
-    
-    # Initializing these again ensures the two widgets are aligned
-    col1, col2 = st.columns(2)
+        with col1:
+            label = "Choose the number of contest finalists."
+            options = st.session_state["finalist_options"]
+            num_winners = st.selectbox(label, options)
 
-    with col1:
-        label = "How many songs does each voter get to listen to?"
-        listen_limit = col1.slider(label, 
-            value=st.session_state["listen_limit"],
-            min_value=50, 
-            max_value=num_songs,
-            step=10,
-            key=section_title+"_listen_limit")
-
-    with col2:
-        label = "How many songs does each voter get to rank?"
-        initial = st.session_state["ballot_limit"] 
-        ballot_limit = col2.slider(label, 
-            value=initial if initial < listen_limit else listen_limit,
-            min_value=10, 
-            max_value=listen_limit,
-            step=10,
-            key=section_title+"_ballot_limit")
+        with col2:
+            label = "How many voters particiapte in the contest?"
+            num_voters = st.slider(label,
+                                value=st.session_state["num_voters"],
+                                min_value=250,
+                                max_value=5000,
+                                step=50)
         
-    col1, col2 = st.columns(2)
+        # Initializing these again ensures the two widgets are aligned
+        col1, col2 = st.columns(2)
 
-    with col1:
-        label = "How many corrupt artists are there?"
-        num_mafiosos = col1.number_input(label,
-            value=2,
-            min_value=0,
-            max_value=10,
-            step=1,
-            key=f"num_mafiosos_{section_title}")
+        with col1:
+            label = "How many songs does each voter get to listen to?"
+            listen_limit = col1.slider(label, 
+                value=st.session_state["listen_limit"],
+                min_value=50, 
+                max_value=num_songs,
+                step=10,
+                key=section_title+"_listen_limit")
 
-    with col2:
-        label = "How large are each of their mafias?"
-        max_mafia_size = num_voters//10
-        mafia_size = col2.slider(label, 
-            value=max_mafia_size//2, 
-            min_value=0, 
-            max_value=max_mafia_size,
-            step=5,
-            key=f"mafia_size_{section_title}")
+        with col2:
+            label = "How many songs does each voter get to rank?"
+            initial = st.session_state["ballot_limit"] 
+            ballot_limit = col2.slider(label, 
+                value=initial if initial < listen_limit else listen_limit,
+                min_value=10, 
+                max_value=listen_limit,
+                step=10,
+                key=section_title+"_ballot_limit")
+            
+        col1, col2 = st.columns(2)
+
+        with col1:
+            label = "How many corrupt artists are there?"
+            num_mafiosos = col1.number_input(label,
+                value=2,
+                min_value=0,
+                max_value=10,
+                step=1,
+                key=f"num_mafiosos_{section_title}")
+
+        with col2:
+            label = "How large are each of their mafias?"
+            max_mafia_size = num_voters//10
+            mafia_size = col2.slider(label, 
+                value=max_mafia_size//2, 
+                min_value=0, 
+                max_value=max_mafia_size,
+                step=5,
+                key=f"mafia_size_{section_title}")
+            
+        baseline_titles, _ = lg.establish_baseline(song_df, num_winners=num_winners, no_story=True)    
+        subtitles = {
+            "condorcet":    f"{num_voters} voters listen to {listen_limit} songs and rank their top {ballot_limit}.",
+            "current":      f"{num_voters} voters listen to {listen_limit} songs and cast one vote each for their favorite {num_winners}."
+        }
+        sandbox, _ = lg.simulation_section(song_df, section_title,
+            num_voters=num_voters, num_winners=num_winners,
+            listen_limit=listen_limit, ballot_limit=ballot_limit,
+            baseline_results=baseline_titles,
+            num_mafiosos=num_mafiosos, mafia_size=mafia_size,
+            subtitles=subtitles,
+            )
         
-    baseline_titles, _ = lg.establish_baseline(song_df, num_winners=num_winners, no_story=True)    
-    subtitles = {
-        "condorcet":    f"{num_voters} voters listen to {listen_limit} songs and rank their top {ballot_limit}.",
-        "current":      f"{num_voters} voters listen to {listen_limit} songs and cast one vote each for their favorite {num_winners}."
-    }
-    sandbox, _ = lg.simulation_section(song_df, section_title,
-        num_voters=num_voters, num_winners=num_winners,
-        listen_limit=listen_limit, ballot_limit=ballot_limit,
-        baseline_results=baseline_titles,
-        num_mafiosos=num_mafiosos, mafia_size=mafia_size,
-        subtitles=subtitles,
-        )
-    

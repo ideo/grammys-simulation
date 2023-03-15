@@ -100,11 +100,10 @@ def write_story(section_title, st_col=st, header_level=3, key="story"):
 
 def write_instructions(section_title, st_col=st):
     instructions = utils.load_text()[section_title]["instructions"]
-    if section_title in instructions:
-        for paragraph in instructions:
-            paragraph = insert_variables(paragraph, section_title, story=False)
-            # st_col.caption(paragraph)
-            st_col.markdown(f"**{paragraph}**")
+    for paragraph in instructions:
+        paragraph = insert_variables(paragraph, section_title, story=False)
+        st_col.caption(paragraph)
+        # st_col.markdown(f"**{paragraph}**")
 
 
 def sidebar():
@@ -162,10 +161,10 @@ def select_num_winners(section_title):
 def interactive_demo(song_df):
     """The interactive portion of the simulation explanation"""
     st.write("")
-    write_story("Imaginary Songs", header_level=5)
+    section_title = "How might we test different voting systems before deciding whether to use them in the real world?"
+    st.markdown(f"##### {section_title}")
+    write_story("Imaginary Songs", header_level=None)
     col1, col2 = st.columns([6,4])
-
-    # print(song_df.sort_values("Objective Ratings").head(50))
 
     demo_songs = [
         "“It’s Unbelievable” by The Mischa Bartons",
@@ -325,7 +324,6 @@ def simulation_section(song_df, section_title,
         num_mafiosos=0, mafia_size=0,
         disabled=False,
         alphabetical=False, 
-        # methods=["condorcet"],
         subtitles={}):
     """
     A high level container for running a simulation.
@@ -349,8 +347,8 @@ def simulation_section(song_df, section_title,
         alphabetical=alphabetical,
         methods=methods)
 
-    if section_title != "Sandbox":
-        write_instructions(section_title)
+    # if section_title != "Sandbox":
+    write_instructions(section_title)
         
     _, cntr, _ = st.columns([3,1,3])
     with cntr:
@@ -414,7 +412,9 @@ def format_chart_df(sim, baseline=None, method="condorcet"):
         _sums = sim.current_method.tallies
         ii = sim.current_method.winners
 
-    chart_df = pd.DataFrame(_sums).iloc[ii]
+    chart_df = pd.DataFrame(_sums)
+    chart_df["Ballot Position"] = sim.song_df.index.values
+    chart_df = chart_df.iloc[ii]
 
     chart_df["Vote Tallies"] = chart_df.sum(axis=1)
     chart_df["Entrant"] = sim.song_df["ID"].astype(str)
@@ -423,6 +423,7 @@ def format_chart_df(sim, baseline=None, method="condorcet"):
     objective_rankings["Rank"] += 1
     chart_df["Rank"] = objective_rankings["Rank"].apply(lambda x: f"{GRAMMAR.ordinal(x)} Place")
     chart_df["Score"] = objective_rankings["Objective Ratings"].apply(lambda x: round(x/10, 2))
+    chart_df["Ballot Position"] = chart_df["Ballot Position"].apply(lambda x: f"{x} out of {sim.song_df.shape[0]}")
 
     if baseline:
         chart_df["Success"] = chart_df["Entrant"].isin(baseline)
@@ -511,7 +512,7 @@ def format_spec(chart_df, num_voters=None, num_corrupt_voters=0, subtitle=None, 
                     {"field": "Score", "type": "quantitative"},
                     {"field": "Rank", "type": "nominal"},
                     {"field": "Deserved Winner?", "type": "nominal"},
-                    # {"field": "Objective Score":}
+                    {"field": "Ballot Position", "type": "nominal"},
                 ]
             },
             "title":    {
