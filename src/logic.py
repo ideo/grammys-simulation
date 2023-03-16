@@ -683,7 +683,7 @@ def repeated_sim_text():
 
     with col2:
         five_winner_text = "Using ballots where voters cast one vote each for their favorite 5 songs, 67% of the time 4 out of 5 of the finalists were deserved winners; an additional 27% of the time, 3 out 5 finalists were deserved winners. No times did no deserved winners make it into the list of five finalists."
-        ten_winner_text = "Using ballots where voters cast one vote each for their favorite 5 songs, 25% of the time 8 out of 10 of the finalists were deserved winners; an additional 33% of the time, 7 out 10 finalists were deserved winners. No times did less than 4 deserved winners make it into the list of five finalists."
+        ten_winner_text = "Using ballots where voters cast one vote each for their favorite 5 songs, 25% of the time 8 out of 10 of the finalists were deserved winners; an additional 33% of the time, 7 out 10 finalists were deserved winners. No times did less than 4 deserved winners make it into the list of ten finalists."
 
         if num_winners == 5:
             st.write(five_winner_text)
