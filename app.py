@@ -36,7 +36,8 @@ lg.proceed_button(center, label, show_state)
 
 show_state = 1
 if st.session_state['show_state'] >= show_state:
-    section_title = "The Isle of Musica"
+    # section_title = "The Isle of Musica"
+    section_title = "Song of the Year Contest on The Isle of Musica"
     lg.write_story(section_title, header_level=1)
     lg.select_num_winners(section_title)
     st.markdown("---")
