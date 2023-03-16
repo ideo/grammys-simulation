@@ -178,8 +178,10 @@ if "sim3" in globals():
     if sim3.complete:
         lg.write_story("Conclusion", header_level=2)
 
+        st.markdown("")
+        st.markdown("---")
         section_title = "Sandbox"
-        lg.write_story(section_title, header_level=5)
+        lg.write_story(section_title, header_level=3)
 
         col1, col2 = st.columns(2)
 
