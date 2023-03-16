@@ -82,6 +82,12 @@ Conclusion:
     - 2. Citizens of the Isle could reach this fair outcome while each only listening to 10% of the total songs, leaving them more time to engineer sounds, produce new music, and get inspired to record more. Voter fatigue was nearly eliminated! 
     - Once the SONG OF THE YEAR contest was complete, the citizens of Musica felt recognized by their peers for their efforts and contributions to their Musical community. And in the end, it doesn’t matter who won the contest, because they know that the real winner here is the expertise and passion of their harmonious community.
 
+Some Notes on Simulations:
+  story:
+    - 'Scientists commonly turn to agent based simulations for help solving complex problems. Agent based simulations are simple to set up but the outputs can be complex and informative. The process is simple: first, you define the logic for how agents interact. Then you let them interact and observe the results. By connecting specific inputs to changing outputs, simulations help us understand how opaque phenomena behave and what control we could exert over systems.'
+    - One of the most famous examples of agent based simulations, the [Schellings Segregation Model](https://www.youtube.com/watch?v=JjfihtGefxk&ab_channel=RandomEconomist), won the Nobel Prize. It has been brought to life by this colorful and interactive animation, [The Parable of the Polygons](https://ncase.me/polygons/), which makes an intimidating and complex problem – racial segregation – approachable through metaphor and simple interactivity.
+    - Another inspirational simulation, more relevant to our purposes here, [To Build a Better Ballot](https://ncase.me/ballot/), explores alternative voting methods for the US presidential election. Similarly to our simulation here, it sets objective qualities of candidates as a construct to determine how fair and democratic are the election outcomes.
+
 Sandbox:
   story:
     - Below are all the controls for this simulations. In addition, you can crank up the number of voters to greater than the num_voters featured in the story.

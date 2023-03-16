@@ -38,7 +38,7 @@ show_state = 1
 if st.session_state['show_state'] >= show_state:
     # section_title = "The Isle of Musica"
     section_title = "Song of the Year Contest on The Isle of Musica"
-    lg.write_story(section_title, header_level=1)
+    lg.write_story(section_title, header_level=2)
     lg.select_num_winners(section_title)
     st.markdown("---")
     _, center, _ = st.columns([2,2,2])
@@ -179,6 +179,8 @@ if lg.this_section_is_viewable(show_state):
 show_state = 6
 if lg.this_section_is_viewable(show_state):
     lg.write_story("Conclusion", header_level=2)
+    st.write("")
+    lg.write_story("Some Notes on Simulations", header_level=3)
 
     st.markdown("")
     st.markdown("---")
