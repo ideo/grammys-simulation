@@ -1,4 +1,4 @@
-Simulation Swarm on the Isle of Musica:
+The Isle of Musica:
   story:
     - The GRAMMYs team knows better than anyone that voting on a mass scale is bound to be complex. And just like any complex system, trying out a “better” way to vote is often too impractical to risk.
     # - "Voting is complex. Just like many other phenomena in our world, trying out a “better” voting system might be too expensive or impractical. To solve such issues and first try out different scenarios, scientists often use Agent Based Simulation. The idea behind these simulations is simple: you create basic rules for imaginary actors to follow in an imaginary world, then let the agents interact based on those rules. You then observe what happens in the imaginary world to learn what might happen in the real world. One of the most famous examples of agent based simulations, the [Schellings Segregation Model](https://www.youtube.com/watch?v=JjfihtGefxk&ab_channel=RandomEconomist), contributed to Schelling's Nobel Prize in economics."
@@ -38,7 +38,7 @@ Keep it Simple:
     - Mayor Melody, for the sake of ease, decides that each voter simply vote for which songs they think should proceed to the next round. With five finalists, each voter can vote for five songs.
     - Mayor Mel is a little overwhelmed at how many songs have been nominated, but she knows her citizens are dedicated and thoughtful. So she adds all the songs to the playlist on Isle of Musica’s .gov website and tells the island to start listening!
   instructions:
-    - In this first contest, voters start listening to songs in the order they appear on the Mayor’s playlist. No voter has time to listen to every song. Each voters votes for their favorite num_winners songs they hear.
+    - In this first contest, voters start listening to songs in the order they appear on the Mayor’s playlist. No voter has time to listen to every song. Each voter votes for their favorite num_winners songs they hear.
   takeaway:
     - In this “shortlist” simulation, we see that when voters are shown songs on a ballot in alphabetical order, the songs that should win often do not receive the most votes.
     - Voters get more and more fatigued the longer they spend listening, and tend to best remember songs that begin with letters near the beginning of the alphabet. Note how the songs on the top of the ballot get more votes. This voting method is simply too impractical to be fair. 

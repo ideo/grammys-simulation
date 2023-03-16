@@ -84,7 +84,24 @@ def explore_listening_limit():
                     print(f"Skipping {num_voters} voters, {listen_limit} sample size, {ballot_limit} ballot limit.")
 
 
+def test_one_configuration(num_winners):
+    num_songs = 500
+    num_voters = 1000
+    listen_limit = 50
+    ballot_limit = 25
+    filepath = DATA_DIR / f"single_configuration_{num_winners}_winners.pkl"
+    song_df = load_or_generate_objective_scores(num_songs)
+    repeated_sim = RepeatedSimulations(song_df, num_voters, 
+                              listen_limit=listen_limit, 
+                              ballot_limit=ballot_limit,
+                              num_winners=num_winners,
+                              filepath=filepath)
+    repeated_sim.simulate(num_repetitions=100)
+
+
 if __name__ == "__main__":
     # pass
-    establish_a_baseline()
+    # establish_a_baseline()
     # explore_listening_limit()
+    test_one_configuration(5)
+    # test_one_configuration(10)

@@ -383,6 +383,9 @@ def simulation_section(song_df, section_title,
 
     if chart_df["Vote Tallies"].sum() > 0 and section_title != "Sandbox":
         write_story(section_title, header_level=5, key="takeaway")
+
+        if section_title == "The Power of Randomness":
+            repeated_sim_text()
     
     return sim, chart_df
 
@@ -660,90 +663,32 @@ def establish_baseline(song_df, num_winners=None, no_story=False):
 #             st.code(msg)
 
 
-# def heatmap_filepath(num_winners, ballot_limit):
-#     filepath = DATA_DIR / f"heatmap/heatmap_{num_winners}_winners_{ballot_limit}_ballot_limit.json"
-#     return filepath
+def repeated_sim_text():
+    num_winners = st.session_state["num_winners"]
+    st.write("")
+    st.markdown("##### Repeated Simulations")
+    st.write("The benefit of simulations is we can run things many times and explore the range of outcomes. We simulated a contest where 1000 voters listened to 50 songs each.")
 
+    col1, col2 = st.columns(2)
 
-# def explore_changing_sample_size(ballot_limit, baseline):
-#     """
-#     This generates the spec for the heatmap. It saves it so the streamlit app
-#     can just load the chart, not the raw data.
-#     """
-#     # num_songs = sim.song_df.shape[0]
-#     num_songs = st.session_state["num_songs"]
-#     filepath = DATA_DIR / f"exploring_listening_limit_{num_songs}_songs_{ballot_limit}_ballot_limit.pkl"
-#     with open(filepath, "rb") as pkl_file:
-#         exploration = pickle.load(pkl_file)
+    with col1:
+        # Condorcet
+        five_winner_text = "Using ballots where voters rank their top 25 songs, 59% of the time 4 out of 5 of the finalists were deserved winners; an additional 34% of the time, 3 out 5 finalists were deserved winners. No times did no deserved winners make it into the list of five finalists."
+        ten_winner_text = "Using ballots where voters rank their top 25 songs, 78% of the time 8 out of 10 of the finalists were deserved winners; an additional 18% of the time, 7 out 10 finalists were deserved winners. No times did less than 6 deserved winners make it into the list of ten finalists."
 
-#     # This can all be done ahead of time. Only the chart_df needs to be saved
-#     # Tally, on average, how many of the top N were fair
-#     num_winners = len(baseline)
-#     outcome_quality = defaultdict(dict)
-#     num_contests = exploration[3000][500].num_contests
-#     num_contests = p.number_to_words(num_contests)
-#     # num_songs = p.number_to_words(num_songs)
+        if num_winners == 5:
+            st.write(five_winner_text)
+        if num_winners == 10:
+            st.write(ten_winner_text)
 
-#     for num_voters, contests in exploration.items():
-#         for listen_limit, outcomes in contests.items():
-#             num_fair_winners = []
-#             for _, results in outcomes.contest_winners.items():
-#                 winners = results[:num_winners]
-#                 num_fair_winners.append(len(set(winners).intersection(set(baseline))))
-            
-#             # outcome_quality[num_voters][listen_limit] = np.mean(num_fair_winners)
-#             outcome_quality[num_voters][listen_limit] = np.median(num_fair_winners)
+    with col2:
+        five_winner_text = "Using ballots where voters cast one vote each for their favorite 5 songs, 67% of the time 4 out of 5 of the finalists were deserved winners; an additional 27% of the time, 3 out 5 finalists were deserved winners. No times did no deserved winners make it into the list of five finalists."
+        ten_winner_text = "Using ballots where voters cast one vote each for their favorite 5 songs, 25% of the time 8 out of 10 of the finalists were deserved winners; an additional 33% of the time, 7 out 10 finalists were deserved winners. No times did less than 4 deserved winners make it into the list of five finalists."
 
-#     # Format Heatmap
-#     voter_range = list(outcome_quality.keys())
-#     sample_range = list(outcome_quality[voter_range[0]].keys())
-#     x, y = np.meshgrid(sample_range, voter_range)
-
-#     x_label = "Sample Size"
-#     y_label = "Voters"
-
-#     source = pd.DataFrame({x_label: x.ravel(), y_label: y.ravel()})
-#     source["z"] = source.apply(lambda row: outcome_quality.get(row[y_label], np.nan).get(row[x_label], np.nan), axis=1)
-
-#     # First time doing an actual altair chart instead of doing a vega-lite spec
-#     chart = alt.Chart(source).mark_rect().encode(
-#         x=alt.X(f"{x_label}:O", axis=alt.Axis(
-#             title="Sample Size: How Many Songs Voters Listened To",
-#             labelAngle=0,
-#             )), 
-#         y=alt.Y(f"{y_label}:O", sort='descending', axis=alt.Axis(
-#             title="No. Voters"
-#             )), 
-#         color=alt.Color(
-#             "z:Q", 
-#             scale=alt.Scale(scheme="RedBlue", domain=[0,num_winners]),
-#             title="Median",
-#         )
-#     ).properties(
-#         title={
-#             "text": "Contest Consistency",
-#             "subtitle": [
-#                 f"The median number of deserved winners within the top {num_winners}.",
-#                 f"{num_contests.capitalize()} contests at each configuation. {num_songs} nominated songs. Ballot size of {ballot_limit}.",]
-#         }
-#     )
-#     filepath = heatmap_filepath(num_winners, ballot_limit)
-#     chart.save(filepath)
-
-
-
-# def load_or_generate_heatmap_chart(num_winners, ballot_limit, baseline, regenerate=False):
-#     filepath = heatmap_filepath(num_winners, ballot_limit)
-    
-#     if not os.path.exists(filepath) or regenerate:
-#         explore_changing_sample_size(ballot_limit, baseline) 
-    
-#     with open(filepath, "r") as json_object:
-#         chart_dict = json.load(json_object)
-
-#     # Original chart specified as an Altair oject. When loaded as a dictionary
-#     # we display it as a vega-lite object.
-#     st.vega_lite_chart(chart_dict, use_container_width=True)
+        if num_winners == 5:
+            st.write(five_winner_text)
+        if num_winners == 10:
+            st.write(ten_winner_text)
 
 
 def format_total_time():

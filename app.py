@@ -17,9 +17,11 @@ num_songs = st.session_state["num_songs"]
 num_winners = st.session_state["num_winners"]
 song_df = load_or_generate_objective_scores(num_songs)
 
+# st.dataframe(song_df)
+
 
 # Simulation Explanation and Interactive Demo
-section_title = "Simulation Swarm on the Isle of Musica"
+section_title = "The Isle of Musica"
 lg.write_story(section_title, header_level=1)
 lg.interactive_demo(song_df)
 baseline_titles, _ = lg.establish_baseline(song_df)

@@ -116,16 +116,15 @@ class Simulation:
         self.complete = False
         self.condorcet_winners = []
         self.current_method_winners = []
-        # self.reset_ballots()
 
 
     @property
     def params(self):
         param_dict = {
-            "name":         self.name,
-            "num_voters":   self.num_voters,
-            "listen_limit":   self.listen_limit,
-            "st_dev":       self.st_dev,
+            "name":             self.name,
+            "num_voters":       self.num_voters,
+            "listen_limit":     self.listen_limit,
+            "st_dev":           self.st_dev,
         }
         return param_dict
 
@@ -138,6 +137,7 @@ class Simulation:
             self.non_corrupt_ballots = self.ballots.copy()
             self.corrupt_ballots()
         self.tally_votes()
+        self.record_consistency()
         self.complete = True
 
 
@@ -241,6 +241,12 @@ class Simulation:
         return winners
 
 
+    def record_consistency(self):
+        fair_winners = self.song_df.sort_values("Objective Ratings", ascending=False).head(self.num_winners).index.tolist()
+        self.num_condorcet_fair_winners = len(set(self.condorcet_winners[:self.num_winners]).intersection(set(fair_winners)))
+        self.num_current_method_fair_winners = len(set(self.current_method_winners[:self.num_winners]).intersection(set(fair_winners)))
+
+
 #############################################################################
 
 class RepeatedSimulations:
@@ -258,12 +264,16 @@ class RepeatedSimulations:
         self.sim = Simulation(song_df, num_voters,
             listen_limit = listen_limit,
             ballot_limit = ballot_limit,
-            num_winners = num_winners)
+            num_winners = num_winners,
+            methods=["condorcet", "current"])
         
         num_songs = song_df.shape[0]
         self.sum_of_sums = np.zeros((num_songs, num_songs))
         self.sum_of_rankings = np.zeros((num_songs, num_songs))
-        self.contest_winners = {}
+        self.condorcet_winners = {}
+        self.current_method_winners = {}
+        self.num_condorcet_fair_winners = []
+        self.num_current_method_fair_winners = []
         self.num_contests = 0
         
         
@@ -272,152 +282,13 @@ class RepeatedSimulations:
             self.sim.simulate()
             self.sum_of_sums += self.sim.condorcet.pairwise_sums
             self.sum_of_rankings += self.sim.condorcet.preferences
-            self.contest_winners[self.num_contests] = self.sim.condorcet.top_nominee_ids
+            self.condorcet_winners[self.num_contests] = self.sim.condorcet.top_nominee_ids
+            self.current_method_winners[self.num_contests] = self.sim.current_method.winners
+            self.num_condorcet_fair_winners.append(self.sim.num_condorcet_fair_winners)
+            self.num_current_method_fair_winners.append(self.sim.num_current_method_fair_winners)
             self.num_contests += 1
 
 
         if self.filepath is not None:
             with open(self.filepath, "wb") as pkl_file:
                 pickle.dump(self, pkl_file)
-
-
-# The previous simulation was set up to incorporate multiple tallying 
-# techniques. Leaving this code commented out here to preserve that intent, 
-# since it may very well come back.
-
-    # def tally_votes(self, ballots):
-    #     if self.method == "sum":
-    #         winner = self.tally_by_summing()
-
-    #     elif self.method == "condorcet":
-    #         winner = self.tally_by_condorcet_method()
-
-    #     elif self.method == "rcv":
-    #         winner = self.tally_by_ranked_choice(N=self.rank_limit)
-
-    #     elif self.method == "fptp":
-    #         winner = self.tally_by_first_past_the_post(ballots)
-
-    #     return winner
-
-        
-    # def tally_by_summing(self):
-    #     """This function determines the winner considering the sum.
-
-    #     Returns:
-    #         integer: guac ID of winner
-    #     """
-    #     #putting the results together
-    #     self.ballots.set_index(["ID"], inplace = True)
-    #     self.ballots["sum"] = self.ballots.sum(axis=1)
-        
-    #     #sort the scores to have the sum at the top
-    #     sorted_scores = self.ballots.sort_values(by="sum", ascending=False)
-    #     sorted_scores['ID'] = sorted_scores.index
-
-    #     #extract highest sum        
-    #     winning_sum = sorted_scores.iloc[0]["sum"]
-
-    #     #create a dictionary of sums - winners to catch multiple winners
-    #     sum_winners_dict = {}
-    #     for s, w in zip(sorted_scores["sum"].tolist(), sorted_scores['ID'].tolist()):
-    #         if s in sum_winners_dict.keys():
-    #             sum_winners_dict[s].append(w)
-    #         else:
-    #             sum_winners_dict[s] = [w]
-
-    #     self.sum_winners = sum_winners_dict[winning_sum]
-    #     self.sum_winner = self.sum_winners[0]
-    #     # self.sum_success = self.sum_winner == self.objective_winner
-
-    #     if len(self.sum_winners) > 1:
-    #         print("\n\n\nMultiple sum winners, picking one at random...\n\n\n")
-
-    #     return self.sum_winner
-
-
-    # def tally_by_condorcet_method(self):
-    #     #finding the mean score for each nominee
-    #     columns_to_consider = self.ballots.set_index("ID").columns
-    #     # columns_to_consider.remove("sum")
-    #     self.ballots["Mean"] = self.ballots[columns_to_consider].mean(axis=1)
-
-    #     #creating the list that will contain each matrix ballot (needed for condorcet)
-    #     # ballots_matrix_list = []
-        
-    #     #filling in the ballots dataframe, for the various characters
-    #     # condorcet_elements = None
-    #     condorcet_elements, ballots_matrix_list = self.condorcet_results()
-    #     self.ballots_matrix_list = ballots_matrix_list
-    #     self.condorcet_winner = condorcet_elements.declare_winner(self.ballots, ballots_matrix_list)
-    #     self.condorcet_winners = condorcet_elements.winners
-    #     # self.condo_success = self.condorcet_winner == self.objective_winner
-    #     return self.condorcet_winner
-
-
-    # def condorcet_results(self, ballots_matrix_list=[]):
-    #     """This function collects the results of a simulation on a set of people
-
-    #     Args:
-    #         num_people (int): number of town people
-    #         mean_offset (float): offset to apply to the objective score (we use this to account for personas)
-    #         ballots_matrix_sum (numpy matrix): matrix needed for the calculation of the condorcet winner
-
-    #     Returns:
-    #         condorcet counting object containing the details of the condorcet method to compute the winner
-    #     """
-    #     condorcet_elements = None
-
-    #     print("Tallying")
-    #     for person in stqdm(self.voters):
-
-    #         #creating the el
-    # ements to compute the condorcet winner
-    #         condorcet_elements = CondorcetCounting(self.song_df, person.ballot)
-    #         # condorcet_elements = person.taste_and_vote(self.song_df)
-
-    #         #collect ballox matrices
-    #         ballots_matrix_list.append(condorcet_elements.ballot_matrix)
-
-    #         #add the results to the results dataframe with a new column name
-    #         # self.ballots[f"Scores {person.number}"] = self.song_df["ID"].apply(lambda x: condorcet_elements.ballot_dict.get(x, None))
-
-    #         if len(self.ballots[self.ballots[f"Scores {person.number}"].isnull()]) == len(self.ballots):
-    #             sys.exit(f"No scores recorder from person.number {person.number}. Something is wrong...") 
-            
-    #     #returning the last condorcet element calculated. 
-    #     return condorcet_elements, ballots_matrix_list
-
-
-    # def tally_by_ranked_choice(self, N=None):
-    #     """TODO: Incorporate N"""
-
-    #     # I want to display their names not their IDs
-    #     self.ballots["Entrant"] = self.song_df["Entrant"]
-    #     self.ballots.set_index("Entrant", inplace=True)
-    #     self.ballots.drop(columns=["ID"], inplace=True)
-
-    #     rcv = RankChoiceVoting(N)
-    #     ranks = rcv.convert_score_ballots_to_implicit_ranks(self.ballots)
-    #     self.rankings = rcv.tally_results(ranks)
-    #     self.rcv = rcv
-    #     return self.rankings[0][0]
-
-
-    # def tally_by_first_past_the_post(self, ballots):
-    #     """
-    #     Interpret each voter's top score as their one favorite choice. Tally
-    #     all these single choices with first-past-the-post.
-
-    #     If there is a tie, it is broken randomly simply by calling .idxmax()
-    #     """
-    #     ballots.drop(columns=["ID"], inplace=True)
-    #     names = self.song_df["Entrant"]
-    #     votes = []
-
-    #     choose_fav = lambda ballot: votes.append(names.iloc[ballot.idxmax()])
-    #     ballots.apply(choose_fav, axis=0)
-
-    #     tallies = [(name, count) for name, count in Counter(votes).items()]
-    #     self.rankings = sorted(tallies, key=lambda x: x[1], reverse=True)
-    #     return self.rankings[0][0]
