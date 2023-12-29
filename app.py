@@ -6,7 +6,7 @@ from src import load_or_generate_objective_scores
 
 st.set_page_config(
     page_title="Isle of Musica",
-    page_icon="img/grammys_logo.png",
+    page_icon="img/avocado-emoji.png",
     initial_sidebar_state="expanded")
 
 
