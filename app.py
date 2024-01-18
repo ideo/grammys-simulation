@@ -22,7 +22,7 @@ song_df = load_or_generate_objective_scores(num_songs)
 
 # Simulation Explanation and Interactive Demo
 section_title = "The Isle of Musica"
-lg.write_story(section_title, header_level=1)
+st.title(section_title)
 lg.interactive_demo(song_df)
 baseline_titles, _ = lg.establish_baseline(song_df)
 
