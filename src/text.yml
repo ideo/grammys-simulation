@@ -1,8 +1,3 @@
-The Isle of Musica:
-  story:
-    - The GRAMMYs team knows better than anyone that voting on a mass scale is bound to be complex. And just like any complex system, trying out a “better” way to vote is often too impractical to risk.
-    # - "Voting is complex. Just like many other phenomena in our world, trying out a “better” voting system might be too expensive or impractical. To solve such issues and first try out different scenarios, scientists often use Agent Based Simulation. The idea behind these simulations is simple: you create basic rules for imaginary actors to follow in an imaginary world, then let the agents interact based on those rules. You then observe what happens in the imaginary world to learn what might happen in the real world. One of the most famous examples of agent based simulations, the [Schellings Segregation Model](https://www.youtube.com/watch?v=JjfihtGefxk&ab_channel=RandomEconomist), contributed to Schelling's Nobel Prize in economics."
-
 Imaginary Songs:
   story:
     - To solve such issues and first try out different scenarios, scientists often create basic rules for imaginary actors to follow in an imaginary world, then let the agents interact based on those rules, otherwise known as Agent Based Simulation. 
